@@ -148,6 +148,15 @@ mutable struct Order
   dontUseAutoPriceForHedge::Bool
   isOmsContainer::Bool
   discretionaryUpToLimitPrice::Bool
+  autoCancelDate::String
+  filledQuantity::Union{Float64,Nothing}
+  refFuturesConId::Union{Int,Nothing}
+  autoCancelParent::Bool
+  shareholder::String
+  imbalanceOnly::Bool
+  routeMarketableToBbo::Bool
+  parentPermId::Union{Int,Nothing}
+  usePriceMgmtAlgo::Union{Bool,Nothing}
 end
 Order() = Order(0, 0, 0, ns, 0.0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0,
                 false, false, 0, 0, false, false, ns, ns, ns, false, nothing, nothing,
@@ -157,7 +166,8 @@ Order() = Order(0, 0, 0, ns, 0.0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, t
                 fill(nothing, 9)..., false, nothing, nothing, false, fill(ns, 8)...,
                 NamedTuple(), NamedTuple(), ns, false, false, false, ns, [],
                 NamedTuple(), 0, 0.0, false, 0, ns, ns, fill(nothing, 4)..., 0, nothing, [],
-                false, false, ns, SoftDollarTier(), nothing, ns, ns, ns, ns, false, false, false)
+                false, false, ns, SoftDollarTier(), nothing, ns, ns, ns, ns, false, false, false,
+                ns, nothing, nothing, false, ns, false, false, nothing, nothing)
 
 
 mutable struct ScannerSubscription

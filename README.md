@@ -1,8 +1,8 @@
-# Jib.jl
+# Jib
 
 **A Julia implementation of Interactive Brokers API**
 
-`Jib.jl` is a native [Julia](https://julialang.org/) client that implements
+`Jib` is a native [Julia](https://julialang.org/) client that implements
 [Interactive Brokers](https://www.interactivebrokers.com/) API to communicate with their
 TWS or IBGateway.
 

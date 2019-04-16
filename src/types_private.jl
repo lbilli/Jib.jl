@@ -106,6 +106,8 @@ struct OrderState
   maxCommission::Union{Float64,Nothing}
   commissionCurrency::String
   warningText::String
+  completedTime::String
+  completedStatus::String
 end
 
 

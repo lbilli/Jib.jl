@@ -79,6 +79,8 @@ struct Wrapper
   tickByTickBidAsk::Function
   tickByTickMidPoint::Function
   orderBound::Function
+  completedOrder::Function
+  completedOrdersEnd::Function
 end
 function Wrapper(; kw...)
 
@@ -315,6 +317,17 @@ function simple_wrap()
                          something(realizedPnL, "NA"),   " ",
                          value),
 
+    orderBound= (orderId::Int, apiClientId::Int, apiOrderId::Int) ->
+                  println("OrderBound $orderId $apiClientId $apiOrderId"),
+
+    completedOrder= function(contract::Contract, order::Order, orderState::OrderState)
+                      d[:completed_contract] = contract
+                      d[:completed] = order
+                      d[:completed_state] = orderState
+                 println("CompletedOrder: $(contract.symbol) $(orderState.status)")
+              end,
+
+    completedOrdersEnd= () -> println("CompletedOrdersEnd."),
   )
 
   d, w

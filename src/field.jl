@@ -15,8 +15,8 @@ Base.convert(::Type{String}, x::Field) = String(x.value)
 # Int
 function Base.convert(::Type{Int}, x::Field)
 
-  x.value ∈ ["", "2147483647"] ? nothing :            # typemax(Int32)
-                                 parse(Int, x.value)
+  x.value ∈ ["", "2147483647", "9223372036854775807"] ? nothing :   # typemax(Int32) typemax(Int64)
+                                                        parse(Int, x.value)
 end
 
 # Float

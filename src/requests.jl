@@ -242,6 +242,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version >= Client.D_PEG_ORDERS && o(order.discretionaryUpToLimitPrice)
 
+  ib.version >= Client.PRICE_MGMT_ALGO && o(order.usePriceMgmtAlgo)
+
   sendmsg(ib, o)
 end
 
@@ -634,6 +636,8 @@ end
 
 cancelTickByTickData(ib::Connection, reqId::Int) = req_simple(ib, 98, reqId) ### CANCEL_TICK_BY_TICK_DATA
 
+reqCompletedOrders(ib::Connection, apiOnly::Bool) = req_simple(ib, 99, apiOnly) ### REQ_COMPLETED_ORDERS
+
 
 # Exports
 export  reqMktData,
@@ -709,5 +713,6 @@ export  reqMktData,
         cancelPnLSingle,
         reqHistoricalTicks,
         reqTickByTickData,
-        cancelTickByTickData
+        cancelTickByTickData,
+        reqCompletedOrders
 end

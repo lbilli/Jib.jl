@@ -231,8 +231,8 @@ const process = Dict{Int,Function}(
           o.solicited,
           o.whatIf = it
 
-          os = ver >= Client.WHAT_IF_EXT_FIELDS ? slurp(OrderState, it) :
-                                                  OrderState(pop(it), fill(ns, 6)..., take(it, 8)...)
+          os = ver >= Client.WHAT_IF_EXT_FIELDS ? OrderState(take(it, 15)..., ns, ns) :
+                                                  OrderState(pop(it), fill(ns, 6)..., take(it, 8)..., ns, ns)
 
           o.randomizeSize,
           o.randomizePrice = it
@@ -277,6 +277,8 @@ const process = Dict{Int,Function}(
           ver >= Client.ORDER_CONTAINER && (o.isOmsContainer = pop(it))
 
           ver >= Client.D_PEG_ORDERS && (o.discretionaryUpToLimitPrice = pop(it))
+
+          ver >= Client.PRICE_MGMT_ALGO && (o.usePriceMgmtAlgo = pop(it))
 
           w.openOrder(o.orderId, c, o, os)
         end,
@@ -945,5 +947,147 @@ const process = Dict{Int,Function}(
         end,
 
   # ORDER_BOUND
-  100 => (it, w, ver) -> w.orderBound(collect(Int, take(it, 3))...)
+ 100 => (it, w, ver) -> w.orderBound(collect(Int, take(it, 3))...),
+
+  # COMPLETED_ORDER
+ 101 => function(it, w, ver)
+
+          o = Order()
+          c = Contract()
+
+          slurp!(c, [1:8; 10:12], it)
+
+          slurp!(o, 4:9, it)  # :action through :tif
+
+          slurp!(o, (:ocaGroup,
+                     :account,
+                     :openClose,
+                     :origin,
+                     :orderRef,
+                     :permId,
+                     :outsideRth,
+                     :hidden,
+                     :discretionaryAmt,
+                     :goodAfterTime,
+                     :faGroup,
+                     :faMethod,
+                     :faPercentage,
+                     :faProfile), it)
+
+          ver >= Client.MODELS_SUPPORT && (o.modelCode = pop(it))
+
+          slurp!(o, (:goodTillDate,
+                     :rule80A,
+                     :percentOffset,
+                     :settlingFirm,
+                     :shortSaleSlot,
+                     :designatedLocation,
+                     :exemptCode), it)
+
+          slurp!(o, 47:51, it)    # :startingPrice through :stockRangeUpper
+
+          slurp!(o, (:displaySize,
+                     :sweepToFill,
+                     :allOrNone,
+                     :minQty,
+                     :ocaType,
+                     :triggerMethod), it)
+
+          slurp!(o, 54:57, it)    # :volatility" through :deltaNeutralAuxPrice"
+
+          !isempty(o.deltaNeutralOrderType) && slurp!(o, [58; 63:65], it)  # :deltaNeutralConId through :deltaNeutralDesignatedLocation
+
+          slurp!(o, (:continuousUpdate,
+                     :referencePriceType,
+                     :trailStopPrice,
+                     :trailingPercent), it)
+
+          c.comboLegsDescrip = pop(it)
+
+          # ComboLegs
+          n::Int = pop(it)
+
+          for _ ∈ 1:n
+            push!(c.comboLegs, slurp(ComboLeg, it))
+          end
+
+          # OrderComboLeg
+          n = pop(it)
+          append!(o.orderComboLegs, take(it, n))
+
+          # SmartComboRouting
+          n = pop(it)
+          n > 0 && (o.smartComboRoutingParams = tagvalue2nt(take(it, 2n)))
+
+          slurp!(o, (:scaleInitLevelSize,
+                     :scaleSubsLevelSize,
+                     :scalePriceIncrement), it)
+
+          o.scalePriceIncrement !== nothing &&
+          o.scalePriceIncrement > 0.0       && slurp!(o, 73:79, it) # scalePriceAdjustValue through scaleRandomPercent
+
+          o.hedgeType = pop(it)
+
+          !isempty(o.hedgeType) && (o.hedgeParam = pop(it))
+
+          slurp!(o, (:clearingAccount,
+                     :clearingIntent,
+                     :notHeld), it)
+
+          # DeltaNeutralContract
+          slurp(Bool, it) && (c.deltaNeutralContract = slurp(DeltaNeutralContract, it))
+
+          # AlgoStrategy
+          o.algoStrategy = pop(it)
+
+          if !isempty(o.algoStrategy)
+            n = pop(it)
+            n > 0 && (o.algoParams = tagvalue2nt(take(it, 2n)))
+          end
+
+          o.solicited,
+          ostatus::String,     # OrderState.status
+          o.randomizeSize,
+          o.randomizePrice = it
+
+          if ver >= Client.PEGGED_TO_BENCHMARK
+
+            o.orderType == "PEG BENCH" && slurp!(o, (:referenceContractId,
+                                                     :isPeggedChangeAmountDecrease,
+                                                     :peggedChangeAmount,
+                                                     :referenceChangeAmount,
+                                                     :referenceExchangeId), it)
+
+            # Conditions
+            n = pop(it)
+
+            if n > 0
+              for _ ∈ 1:n
+                push!(o.conditions, slurp(condition_map[slurp(ConditionType, it)], it))
+              end
+
+              o.conditionsIgnoreRth,
+              o.conditionsCancelOrder = it
+            end
+
+          end
+
+          slurp!(o, (:trailStopPrice,
+                     :lmtPriceOffset), it)
+
+          ver >= Client.CASH_QTY && (o.cashQty = pop(it))
+
+          ver >= Client.AUTO_PRICE_FOR_HEDGE && (o.dontUseAutoPriceForHedge = pop(it))
+
+          ver >= Client.ORDER_CONTAINER && (o.isOmsContainer = pop(it))
+
+          slurp!(o, 122:129, it)    # :autoCancelDate through :parentPermId
+
+          os = OrderState(ostatus, fill(ns, 9)..., fill(nothing, 3)..., ns, ns, take(it, 2)...)
+
+          w.completedOrder(c, o, os)
+         end,
+
+  # COMPLETED_ORDERS_END
+ 102 => (it, w, ver) -> w.completedOrdersEnd()
 )
