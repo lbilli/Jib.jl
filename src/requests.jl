@@ -53,16 +53,12 @@ function reqMktData(ib::Connection, tickerId::Int, contract::Contract, genericTi
     end
   end
 
-  if contract.deltaNeutralContract !== nothing
-    o(true,
-      splat(contract.deltaNeutralContract))
-  else
-    o(false)
-  end
+  isnothing(contract.deltaNeutralContract) ? o(false) :
+                                             o(true, splat(contract.deltaNeutralContract))
 
   o(genericTicks, snapshot)
 
-  ib.version >= Client.REQ_SMART_COMPONENTS && o(regulatorySnaphsot)
+  ib.version ≥ Client.REQ_SMART_COMPONENTS && o(regulatorySnaphsot)
 
   o(mktDataOptions)
 
@@ -114,7 +110,7 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :faPercentage,
                   :faProfile)))
 
-  ib.version >= Client.MODELS_SUPPORT && o(order.modelCode)
+  ib.version ≥ Client.MODELS_SUPPORT && o(order.modelCode)
 
   o(splat(order, (:shortSaleSlot,
                   :designatedLocation,
@@ -150,7 +146,7 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :scaleSubsLevelSize,
                   :scalePriceIncrement)))
 
-  order.scalePriceIncrement !== nothing &&
+  !isnothing(order.scalePriceIncrement) &&
   order.scalePriceIncrement > 0.0       && o(splat(order, 73:79))
 
   o(splat(order, (:scaleTable,
@@ -166,11 +162,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :notHeld)))
 
   # DeltaNeutralContract
-  if contract.deltaNeutralContract !== nothing
-    o(true, splat(contract.deltaNeutralContract))
-  else
-    o(false)
-  end
+  isnothing(contract.deltaNeutralContract) ? o(false) :
+                                             o(true, splat(contract.deltaNeutralContract))
 
   # Algo
   o(order.algoStrategy)
@@ -191,7 +184,7 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :randomizeSize,
                   :randomizePrice)))
 
-  if ib.version >= Client.PEGGED_TO_BENCHMARK
+  if ib.version ≥ Client.PEGGED_TO_BENCHMARK
 
     if order.orderType == "PEG BENCH"
       o(splat(order, (:referenceContractId,
@@ -223,26 +216,26 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                     :adjustableTrailingUnit)))
   end
 
-  ib.version >= Client.EXT_OPERATOR && o(order.extOperator)
+  ib.version ≥ Client.EXT_OPERATOR && o(order.extOperator)
 
-  ib.version >= Client.SOFT_DOLLAR_TIER && o(order.softDollarTier.name,
-                                             order.softDollarTier.val)
+  ib.version ≥ Client.SOFT_DOLLAR_TIER && o(order.softDollarTier.name,
+                                            order.softDollarTier.val)
 
-  ib.version >= Client.CASH_QTY && o(order.cashQty)
+  ib.version ≥ Client.CASH_QTY && o(order.cashQty)
 
-  ib.version >= Client.DECISION_MAKER && o(order.mifid2DecisionMaker,
-                                           order.mifid2DecisionAlgo)
+  ib.version ≥ Client.DECISION_MAKER && o(order.mifid2DecisionMaker,
+                                          order.mifid2DecisionAlgo)
 
-  ib.version >= Client.MIFID_EXECUTION && o(order.mifid2ExecutionTrader,
-                                            order.mifid2ExecutionAlgo)
+  ib.version ≥ Client.MIFID_EXECUTION && o(order.mifid2ExecutionTrader,
+                                           order.mifid2ExecutionAlgo)
 
-  ib.version >= Client.AUTO_PRICE_FOR_HEDGE && o(order.dontUseAutoPriceForHedge)
+  ib.version ≥ Client.AUTO_PRICE_FOR_HEDGE && o(order.dontUseAutoPriceForHedge)
 
-  ib.version >= Client.ORDER_CONTAINER && o(order.isOmsContainer)
+  ib.version ≥ Client.ORDER_CONTAINER && o(order.isOmsContainer)
 
-  ib.version >= Client.D_PEG_ORDERS && o(order.discretionaryUpToLimitPrice)
+  ib.version ≥ Client.D_PEG_ORDERS && o(order.discretionaryUpToLimitPrice)
 
-  ib.version >= Client.PRICE_MGMT_ALGO && o(order.usePriceMgmtAlgo)
+  ib.version ≥ Client.PRICE_MGMT_ALGO && o(order.usePriceMgmtAlgo)
 
   sendmsg(ib, o)
 end
@@ -285,10 +278,10 @@ function reqMktDepth(ib::Connection, tickerId::Int, contract::Contract, numRows:
   o(10, 5,      ### REQ_MKT_DEPTH
     tickerId,
     splat(contract,
-          ib.version >= Client.MKT_DEPTH_PRIM_EXCHANGE ? (1:12) : [1:8; 10:12]),
+          ib.version ≥ Client.MKT_DEPTH_PRIM_EXCHANGE ? (1:12) : [1:8; 10:12]),
     numRows)
 
-  ib.version >= Client.SMART_DEPTH && o(isSmartDepth)
+  ib.version ≥ Client.SMART_DEPTH && o(isSmartDepth)
 
   o(mktDepthOptions)
 
@@ -302,7 +295,7 @@ function cancelMktDepth(ib::Connection, tickerId::Int, isSmartDepth::Bool)
   o(11, 1,   ### CANCEL_MKT_DEPTH
     tickerId)
 
-  ib.version >= Client.SMART_DEPTH && o(isSmartDepth)
+  ib.version ≥ Client.SMART_DEPTH && o(isSmartDepth)
 
   sendmsg(ib, o)
 end
@@ -366,7 +359,7 @@ function reqHistoricalData(ib::Connection, tickerId::Int, contract::Contract, en
     end
   end
 
-  ib.version >= Client.SYNT_REALTIME_BARS && o(keepUpToDate)
+  ib.version ≥ Client.SYNT_REALTIME_BARS && o(keepUpToDate)
 
   o(chartOptions)
 
@@ -399,7 +392,7 @@ function reqScannerSubscription(ib::Connection, tickerId::Int, subscription::Sca
   o(tickerId,
     splat(subscription))
 
-  ib.version >= Client.SCANNER_GENERIC_OPTS && o(scannerSubscriptionFilterOptions)
+  ib.version ≥ Client.SCANNER_GENERIC_OPTS && o(scannerSubscriptionFilterOptions)
 
   o(scannerSubscriptionOptions)
 
@@ -537,7 +530,7 @@ function reqNewsArticle(ib::Connection, requestId::Int, providerCode::String, ar
     providerCode,
     articleId)
 
-  ib.version >= Client.NEWS_QUERY_ORIGINS && o(newsArticleOptions)
+  ib.version ≥ Client.NEWS_QUERY_ORIGINS && o(newsArticleOptions)
 
   sendmsg(ib, o)
 end
@@ -556,7 +549,7 @@ function reqHistoricalNews(ib::Connection, requestId::Int, conId::Int, providerC
     endDateTime,
     totalResults)
 
-  ib.version >= Client.NEWS_QUERY_ORIGINS && o(historicalNewsOptions)
+  ib.version ≥ Client.NEWS_QUERY_ORIGINS && o(historicalNewsOptions)
 
   sendmsg(ib, o)
 end
@@ -629,7 +622,7 @@ function reqTickByTickData(ib::Connection, reqId::Int, contract::Contract, tickT
     splat(contract, 1:12),
     tickType)
 
-  ib.version >= Client.TICK_BY_TICK_IGNORE_SIZE && o(numberOfTicks, ignoreSize)
+  ib.version ≥ Client.TICK_BY_TICK_IGNORE_SIZE && o(numberOfTicks, ignoreSize)
 
   sendmsg(ib, o)
 end
@@ -640,79 +633,79 @@ reqCompletedOrders(ib::Connection, apiOnly::Bool) = req_simple(ib, 99, apiOnly) 
 
 
 # Exports
-export  reqMktData,
-        cancelMktData,
-        placeOrder,
-        cancelOrder,
-        reqOpenOrders,
-        reqAccountUpdates,
-        reqExecutions,
-        reqIds,
-        reqContractDetails,
-        reqMktDepth,
-        cancelMktDepth,
-        reqNewsBulletins,
-        cancelNewsBulletins,
-        setServerLogLevel,
-        reqAutoOpenOrders,
-        reqAllOpenOrders,
-        reqManagedAccts,
-        requestFA,
-        replaceFA,
-        reqHistoricalData,
-        exerciseOptions,
-        reqScannerSubscription,
-        cancelScannerSubscription,
-        reqScannerParameters,
-        cancelHistoricalData,
-        reqCurrentTime,
-        reqRealTimeBars,
-        cancelRealTimeBars,
-        reqFundamentalData,
-        cancelFundamentalData,
-        calculateImpliedVolatility,
-        calculateOptionPrice,
-        cancelCalculateImpliedVolatility,
-        cancelCalculateOptionPrice,
-        reqGlobalCancel,
-        reqMarketDataType,
-        reqPositions,
-        reqAccountSummary,
-        cancelAccountSummary,
-        cancelPositions,
-        verifyRequest,
-        verifyMessage,
-        queryDisplayGroups,
-        subscribeToGroupEvents,
-        updateDisplayGroup,
-        unsubscribeFromGroupEvents,
-#        startApi,
-        verifyAndAuthRequest,
-        verifyAndAuthMessage,
-        reqPositionsMulti,
-        cancelPositionsMulti,
-        reqAccountUpdatesMulti,
-        cancelAccountUpdatesMulti,
-        reqSecDefOptParams,
-        reqSoftDollarTiers,
-        reqFamilyCodes,
-        reqMatchingSymbols,
-        reqMktDepthExchanges,
-        reqSmartComponents,
-        reqNewsArticle,
-        reqNewsProviders,
-        reqHistoricalNews,
-        reqHeadTimestamp,
-        reqHistogramData,
-        cancelHistogramData,
-        cancelHeadTimestamp,
-        reqMarketRule,
-        reqPnL,
-        cancelPnL,
-        reqPnLSingle,
-        cancelPnLSingle,
-        reqHistoricalTicks,
-        reqTickByTickData,
-        cancelTickByTickData,
-        reqCompletedOrders
+export reqMktData,
+       cancelMktData,
+       placeOrder,
+       cancelOrder,
+       reqOpenOrders,
+       reqAccountUpdates,
+       reqExecutions,
+       reqIds,
+       reqContractDetails,
+       reqMktDepth,
+       cancelMktDepth,
+       reqNewsBulletins,
+       cancelNewsBulletins,
+       setServerLogLevel,
+       reqAutoOpenOrders,
+       reqAllOpenOrders,
+       reqManagedAccts,
+       requestFA,
+       replaceFA,
+       reqHistoricalData,
+       exerciseOptions,
+       reqScannerSubscription,
+       cancelScannerSubscription,
+       reqScannerParameters,
+       cancelHistoricalData,
+       reqCurrentTime,
+       reqRealTimeBars,
+       cancelRealTimeBars,
+       reqFundamentalData,
+       cancelFundamentalData,
+       calculateImpliedVolatility,
+       calculateOptionPrice,
+       cancelCalculateImpliedVolatility,
+       cancelCalculateOptionPrice,
+       reqGlobalCancel,
+       reqMarketDataType,
+       reqPositions,
+       reqAccountSummary,
+       cancelAccountSummary,
+       cancelPositions,
+       verifyRequest,
+       verifyMessage,
+       queryDisplayGroups,
+       subscribeToGroupEvents,
+       updateDisplayGroup,
+       unsubscribeFromGroupEvents,
+#       startApi,
+       verifyAndAuthRequest,
+       verifyAndAuthMessage,
+       reqPositionsMulti,
+       cancelPositionsMulti,
+       reqAccountUpdatesMulti,
+       cancelAccountUpdatesMulti,
+       reqSecDefOptParams,
+       reqSoftDollarTiers,
+       reqFamilyCodes,
+       reqMatchingSymbols,
+       reqMktDepthExchanges,
+       reqSmartComponents,
+       reqNewsArticle,
+       reqNewsProviders,
+       reqHistoricalNews,
+       reqHeadTimestamp,
+       reqHistogramData,
+       cancelHistogramData,
+       cancelHeadTimestamp,
+       reqMarketRule,
+       reqPnL,
+       cancelPnL,
+       reqPnLSingle,
+       cancelPnLSingle,
+       reqHistoricalTicks,
+       reqTickByTickData,
+       cancelTickByTickData,
+       reqCompletedOrders
 end

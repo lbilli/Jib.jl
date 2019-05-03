@@ -30,7 +30,7 @@ function decode(msg, w, ver)
 
   f = get(process, id, nothing)
 
-  if f === nothing
+  if isnothing(f)
     @warn "Decoder: unknown message" ID=id
 
   else

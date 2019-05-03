@@ -20,8 +20,9 @@ end
 
 
 """
-  Process one message. Blocking.
+    check_msg(ib, wrap)
 
+Process one message and dispatch the appropriate callback. **Blocking**.
 """
 function check_msg(ib::Connection, w::Wrapper)
 
@@ -31,9 +32,14 @@ function check_msg(ib::Connection, w::Wrapper)
 
 end
 
-"""
-  Process all messages waiting in queue without blocking
 
+"""
+    check_all(ib, wrap, flush=false)
+
+Process all messages waiting in the queue. **Not blocking**.
+If `flush=true`, messages are read but callbacks are not dispatched.
+
+Return number of messages processed.
 """
 function check_all(ib::Connection, w::Wrapper, flush::Bool=false)
 
@@ -51,6 +57,11 @@ function check_all(ib::Connection, w::Wrapper, flush::Bool=false)
 end
 
 
+"""
+    start_reader(ib, wrap)
+
+Start a new [`Task`](@ref) to process messages asynchronously.
+"""
 function start_reader(ib::Connection, w::Wrapper)
 
   @async begin

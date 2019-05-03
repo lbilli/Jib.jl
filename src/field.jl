@@ -31,7 +31,7 @@ function Base.convert(::Type{Bool}, x::Field)
 
   res = findfirst(==(x.value), ["1", "true", "0", "false"])
 
-  res === nothing && error("Invalid Bool: $(x.value)")
+  isnothing(res) && error("Invalid Bool: |$(x.value)|")
 
   res < 3
 end

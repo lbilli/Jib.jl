@@ -113,14 +113,27 @@ the desired methods, as shown in the [example](#usage) above.
 A more comprehensive example is provided by [`simple_wrap()`](src/wrapper.jl),
 which is used like this:
 ```julia
-data, wrap = simple_wrap()
+using Jib
+using Jib: Contract, reqContractDetails, simple_wrap, start_reader
+
+data, wrap = simple_wrap();
+
+ib = Jib.connect(4002, 1);
+start_reader(ib, wrap);
+
+reqContractDetails(ib, 99, Contract(conId=208813720, exchange="SMART"))
+
+# Wait for response and then access the "ContractDetails" result:
+data[:cd]
 ```
 Thanks to closures, `data` (a `Dict` in this case) is accessible by all
 `wrap` methods as well as the main program. This way it is possible to easily
-propagate data from the server to different parts of the program.
+propagate the incoming data to different parts of the program.
 
 For more details about callback definitions and signatures,
-refer again to the official IB `EWrapper` class documentation.
+refer to the official IB `EWrapper` class documentation.
+As reference, the exact signatures used in this package
+are found [here](data/wrapper_signatures.jl).
 
 #### Notes
 Callbacks are generally invoked with arguments and types matching the signatures

@@ -110,7 +110,7 @@ const process = Dict{Int,Function}(
 
           args = slurp((Int,String,Float64,Float64,Float64,Int,Int,Float64,Int,String), it)
 
-          mktCapPrice = ver >= Client.MARKET_CAP_PRICE ? slurp(Float64, it) : nothing
+          mktCapPrice = ver ≥ Client.MARKET_CAP_PRICE ? slurp(Float64, it) : nothing
 
           w.orderStatus(args..., mktCapPrice)
         end,
@@ -149,7 +149,7 @@ const process = Dict{Int,Function}(
                      :faPercentage,
                      :faProfile), it)
 
-          ver >= Client.MODELS_SUPPORT && (o.modelCode = pop(it))
+          ver ≥ Client.MODELS_SUPPORT && (o.modelCode = pop(it))
 
           slurp!(o, (:goodTillDate,
                      :rule80A,
@@ -205,7 +205,7 @@ const process = Dict{Int,Function}(
                      :scaleSubsLevelSize,
                      :scalePriceIncrement), it)
 
-          o.scalePriceIncrement !== nothing &&
+          !isnothing(o.scalePriceIncrement) &&
           o.scalePriceIncrement > 0.0       && slurp!(o, 73:79, it) # scalePriceAdjustValue through scaleRandomPercent
 
           o.hedgeType = pop(it)
@@ -231,13 +231,13 @@ const process = Dict{Int,Function}(
           o.solicited,
           o.whatIf = it
 
-          os = ver >= Client.WHAT_IF_EXT_FIELDS ? OrderState(take(it, 15)..., ns, ns) :
-                                                  OrderState(pop(it), fill(ns, 6)..., take(it, 8)..., ns, ns)
+          os = ver ≥ Client.WHAT_IF_EXT_FIELDS ? OrderState(take(it, 15)..., ns, ns) :
+                                                 OrderState(pop(it), fill(ns, 6)..., take(it, 8)..., ns, ns)
 
           o.randomizeSize,
           o.randomizePrice = it
 
-          if ver >= Client.PEGGED_TO_BENCHMARK
+          if ver ≥ Client.PEGGED_TO_BENCHMARK
 
             o.orderType == "PEG BENCH" && slurp!(o, (:referenceContractId,
                                                      :isPeggedChangeAmountDecrease,
@@ -267,18 +267,18 @@ const process = Dict{Int,Function}(
                        :adjustableTrailingUnit), it)
           end
 
-          ver >= Client.SOFT_DOLLAR_TIER &&
-                 (o.softDollarTier = slurp(SoftDollarTier, it))
+          ver ≥ Client.SOFT_DOLLAR_TIER &&
+                (o.softDollarTier = slurp(SoftDollarTier, it))
 
-          ver >= Client.CASH_QTY && (o.cashQty = pop(it))
+          ver ≥ Client.CASH_QTY && (o.cashQty = pop(it))
 
-          ver >= Client.AUTO_PRICE_FOR_HEDGE && (o.dontUseAutoPriceForHedge = pop(it))
+          ver ≥ Client.AUTO_PRICE_FOR_HEDGE && (o.dontUseAutoPriceForHedge = pop(it))
 
-          ver >= Client.ORDER_CONTAINER && (o.isOmsContainer = pop(it))
+          ver ≥ Client.ORDER_CONTAINER && (o.isOmsContainer = pop(it))
 
-          ver >= Client.D_PEG_ORDERS && (o.discretionaryUpToLimitPrice = pop(it))
+          ver ≥ Client.D_PEG_ORDERS && (o.discretionaryUpToLimitPrice = pop(it))
 
-          ver >= Client.PRICE_MGMT_ALGO && (o.usePriceMgmtAlgo = pop(it))
+          ver ≥ Client.PRICE_MGMT_ALGO && (o.usePriceMgmtAlgo = pop(it))
 
           w.openOrder(o.orderId, c, o, os)
         end,
@@ -316,7 +316,7 @@ const process = Dict{Int,Function}(
           cd.contract.conId,
           cd.minTick = it
 
-          ver >= Client.MD_SIZE_MULTIPLIER && (cd.mdSizeMultiplier = pop(it))
+          ver ≥ Client.MD_SIZE_MULTIPLIER && (cd.mdSizeMultiplier = pop(it))
 
           cd.contract.multiplier = pop(it)
           slurp!(cd, 4:8, it)
@@ -326,16 +326,16 @@ const process = Dict{Int,Function}(
           n::Int = pop(it)
           n > 0 && (cd.secIdList = tagvalue2nt(take(it, 2n)))
 
-          ver >= Client.AGG_GROUP && (cd.aggGroup = pop(it))
+          ver ≥ Client.AGG_GROUP && (cd.aggGroup = pop(it))
 
-          if ver >= Client.UNDERLYING_INFO
+          if ver ≥ Client.UNDERLYING_INFO
             cd.underSymbol,
             cd.underSecType = it
           end
 
-          ver >= Client.MARKET_RULES && (cd.marketRuleIds = pop(it))
+          ver ≥ Client.MARKET_RULES && (cd.marketRuleIds = pop(it))
 
-          ver >= Client.REAL_EXPIRATION_DATE && (cd.realExpirationDate = pop(it))
+          ver ≥ Client.REAL_EXPIRATION_DATE && (cd.realExpirationDate = pop(it))
 
           w.contractDetails(reqId, cd)
         end,
@@ -351,9 +351,9 @@ const process = Dict{Int,Function}(
 
           args = collect(take(it, 15))   # Must materialize
 
-          modelCode = ver >= Client.MODELS_SUPPORT ? pop(it) : ns
+          modelCode = ver ≥ Client.MODELS_SUPPORT ? pop(it) : ns
 
-          lastLiquidity = ver >= Client.LAST_LIQUIDITY ? pop(it) : 0
+          lastLiquidity = ver ≥ Client.LAST_LIQUIDITY ? pop(it) : 0
 
           e = Execution(orderId, args..., modelCode, lastLiquidity)
 
@@ -368,7 +368,7 @@ const process = Dict{Int,Function}(
 
           args = slurp((Int,Int,String,Int,Int,Float64,Int), it)
 
-          isSmartDepth = ver >= Client.SMART_DEPTH ? slurp(Bool, it) : false
+          isSmartDepth = ver ≥ Client.SMART_DEPTH ? slurp(Bool, it) : false
 
           w.updateMktDepthL2(args..., isSmartDepth)
         end,
@@ -440,7 +440,7 @@ const process = Dict{Int,Function}(
           cd.contract.conId,
           cd.minTick = it
 
-          ver >= Client.MD_SIZE_MULTIPLIER && (cd.mdSizeMultiplier = pop(it))
+          ver ≥ Client.MD_SIZE_MULTIPLIER && (cd.mdSizeMultiplier = pop(it))
 
           slurp!(cd, (:orderTypes,
                       :validExchanges,
@@ -455,9 +455,9 @@ const process = Dict{Int,Function}(
           n::Int = pop(it)
           n > 0 && (cd.secIdList = tagvalue2nt(take(it, 2n)))
 
-          ver >= Client.AGG_GROUP && (cd.aggGroup = pop(it))
+          ver ≥ Client.AGG_GROUP && (cd.aggGroup = pop(it))
 
-          ver >= Client.MARKET_RULES && (cd.marketRuleIds = pop(it))
+          ver ≥ Client.MARKET_RULES && (cd.marketRuleIds = pop(it))
 
           w.bondContractDetails(reqId, cd)
         end,
@@ -717,7 +717,7 @@ const process = Dict{Int,Function}(
 
           n::Int = pop(it)
 
-          dt = if ver >= Client.SERVICE_DATA_TYPE
+          dt = if ver ≥ Client.SERVICE_DATA_TYPE
 
                  fill_df([String,String,String,String,Union{Int,Nothing}], [:exchange, :secType, :listingExch, :serviceDataType, :aggGroup], n, it)
 
@@ -833,9 +833,9 @@ const process = Dict{Int,Function}(
 
           unrealizedPnL = realizedPnL = nothing
 
-          ver >= Client.UNREALIZED_PNL && (unrealizedPnL = slurp(Float64, it))
+          ver ≥ Client.UNREALIZED_PNL && (unrealizedPnL = slurp(Float64, it))
 
-          ver >= Client.REALIZED_PNL && (realizedPnL = slurp(Float64, it))
+          ver ≥ Client.REALIZED_PNL && (realizedPnL = slurp(Float64, it))
 
           w.pnl(reqId, dailyPnL, unrealizedPnL, realizedPnL)
         end,
@@ -849,9 +849,9 @@ const process = Dict{Int,Function}(
 
           unrealizedPnL = realizedPnL = nothing
 
-          ver >= Client.UNREALIZED_PNL && (unrealizedPnL = slurp(Float64, it))
+          ver ≥ Client.UNREALIZED_PNL && (unrealizedPnL = slurp(Float64, it))
 
-          ver >= Client.REALIZED_PNL && (realizedPnL = slurp(Float64, it))
+          ver ≥ Client.REALIZED_PNL && (realizedPnL = slurp(Float64, it))
 
           value::Float64 = pop(it)
 
@@ -974,7 +974,7 @@ const process = Dict{Int,Function}(
                      :faPercentage,
                      :faProfile), it)
 
-          ver >= Client.MODELS_SUPPORT && (o.modelCode = pop(it))
+          ver ≥ Client.MODELS_SUPPORT && (o.modelCode = pop(it))
 
           slurp!(o, (:goodTillDate,
                      :rule80A,
@@ -1023,7 +1023,7 @@ const process = Dict{Int,Function}(
                      :scaleSubsLevelSize,
                      :scalePriceIncrement), it)
 
-          o.scalePriceIncrement !== nothing &&
+          !isnothing(o.scalePriceIncrement) &&
           o.scalePriceIncrement > 0.0       && slurp!(o, 73:79, it) # scalePriceAdjustValue through scaleRandomPercent
 
           o.hedgeType = pop(it)
@@ -1050,7 +1050,7 @@ const process = Dict{Int,Function}(
           o.randomizeSize,
           o.randomizePrice = it
 
-          if ver >= Client.PEGGED_TO_BENCHMARK
+          if ver ≥ Client.PEGGED_TO_BENCHMARK
 
             o.orderType == "PEG BENCH" && slurp!(o, (:referenceContractId,
                                                      :isPeggedChangeAmountDecrease,
@@ -1075,11 +1075,11 @@ const process = Dict{Int,Function}(
           slurp!(o, (:trailStopPrice,
                      :lmtPriceOffset), it)
 
-          ver >= Client.CASH_QTY && (o.cashQty = pop(it))
+          ver ≥ Client.CASH_QTY && (o.cashQty = pop(it))
 
-          ver >= Client.AUTO_PRICE_FOR_HEDGE && (o.dontUseAutoPriceForHedge = pop(it))
+          ver ≥ Client.AUTO_PRICE_FOR_HEDGE && (o.dontUseAutoPriceForHedge = pop(it))
 
-          ver >= Client.ORDER_CONTAINER && (o.isOmsContainer = pop(it))
+          ver ≥ Client.ORDER_CONTAINER && (o.isOmsContainer = pop(it))
 
           slurp!(o, 122:129, it)    # :autoCancelDate through :parentPermId
 

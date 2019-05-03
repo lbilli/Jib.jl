@@ -34,7 +34,7 @@
 
   @test Jib.Reader.Decoder.slurp((Int, Float64, String), it) == [1, 0., "action"]
 
-  @test Jib.Reader.Decoder.slurp(Int, it) === nothing
+  @test isnothing(Jib.Reader.Decoder.slurp(Int, it))
 
   it = Iterators.Stateful(v)
   @test Jib.Reader.Decoder.slurp(Jib.ComboLeg, it) == Jib.ComboLeg(conId=1, action="action")
