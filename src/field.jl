@@ -1,9 +1,8 @@
 """
+    Field()
+
 Wrap inbound fields and define conversions to
-
-String, Int, Float64, Bool and Enums
-
-
+`String`, `Int`, `Float64`, `Bool` and `Enums`.
 """
 struct Field{T<:AbstractString}
   value::T

@@ -22,8 +22,9 @@ import ...ComboLeg,
 
 
 """
-  Some utility functions
+    slurp(::Type{T}, it)
 
+Utility functions to read from an iterator `it` and convert to predefined types `T`.
 """
 slurp(::Type{T}, it) where {T<:Union{Bool,Int,Enum{Int32},Float64,String}} = convert(T, pop(it))
 
@@ -35,10 +36,11 @@ slurp!(x::T, idx, it) where {T} = setfield!.(Ref(x), idx, slurp(fieldtype.(T, id
 
 
 """
-  Convert a String[] into a NamedTuple() like this:
+    tagvalue2nt(x)
 
-  ["tag1", "value1", "tag2", "value2", ...] -> (tag1="value1", tag2="value2", ...)
+Convert a `String[]` into a `NamedTuple()` like this:
 
+    ["tag1", "value1", "tag2", "value2", ...] -> (tag1="value1", tag2="value2", ...)
 """
 function tagvalue2nt(x)
 
@@ -65,21 +67,20 @@ end
 
 function fill_df(eltypes, names, n, it)
 
-  dt = DataFrame(eltypes, names, n)
+  df = DataFrame(eltypes, names, n)
 
-  nr, nc = size(dt)
-
-  for r ∈ 1:nr, c ∈ 1:nc
-    dt[r, c] = pop(it)
+  for r ∈ 1:nrow(df), c ∈ 1:ncol(df)
+    df[r, c] = pop(it)
   end
 
-  dt
+  df
 end
 
 
 """
-  Collection of parsers indexed by message ID
+    process::Dict{Int,Function}
 
+Collection of parsers indexed by message ID
 """
 const process = Dict{Int,Function}(
 
@@ -392,7 +393,7 @@ const process = Dict{Int,Function}(
 
           n::Int = pop(it)
 
-          dt = if ver < Client.SYNT_REALTIME_BARS
+          df = if ver < Client.SYNT_REALTIME_BARS
 
                 tmp = fill_df([String,Float64,Float64,Float64,Float64,Int,Float64,String,Int],
                               [:time, :open, :high, :low, :close, :volume, :wap, :hasGaps, :count],
@@ -409,7 +410,7 @@ const process = Dict{Int,Function}(
                         n, it)
               end
 
-          w.historicalData(reqId, dt)
+          w.historicalData(reqId, df)
         end,
 
   # BOND_CONTRACT_DATA
@@ -717,7 +718,7 @@ const process = Dict{Int,Function}(
 
           n::Int = pop(it)
 
-          dt = if ver ≥ Client.SERVICE_DATA_TYPE
+          df = if ver ≥ Client.SERVICE_DATA_TYPE
 
                  fill_df([String,String,String,String,Union{Int,Nothing}], [:exchange, :secType, :listingExch, :serviceDataType, :aggGroup], n, it)
 
@@ -732,7 +733,7 @@ const process = Dict{Int,Function}(
                  tmp
                 end
 
-          w.mktDepthExchanges(dt)
+          w.mktDepthExchanges(df)
         end,
 
   # TICK_REQ_PARAMS
@@ -744,9 +745,9 @@ const process = Dict{Int,Function}(
           reqId::Int,
           n::Int = it
 
-          dt = fill_df([Int,String,String], [:bit, :exchange, :exchangeLetter], n, it)
+          df = fill_df([Int,String,String], [:bit, :exchange, :exchangeLetter], n, it)
 
-          w.smartComponents(reqId, dt)
+          w.smartComponents(reqId, df)
         end,
 
   # NEWS_ARTICLE
@@ -766,9 +767,9 @@ const process = Dict{Int,Function}(
 
           n::Int = pop(it)
 
-          dt = fill_df([String,String], [:providerCode, :providerName], n, it)
+          df = fill_df([String,String], [:providerCode, :providerName], n, it)
 
-          w.newsProviders(dt)
+          w.newsProviders(df)
         end,
 
   # HISTORICAL_NEWS
@@ -786,9 +787,9 @@ const process = Dict{Int,Function}(
           reqId::Int,
           n::Int = it
 
-          dt = fill_df([Float64,Int], [:price, :size], n, it)
+          df = fill_df([Float64,Int], [:price, :size], n, it)
 
-          w.histogramData(reqId, dt)
+          w.histogramData(reqId, df)
         end,
 
   # HISTORICAL_DATA_UPDATE
@@ -820,9 +821,9 @@ const process = Dict{Int,Function}(
           marketRuleId::Int,
           n::Int = it
 
-          dt = fill_df([Float64,Float64], [:lowEdge, :increment], n, it)
+          df = fill_df([Float64,Float64], [:lowEdge, :increment], n, it)
 
-          w.marketRule(marketRuleId, dt)
+          w.marketRule(marketRuleId, df)
         end,
 
   # PNL
@@ -865,15 +866,15 @@ const process = Dict{Int,Function}(
           reqId::Int,
           n::Int = it
 
-          dt = fill_df([Int,Int,Float64,Int], [:time, :ignore, :price, :size], n, it)
+          df = fill_df([Int,Int,Float64,Int], [:time, :ignore, :price, :size], n, it)
 
-          deletecols!(dt, :ignore)
+          deletecols!(df, :ignore)
 
-          # TODO: Convert dt[:time] to [Zoned]DateTime
+          # TODO: Convert df[:time] to [Zoned]DateTime
 
           done::Bool = pop(it)
 
-          w.historicalTicks(reqId, dt, done)
+          w.historicalTicks(reqId, df, done)
         end,
 
   # HISTORICAL_TICKS_BID_ASK
@@ -882,14 +883,14 @@ const process = Dict{Int,Function}(
           reqId::Int,
           n::Int = it
 
-          dt = fill_df([Int,Int,Float64,Float64,Int,Int], [:time, :mask, :priceBid, :priceAsk, :sizeBid, :sizeAsk], n, it)
+          df = fill_df([Int,Int,Float64,Float64,Int,Int], [:time, :mask, :priceBid, :priceAsk, :sizeBid, :sizeAsk], n, it)
 
-          # TODO: Convert dt[:time] to [Zoned]DateTime
-          # TODO: Unmask dt[:mask]
+          # TODO: Convert df[:time] to [Zoned]DateTime
+          # TODO: Unmask df[:mask]
 
           done::Bool = pop(it)
 
-          w.historicalTicksBidAsk(reqId, dt, done)
+          w.historicalTicksBidAsk(reqId, df, done)
         end,
 
   # HISTORICAL_TICKS_LAST
@@ -898,14 +899,14 @@ const process = Dict{Int,Function}(
           reqId::Int,
           n::Int = it
 
-          dt = fill_df([Int,Int,Float64,Int,String,String], [:time, :mask, :price, :size, :exchange, :specialConditions], n, it)
+          df = fill_df([Int,Int,Float64,Int,String,String], [:time, :mask, :price, :size, :exchange, :specialConditions], n, it)
 
-          # TODO: Convert dt[:time] to [Zoned]DateTime
-          # TODO: Unmask dt[:mask]
+          # TODO: Convert df[:time] to [Zoned]DateTime
+          # TODO: Unmask df[:mask]
 
           done::Bool = pop(it)
 
-          w.historicalTicksLast(reqId, dt, done)
+          w.historicalTicksLast(reqId, df, done)
         end,
 
   # TICK_BY_TICK

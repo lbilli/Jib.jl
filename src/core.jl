@@ -4,11 +4,10 @@ const API_SIGN = "API\0"
 const HEADTYPE = UInt32    # sizeof(HEADTYPE) == 4 bytes
 const MAX_LEN =  0xffffff
 
-using Sockets
 
 isascii(m) = all(x -> x < 0x80, m) # ASCII
 
-function write_one(socket::TCPSocket, buf::IOBuffer, api_sign::Bool=false)
+function write_one(socket, buf, api_sign=false)
 
   msg = take!(buf)
 
@@ -22,7 +21,7 @@ function write_one(socket::TCPSocket, buf::IOBuffer, api_sign::Bool=false)
 end
 
 
-function read_one(socket::TCPSocket)
+function read_one(socket)
 
   len = ntoh(read(socket, HEADTYPE))
 

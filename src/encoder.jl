@@ -15,6 +15,7 @@ struct Enc
 end
 Enc() = Enc(IOBuffer(sizehint=64))
 
+
 """
     (e::Enc)(::T)
 

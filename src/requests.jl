@@ -13,7 +13,7 @@ import ..Contract,
 include("encoder.jl");   using .Encoder: Enc, splat
 
 
-# Send messasge to the wire
+# Send messasge
 function sendmsg(ib::Connection, e::Enc)
 
   @assert isopen(ib.socket)
@@ -78,8 +78,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
   o(id,
     splat(contract, [1:12; 14; 15]),
     splat(order, [4:9; 12; 83; 36; 37; 14:22]))  # "action" -> "tif"
-                                                    # "ocaGroup" "account" "openClose" "origin"
-                                                    # "orderRef" -> "hidden"
+                                                 # "ocaGroup" "account" "openClose" "origin"
+                                                 # "orderRef" -> "hidden"
 
   if contract.secType == "BAG"
 
@@ -258,7 +258,7 @@ function reqExecutions(ib::Connection, reqId::Int, filter::ExecutionFilter)
 end
 
 reqIds(ib::Connection) = req_simple(ib, 8, 1, 1) ### REQ_IDS
-                                         #  ^ Hardcoded numIds=1. It's deprecated and unused
+                                           #  ^ Hardcoded numIds=1. It's deprecated and unused
 
 function reqContractDetails(ib::Connection, reqId::Int, contract::Contract)
 

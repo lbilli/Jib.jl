@@ -210,6 +210,11 @@ function simple_wrap()
 
     currentTime= (time::Int) -> println("CurrentTime: $time"),
 
+    fundamentalData= function(reqId::Int, data::String)
+                       d[:fundamental] = data
+                       println("FundamentalData: $reqId")
+                     end,
+
     tickSnapshotEnd= (reqId::Int) -> println("TickSnapshotEnd: $reqId"),
 
     marketDataType= (reqId::Int, marketDataType::MarketDataType) -> println("MarketDataType: $reqId $marketDataType"),
@@ -287,7 +292,7 @@ function simple_wrap()
                    end,
 
     newsArticle= function(requestId::Int, articleType::Int, articleText::String)
-                   d[:article] = articleText
+                   d[:newsarticle] = articleText
                    println("NewsArticle: $requestId $articleType")
                  end,
 

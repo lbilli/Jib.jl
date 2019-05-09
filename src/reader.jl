@@ -1,7 +1,5 @@
 module Reader
 
-using Sockets
-
 using ..Client: Connection, Core.read_one
 
 import ..Wrapper
@@ -9,7 +7,7 @@ import ..Wrapper
 include("decoder.jl")
 
 
-function read_msg(socket::TCPSocket)
+function read_msg(socket)
 
   msg = read_one(socket)
 
@@ -44,7 +42,7 @@ Return number of messages processed.
 function check_all(ib::Connection, w::Wrapper, flush::Bool=false)
 
   count = 0
-  while bytesavailable(ib.socket) > 0 || ib.socket.status == Sockets.StatusOpen # =3
+  while bytesavailable(ib.socket) > 0 || ib.socket.status == Base.StatusOpen # =3
 
     msg = read_msg(ib.socket)
 

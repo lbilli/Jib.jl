@@ -18,7 +18,7 @@ function decode(msg, w, ver)
   # The first field is the message ID
   id::Int = pop(it)
 
-  # The second field (version) is unused for id < 75 and != 3, 5, 11, 17
+  # The second field (version) is ignored for id < 75 and != 3, 5, 11, 17
   if id  < 75 && id ∉ [3, 5, 11, 17]             ||
      id ==  3 && ver < Client.MARKET_CAP_PRICE   ||
      id ==  5 && ver < Client.ORDER_CONTAINER    ||

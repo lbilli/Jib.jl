@@ -1,11 +1,16 @@
 module Client
 
-using Sockets
+using Sockets:   TCPSocket
 using TimeZones
 
 include("core.jl")
 include("versions.jl")
 
+"""
+    Connection()
+
+Hold a connection to IB TWS or IBGateway.
+"""
 struct Connection
   socket::TCPSocket
   id::Int
