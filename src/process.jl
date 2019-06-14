@@ -26,13 +26,13 @@ import ...ComboLeg,
 
 Utility functions to read from an iterator `it` and convert to predefined types `T`.
 """
-slurp(::Type{T}, it) where {T<:Union{Bool,Int,Enum{Int32},Float64,String}} = convert(T, pop(it))
+slurp(::Type{T}, it) where T<:Union{Bool,Int,Enum{Int32},Float64,String} = convert(T, pop(it))
 
-slurp(::Type{T}, it) where {T} = T(take(it, fieldcount(T))...)
+slurp(::Type{T}, it) where T = T(take(it, fieldcount(T))...)
 
 slurp(t, it) = convert.(t, take(it, length(t)))
 
-slurp!(x::T, idx, it) where {T} = setfield!.(Ref(x), idx, slurp(fieldtype.(T, idx), it))
+slurp!(x::T, idx, it) where T = setfield!.(Ref(x), idx, slurp(fieldtype.(T, idx), it))
 
 
 """
@@ -55,7 +55,7 @@ function tagvalue2nt(x)
 end
 
 
-function unmask(T::Type{NamedTuple{M,NTuple{N,Bool}}}, mask::Int) where {M} where {N}
+function unmask(T::Type{NamedTuple{M,NTuple{N,Bool}}}, mask::Int) where {M,N}
 
   a = digits(Bool, mask, base=2, pad=N)
 

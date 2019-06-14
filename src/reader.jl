@@ -11,9 +11,10 @@ function read_msg(socket)
 
   msg = read_one(socket)
 
-  @assert length(msg) > 1 && msg[1] != msg[end] == 0x00
+  # Assert and chop last null char
+  @assert length(msg) > 1 && msg[1] != pop!(msg) == 0x00
 
-  split(String(msg[1:end-1]), '\0')
+  split(String(msg), '\0')
 end
 
 
@@ -27,7 +28,6 @@ function check_msg(ib::Connection, w::Wrapper)
   msg = read_msg(ib.socket)
 
   Decoder.decode(msg, w, ib.version)
-
 end
 
 
@@ -62,7 +62,7 @@ Start a new [`Task`](@ref) to process messages asynchronously.
 """
 function start_reader(ib::Connection, w::Wrapper)
 
-  @async begin
+  @async  begin
             try
               while true
                 check_msg(ib, w)

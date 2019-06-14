@@ -36,4 +36,4 @@ function Base.convert(::Type{Bool}, x::Field)
 end
 
 # Enum
-Base.convert(::Type{T}, x::Field) where {T<:Enum{Int32}} = T(convert(Int, x))
+Base.convert(::Type{T}, x::Field) where T<:Enum{Int32} = T(convert(Int, x))

@@ -21,7 +21,7 @@ Enc() = Enc(IOBuffer(sizehint=64))
 
 Define various encodings for known types
 """
-(e::Enc)(::T) where {T} = error("Unknown Type: $T")
+(e::Enc)(::T) where T = error("Unknown Type: $T")
 
 (e::Enc)(x::Union{AbstractString,Int,Float64,Symbol}) = print(e.buf, x, '\0')
 
@@ -35,18 +35,18 @@ Define various encodings for known types
 # NamedTuples
 function (e::Enc)(x::NamedTuple)
 
-  for p ∈ pairs(x)
-    p.second isa Union{AbstractString,Int,Float64} ||
-      @warn "Unsupported Type in NamedTuple" K=p.first V=p.second T=typeof(p.second)
+  for (n, v) ∈ pairs(x)
+    v isa Union{AbstractString,Int,Float64} ||
+      @warn "Unsupported Type in NamedTuple" N=n V=v T=typeof(v)
 
-    print(e.buf, p.first, '=', p.second, ';')
+    print(e.buf, n, '=', v, ';')
   end
 
   print(e.buf, '\0')
 end
 
 # Condition Types
-(e::Enc)(x::AbstractCondition{E}) where {E} = e(E, splat(x))
+(e::Enc)(x::AbstractCondition{E}) where E = e(E, splat(x))
 
 # Generators, as returned by splat()
 (e::Enc)(x::Base.Generator) = foreach(e, x)

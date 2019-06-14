@@ -9,7 +9,7 @@ include("process.jl")
 include("ticktype.jl")
 
 # Make a shortcut
-pop = popfirst!
+const pop = popfirst!
 
 function decode(msg, w, ver)
 

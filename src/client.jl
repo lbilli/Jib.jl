@@ -1,6 +1,6 @@
 module Client
 
-using Sockets:   TCPSocket
+using Sockets: TCPSocket
 using TimeZones
 
 include("core.jl")
@@ -24,6 +24,6 @@ Connection(socket, id, connectOptions, version, time) = Connection(socket,
                                                                    connectOptions,
                                                                    version,
                                                                    time,
-                                                                   TimeZones.timezone(time))
+                                                                   timezone(time))
 
 end

@@ -16,15 +16,13 @@ include("encoder.jl");   using .Encoder: Enc, splat
 # Send messasge
 function sendmsg(ib::Connection, e::Enc)
 
-  @assert isopen(ib.socket)
-
   Client.Core.write_one(ib.socket, e.buf, false)
 
-  return nothing
+  nothing
 end
 
 # Handle requests that don't require special processing
-function req_simple(ib::Connection, args...)
+function req_simple(ib, args...)
 
   o = Enc()
 
@@ -96,8 +94,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
     # Order.smartComboRoutingParams
     o(length(order.smartComboRoutingParams))
 
-    for s ∈ pairs(order.smartComboRoutingParams)
-      o(s...)
+    for (n, v) ∈ pairs(order.smartComboRoutingParams)
+      o(n, v)
     end
   end
 
@@ -172,8 +170,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
     o(length(order.algoParams))
 
-    for p ∈ pairs(order.algoParams)
-      o(p...)
+    for (n, v) ∈ pairs(order.algoParams)
+      o(n, v)
     end
   end
 
