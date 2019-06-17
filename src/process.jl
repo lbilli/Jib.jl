@@ -48,10 +48,7 @@ function tagvalue2nt(x)
 
   s = collect(String, x)
 
-  t = Tuple(Symbol.(s[1:2:end]))
-  v = Tuple(s[2:2:end])
-
-  NamedTuple{t}(v)
+  (; (Symbol(t) => v for (t, v) ∈ Iterators.partition(s, 2))...,)
 end
 
 
@@ -337,6 +334,8 @@ const process = Dict{Int,Function}(
           ver ≥ Client.MARKET_RULES && (cd.marketRuleIds = pop(it))
 
           ver ≥ Client.REAL_EXPIRATION_DATE && (cd.realExpirationDate = pop(it))
+
+          ver ≥ Client.STOCK_TYPE && (cd.stockType = pop(it))
 
           w.contractDetails(reqId, cd)
         end,

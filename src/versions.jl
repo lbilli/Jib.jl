@@ -49,5 +49,6 @@
   MKT_DEPTH_PRIM_EXCHANGE  = 149
   COMPLETED_ORDERS         = 150
   PRICE_MGMT_ALGO          = 151
+  STOCK_TYPE               = 152
 
 end
