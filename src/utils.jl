@@ -30,6 +30,9 @@ function infer_tz(tz)
 
     elseif tz ∈ ["BST", "British Summer Time", "Greenwich Mean Time"]
       tz"Europe/London"
+    
+    elseif tz ∈  ["PZT", "Pacific Standard Time]
+      tz"America/Los_Angeles"
 
     else
       error("Unknown TZ: $tz")
