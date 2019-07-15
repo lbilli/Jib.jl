@@ -35,7 +35,7 @@ function infer_tz(tz)
       tz"America/Los_Angeles"
 
     else
-      error("Unknown Time Zone: $tz")
+      error("Unknown TZ: $tz")
     end
 end
 
