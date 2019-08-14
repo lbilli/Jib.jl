@@ -113,8 +113,7 @@ the desired methods, as shown in the [example](#usage) above.
 A more comprehensive example is provided by [`simple_wrap()`](src/wrapper.jl),
 which is used like this:
 ```julia
-using Jib
-using Jib: Contract, reqContractDetails, simple_wrap, start_reader
+using Jib: Jib, Contract, reqContractDetails, simple_wrap, start_reader
 
 data, wrap = simple_wrap();
 
@@ -165,8 +164,11 @@ types and default values matching the IB API counterparts.
 Examples are `Contract`, `Order`, `ComboLeg`, `ExecutionFilter`, `ScannerSubscription`
 and `Condition*`.
 
-`TagValue` are implemented as Julia `NamedTuple`:
+`TagValueList` are implemented as Julia `NamedTuple`.
+Wherever a TagValue is needed, something like this can be used:
 ```julia
-# Wherever a TagValue is needed, something like this can be used:
-(tag1="value1", tag2="value2")
+tagvaluelist = (tag1="value1", tag2="value2")
+# or, in case of an empty list:
+emptylist = NamedTuple()
 ```
+Values don't need to be of type `String`; `Int` and `Float64` are also allowed.

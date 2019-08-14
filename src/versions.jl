@@ -50,5 +50,6 @@
   COMPLETED_ORDERS         = 150
   PRICE_MGMT_ALGO          = 151
   STOCK_TYPE               = 152
+  ENCODE_MSG_ASCII7        = 153
 
 end

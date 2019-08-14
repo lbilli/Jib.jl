@@ -399,7 +399,7 @@ const process = Dict{Int,Function}(
                               n, it)
 
                 # Drop "hasGaps"
-                deletecols!(tmp, :hasGaps)
+                select!(tmp, Not(:hasGaps))
 
                 tmp
               else
@@ -727,7 +727,7 @@ const process = Dict{Int,Function}(
 
                  tmp.serviceDataType = ifelse.(tmp.isL2, "Deep2", "Deep")
 
-                 deletecols!(tmp, :isL2)
+                 select!(tmp, Not(:isL2))
 
                  tmp
                 end
@@ -867,7 +867,7 @@ const process = Dict{Int,Function}(
 
           df = fill_df([Int,Int,Float64,Int], [:time, :ignore, :price, :size], n, it)
 
-          deletecols!(df, :ignore)
+          select!(df, Not(:ignore))
 
           # TODO: Convert df[:time] to [Zoned]DateTime
 

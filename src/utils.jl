@@ -7,7 +7,7 @@ function from_ibtime(s::AbstractString)
 
   elseif length(s) > 20 && s[9] == ' '
 
-    tz = infer_tz(s[19:end])
+    tz = validatetz(s[19:end])
 
     ZonedDateTime(DateTime(s[1:17], "yyyymmdd HH:MM:SS"), tz)
 
@@ -17,7 +17,7 @@ function from_ibtime(s::AbstractString)
 end
 
 
-function infer_tz(tz)
+function validatetz(tz)
 
    if tz ∈ ["UTC", "GMT"]
      TimeZones.utc_tz
@@ -37,7 +37,7 @@ function infer_tz(tz)
 end
 
 
-function Base.show(io::IO, x::T) where {T<:Union{Contract,ContractDetails,Order,OrderState,ScannerSubscription}}
+function Base.show(io::IO, x::T) where T<:Union{Contract,ContractDetails,Order,OrderState,ScannerSubscription}
 
   for n ∈ fieldnames(T)
     v = getfield(x, n)

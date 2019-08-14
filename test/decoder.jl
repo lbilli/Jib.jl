@@ -7,10 +7,10 @@
   @test_throws ErrorException convert(Bool, v[5])
 
   # Int
-  v = Jib.Reader.Decoder.Field.(["", "1", "2147483647", "a"])
-  @test collect(Union{Int,Nothing}, v[1:3]) == [nothing, 1, nothing]
+  v = Jib.Reader.Decoder.Field.(["", "1", "2147483647", "9223372036854775807", "a"])
+  @test collect(Union{Int,Nothing}, v[1:4]) == [nothing, 1, nothing, nothing]
 
-  @test_throws ArgumentError convert(Int, v[4])
+  @test_throws ArgumentError convert(Int, v[5])
 
   # Float64
   v = Jib.Reader.Decoder.Field.(["", "1", "1.7976931348623157E308", "a"])
