@@ -322,6 +322,30 @@ function simple_wrap()
                          something(realizedPnL, "NA"),   " ",
                          value),
 
+    historicalTicks= function(reqId::Int, ticks::DataFrame, done::Bool)
+                       d[:historyticks] = ticks
+                       println("HistoricalTicks: $reqId $done")
+                     end,
+
+    historicalTicksBidAsk= function(reqId::Int, ticks::DataFrame, done::Bool)
+                             d[:historyticksbidask] = ticks
+                             println("HistoricalTicksBidAsk: $reqId $done")
+                           end,
+
+    historicalTicksLast= function(reqId::Int, ticks::DataFrame, done::Bool)
+                           d[:historytickslast] = ticks
+                           println("HistoricalTicksLast: $reqId $done")
+                         end,
+
+    tickByTickAllLast= (reqId::Int, tickType::Int, time::Int, price::Float64, size::Int, attribs::TickAttribLast, exchange::String, specialConditions::String) ->
+                         println("TickByTickAllLast: $reqId $tickType $time $price $size $attribs $exchange $specialConditions"),
+
+    tickByTickBidAsk= (reqId::Int, time::Int, bidPrice::Float64, askPrice::Float64, bidSize::Int, askSize::Int, attribs::TickAttribBidAsk) ->
+                        println("TickByTickBidAsk: $reqId $time $bidPrice $askPrice $bidSize $askSize $attribs"),
+
+    tickByTickMidPoint= (reqId::Int, time::Int, midPoint::Float64) ->
+                          println("TickByTickMidPoint: $reqId $time $midPoint"),
+
     orderBound= (orderId::Int, apiClientId::Int, apiOrderId::Int) ->
                   println("OrderBound $orderId $apiClientId $apiOrderId"),
 

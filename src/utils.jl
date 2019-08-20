@@ -31,6 +31,18 @@ function validatetz(tz)
     elseif tz ∈ ["BST", "British Summer Time", "Greenwich Mean Time"]
       tz"Europe/London"
 
+    elseif tz == "JST"
+      tz"Asia/Tokyo"
+
+    elseif tz == "HKT"
+      tz"Asia/Hong_Kong"
+
+    elseif tz == "SGT"
+      tz"Asia/Singapore"
+
+    elseif tz == "China Standard Time"
+      tz"Asia/Shanghai"
+
     else
       error("Unknown TZ: $tz")
     end
