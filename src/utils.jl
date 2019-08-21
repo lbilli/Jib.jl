@@ -17,35 +17,47 @@ function from_ibtime(s::AbstractString)
 end
 
 
+"""
+    validatetz(tz)
+
+Try to infer the server time zone setting from the connection
+timestamp string.
+"""
 function validatetz(tz)
 
-   if tz ∈ ["UTC", "GMT"]
-     TimeZones.utc_tz
+  if tz ∈ ["UTC", "GMT"]
+    TimeZones.utc_tz
 
-   elseif tz ∈ ["EST", "EDT", "Eastern Standard Time"]
-     tz"America/New_York"
+  elseif tz ∈ ["EST", "EDT", "Eastern Standard Time"]
+    tz"America/New_York"
 
-    elseif tz ∈ ["CET", "CEST"]
-      tz"Europe/Paris"
+  elseif tz ∈ ["CST", "CDT"]
+    tz"America/Chicago"
 
-    elseif tz ∈ ["BST", "British Summer Time", "Greenwich Mean Time"]
-      tz"Europe/London"
+  elseif tz ∈ ["PST", "PDT"]
+    tz"America/Los_Angeles"
 
-    elseif tz == "JST"
-      tz"Asia/Tokyo"
+  elseif tz ∈ ["CET", "CEST"]
+    tz"Europe/Paris"
 
-    elseif tz == "HKT"
-      tz"Asia/Hong_Kong"
+  elseif tz ∈ ["BST", "British Summer Time", "Greenwich Mean Time"]
+    tz"Europe/London"
 
-    elseif tz == "SGT"
-      tz"Asia/Singapore"
+  elseif tz == "JST"
+    tz"Asia/Tokyo"
 
-    elseif tz == "China Standard Time"
-      tz"Asia/Shanghai"
+  elseif tz == "HKT"
+    tz"Asia/Hong_Kong"
 
-    else
-      error("Unknown TZ: $tz")
-    end
+  elseif tz == "SGT"
+    tz"Asia/Singapore"
+
+  elseif tz == "China Standard Time"
+    tz"Asia/Shanghai"
+
+  else
+    error("Unknown TZ: $tz")
+  end
 end
 
 
