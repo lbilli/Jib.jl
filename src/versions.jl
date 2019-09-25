@@ -51,5 +51,7 @@
   PRICE_MGMT_ALGO          = 151
   STOCK_TYPE               = 152
   ENCODE_MSG_ASCII7        = 153
+  SEND_ALL_FAMILY_CODES    = 154
+  NO_DEFAULT_OPEN_CLOSE    = 155
 
 end

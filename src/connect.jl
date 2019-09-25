@@ -19,8 +19,6 @@ function connect(host, port::Int, clientId::Int, connectOptions::String="", opti
 
   s = Sockets.connect(host, port)
 
-  @assert isopen(s)
-
   # Init string
   m, M = Int(typemin(Version)), Int(typemax(Version))
 
@@ -50,8 +48,6 @@ end
 function connect(port::Int, clientId::Int, connectOptions::String="", optionalCapabilities::String="")
 
   localip = getalladdrinfo("localhost")
-
-  @assert !isempty(localip)
 
   connect(localip[1], port, clientId, connectOptions, optionalCapabilities)
 end

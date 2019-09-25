@@ -5,7 +5,7 @@ const HEADTYPE = UInt32    # sizeof(HEADTYPE) == 4 bytes
 const MAX_LEN =  0xffffff
 
 
-isascii(m) = all(x -> x < 0x80, m) # ASCII
+isascii(m) = all(<(0x80), m) # ASCII
 
 function write_one(socket, buf, api_sign=false)
 
