@@ -89,4 +89,5 @@ const ticktype = ["BID_SIZE",                  #   0
                   "FUTURES_OPEN_INTEREST",     #  86
                   "AVG_OPT_VOLUME",            #  87
                   "DELAYED_LAST_TIMESTAMP",    #  88
-                  "SHORTABLE_SHARES"]          #  89
+                  "SHORTABLE_SHARES",          #  89
+                  "DELAYED_HALTED"]            #  90

@@ -18,12 +18,14 @@ mutable struct Contract
   comboLegs::Vector{ComboLeg}
   deltaNeutralContract::Union{DeltaNeutralContract,Nothing}
 end
-Contract(; conId=     0,
-           symbol=   ns,
-           secType=  ns,
-           exchange= ns,
-           currency= ns) = Contract(conId, symbol, secType, ns, 0.0, ns, ns, exchange, ns,
-                                    currency, ns, ns, false, ns, ns, ns, [], nothing)
+Contract(; conId=        0,
+           symbol=      ns,
+           secType=     ns,
+           exchange=    ns,
+           currency=    ns,
+           localSymbol= ns) = Contract(conId, symbol, secType, ns, 0.0, ns, ns,
+                                       exchange, ns, currency, localSymbol, ns,
+                                       false, ns, ns, ns, [], nothing)
 
 
 mutable struct Order
