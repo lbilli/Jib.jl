@@ -90,4 +90,13 @@ const ticktype = ["BID_SIZE",                  #   0
                   "AVG_OPT_VOLUME",            #  87
                   "DELAYED_LAST_TIMESTAMP",    #  88
                   "SHORTABLE_SHARES",          #  89
-                  "DELAYED_HALTED"]            #  90
+                  "DELAYED_HALTED",            #  90
+                  "REUTERS_2_MUTUAL_FUNDS",    #  91
+                  "ETF_NAV_CLOSE",             #  92
+                  "ETF_NAV_PRIOR_CLOSE",       #  93
+                  "ETF_NAV_BID",               #  94
+                  "ETF_NAV_ASK",               #  95
+                  "ETF_NAV_LAST",              #  96
+                  "ETF_FROZEN_NAV_LAST",       #  97
+                  "ETF_NAV_HIGH",              #  98
+                  "ETF_NAV_LOW"]               #  99
