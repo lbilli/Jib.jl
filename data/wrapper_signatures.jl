@@ -36,7 +36,7 @@ execDetails= function(reqId::Int, contract::Contract, execution::Execution)
 
 execDetailsEnd= function(reqId::Int)
 
-error= function(id::Union{Int,Nothing}, errorCode::Int, errorString::String)
+error= function(id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String)
 
 updateMktDepth= function(id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Int)
 
@@ -134,7 +134,7 @@ rerouteMktDepthReq= function(reqId::Int, conid::Int, exchange::String)
 
 marketRule= function(marketRuleId::Int, priceIncrements::DataFrame)
 
-pnl= function(reqId::Int, dailyPnL::Float64, unrealizedPnL::Union{Float64,Nothing}, realizedPnL::Union{Float64,Nothing})
+pnl= function(reqId::Int, dailyPnL::Float64, unrealizedPnL::Float64, realizedPnL::Float64)
 
 pnlSingle= function(reqId::Int, pos::Int, dailyPnL::Float64, unrealizedPnL::Union{Float64,Nothing}, realizedPnL::Union{Float64,Nothing}, value::Float64)
 

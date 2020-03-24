@@ -70,8 +70,11 @@ function start_reader(ib::Connection, w::Wrapper)
 
             catch e
 
-              e isa EOFError && @warn "Connection Terminated"
-              println(e)
+              if e isa EOFError
+                @warn "Connection Terminated"
+              else
+                @error "Exception thrown" E=e
+              end
             end
 
             @info "Reader Exiting"

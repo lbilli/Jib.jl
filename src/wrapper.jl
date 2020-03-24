@@ -164,8 +164,11 @@ function simple_wrap()
 
     execDetailsEnd= (reqId::Int) -> println("ExecDetailsEnd: $reqId"),
 
-    error= (id::Union{Int,Nothing}, errorCode::Int, errorString::String) ->
-                     println("Error: $(something(id, "NA")) $errorCode $errorString"),
+    error= (id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String) ->
+                     println("Error: ",
+                             something(id, "NA"), " ",
+                             something(errorCode, "NA"), " ",
+                             errorString),
 
     updateMktDepth= (id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Int) ->
                       println("MktDepth: $id $position $operation $side $price $size"),
@@ -176,9 +179,10 @@ function simple_wrap()
     updateNewsBulletin= function(msgId::Int, msgType::Int, newsMessage::String, originExch::String)
                           d[:newsbulletin] = newsMessage
                           println("NewsBulletin: $msgId $msgType $originExch")
+                          println(newsMessage)
                         end,
 
-    managedAccounts= (accountsList::String) ->d[:accounts] = accountsList,
+    managedAccounts= (accountsList::String) -> d[:accounts] = accountsList,
 
     receiveFA= function(pFaDataType::faDataType, cxml::String)
                  d[:fa] = cxml
@@ -274,7 +278,7 @@ function simple_wrap()
                       end,
 
     tickNews= (tickerId::Int, timeStamp::Int, providerCode::String, articleId::String, headline::String, extraData::String) ->
-                println("TickNews: $tickerId $timeStamp $providerCode $articleId $headline"),
+                println("TickNews: $tickerId $timeStamp $providerCode $articleId $headline $extraData"),
 
     smartComponents= function(reqId::Int, theMap::DataFrame)
                        d[:smartcomponents] = theMap
@@ -311,10 +315,8 @@ function simple_wrap()
                   println("MarketRule: $marketRuleId")
                 end,
 
-    pnl= (reqId::Int, dailyPnL::Float64, unrealizedPnL::Union{Float64,Nothing}, realizedPnL::Union{Float64,Nothing}) ->
-           println("PnL: $reqId $dailyPnL ",
-                   something(unrealizedPnL, "NA"), " ",
-                   something(realizedPnL, "NA")),
+    pnl= (reqId::Int, dailyPnL::Float64, unrealizedPnL::Float64, realizedPnL::Float64) ->
+           println("PnL: $reqId $dailyPnL $unrealizedPnL $realizedPnL"),
 
     pnlSingle= (reqId::Int, pos::Int, dailyPnL::Float64, unrealizedPnL::Union{Float64,Nothing}, realizedPnL::Union{Float64,Nothing}, value::Float64) ->
                  println("PnLSingle: $reqId $pos $dailyPnL ",
@@ -347,7 +349,7 @@ function simple_wrap()
                           println("TickByTickMidPoint: $reqId $time $midPoint"),
 
     orderBound= (orderId::Int, apiClientId::Int, apiOrderId::Int) ->
-                  println("OrderBound $orderId $apiClientId $apiOrderId"),
+                  println("OrderBound: $orderId $apiClientId $apiOrderId"),
 
     completedOrder= function(contract::Contract, order::Order, orderState::OrderState)
                       d[:completed_contract] = contract

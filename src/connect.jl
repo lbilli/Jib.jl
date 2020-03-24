@@ -23,7 +23,7 @@ function connect(host, port::Int, clientId::Int, connectOptions::String="", opti
   m, M = Int(typemin(Version)), Int(typemax(Version))
 
   buf = IOBuffer()
-  print(buf, m==M ? "v$m" : "v$m..$M")
+  print(buf, m == M ? "v$m" : "v$m..$M")
   isempty(connectOptions) || print(buf, " ", connectOptions)
 
   # Handshake

@@ -19,11 +19,8 @@ function decode(msg, w, ver)
   id::Int = pop(it)
 
   # The second field (version) is ignored for id < 75 and != 3, 5, 11, 17
-  if id  < 75 && id ∉ [3, 5, 11, 17]             ||
-     id ==  3 && ver < Client.MARKET_CAP_PRICE   ||
-     id ==  5 && ver < Client.ORDER_CONTAINER    ||
-     id == 11 && ver < Client.LAST_LIQUIDITY     ||
-     id == 17 && ver < Client.SYNT_REALTIME_BARS
+  if id  < 75 && id ∉ [3, 5, 11, 17]           ||
+     id ==  5 && ver < Client.ORDER_CONTAINER
 
     pop(it)
   end

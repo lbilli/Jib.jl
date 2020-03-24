@@ -6,9 +6,8 @@
 [Interactive Brokers](https://www.interactivebrokers.com/) API to communicate with their
 TWS or IBGateway.
 
-It aims to be feature complete, though it does not support legacy versions:
-_i.e._ only API versions `v100` and above are currently supported.
-This limit may become even stricter in the future.
+It aims to be feature complete, however it does not intend to support legacy versions.
+Currently, only API versions ~`v100`~ `v142+` are supported.
 
 The package design follows the official C++/Java
 [IB API](http://interactivebrokers.github.io/tws-api/),
@@ -139,7 +138,7 @@ Callbacks are generally invoked with arguments and types matching the signatures
 as described in the official documentation.
 However, there are few notable exceptions:
 - `tickPrice()` has an extra `size::Int` argument,
-  which is meaningful only when `TickType = {BID, ASK, LAST}`.
+  which is meaningful only when `TickType ∈ {BID, ASK, LAST}`.
   In these cases, the official IB API fires an extra `tickSize()` event instead.
 - `historicalData()` is invoked only once per request,
   presenting all the historical data as a single `DataFrame`,

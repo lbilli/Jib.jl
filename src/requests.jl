@@ -54,11 +54,10 @@ function reqMktData(ib::Connection, tickerId::Int, contract::Contract, genericTi
   isnothing(contract.deltaNeutralContract) ? o(false) :
                                              o(true, splat(contract.deltaNeutralContract))
 
-  o(genericTicks, snapshot)
-
-  ib.version ≥ Client.REQ_SMART_COMPONENTS && o(regulatorySnaphsot)
-
-  o(mktDataOptions)
+  o(genericTicks,
+    snapshot,
+    regulatorySnaphsot,
+    mktDataOptions)
 
   sendmsg(ib, o)
 end
@@ -106,11 +105,9 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :faGroup,
                   :faMethod,
                   :faPercentage,
-                  :faProfile)))
-
-  ib.version ≥ Client.MODELS_SUPPORT && o(order.modelCode)
-
-  o(splat(order, (:shortSaleSlot,
+                  :faProfile,
+                  :modelCode,
+                  :shortSaleSlot,
                   :designatedLocation,
                   :exemptCode,
                   :ocaType,
@@ -182,52 +179,45 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :randomizeSize,
                   :randomizePrice)))
 
-  if ib.version ≥ Client.PEGGED_TO_BENCHMARK
-
-    if order.orderType == "PEG BENCH"
-      o(splat(order, (:referenceContractId,
-                      :isPeggedChangeAmountDecrease,
-                      :peggedChangeAmount,
-                      :referenceChangeAmount,
-                      :referenceExchangeId)))
-    end
-
-    # Conditions
-    o(length(order.conditions))
-
-    if !isempty(order.conditions)
-
-      for c ∈ order.conditions
-        o(c)
-      end
-
-      o(order.conditionsIgnoreRth,
-        order.conditionsCancelOrder)
-    end
-
-    o(splat(order, (:adjustedOrderType,
-                    :triggerPrice,
-                    :lmtPriceOffset,
-                    :adjustedStopPrice,
-                    :adjustedStopLimitPrice,
-                    :adjustedTrailingAmount,
-                    :adjustableTrailingUnit)))
+  if order.orderType == "PEG BENCH"
+    o(splat(order, (:referenceContractId,
+                    :isPeggedChangeAmountDecrease,
+                    :peggedChangeAmount,
+                    :referenceChangeAmount,
+                    :referenceExchangeId)))
   end
 
-  ib.version ≥ Client.EXT_OPERATOR && o(order.extOperator)
+  # Conditions
+  o(length(order.conditions))
 
-  ib.version ≥ Client.SOFT_DOLLAR_TIER && o(order.softDollarTier.name,
-                                            order.softDollarTier.val)
+  if !isempty(order.conditions)
 
-  ib.version ≥ Client.CASH_QTY && o(order.cashQty)
+    for c ∈ order.conditions
+      o(c)
+    end
 
-  ib.version ≥ Client.DECISION_MAKER && o(order.mifid2DecisionMaker,
-                                          order.mifid2DecisionAlgo)
+    o(order.conditionsIgnoreRth,
+      order.conditionsCancelOrder)
+  end
 
-  ib.version ≥ Client.MIFID_EXECUTION && o(order.mifid2ExecutionTrader,
-                                           order.mifid2ExecutionAlgo)
+  o(splat(order, (:adjustedOrderType,
+                  :triggerPrice,
+                  :lmtPriceOffset,
+                  :adjustedStopPrice,
+                  :adjustedStopLimitPrice,
+                  :adjustedTrailingAmount,
+                  :adjustableTrailingUnit,
+                  :extOperator)))
 
-  ib.version ≥ Client.AUTO_PRICE_FOR_HEDGE && o(order.dontUseAutoPriceForHedge)
+  o(order.softDollarTier.name,
+    order.softDollarTier.val)
+
+  o(splat(order, (:cashQty,
+                  :mifid2DecisionMaker,
+                  :mifid2DecisionAlgo,
+                  :mifid2ExecutionTrader,
+                  :mifid2ExecutionAlgo,
+                  :dontUseAutoPriceForHedge)))
 
   ib.version ≥ Client.ORDER_CONTAINER && o(order.isOmsContainer)
 
@@ -335,11 +325,8 @@ function reqHistoricalData(ib::Connection, tickerId::Int, contract::Contract, en
 
   o = Enc()
 
-  o(20)      ### REQ_HISTORICAL_DATA
-
-  ib.version < Client.SYNT_REALTIME_BARS && o(6)
-
-  o(tickerId,
+  o(20,   ### REQ_HISTORICAL_DATA
+    tickerId,
     splat(contract, 1:13),
     endDateTime,
     barSizeSetting,
@@ -357,9 +344,8 @@ function reqHistoricalData(ib::Connection, tickerId::Int, contract::Contract, en
     end
   end
 
-  ib.version ≥ Client.SYNT_REALTIME_BARS && o(keepUpToDate)
-
-  o(chartOptions)
+  o(keepUpToDate,
+    chartOptions)
 
   sendmsg(ib, o)
 end
@@ -526,9 +512,8 @@ function reqNewsArticle(ib::Connection, requestId::Int, providerCode::String, ar
   o(84,    ### REQ_NEWS_ARTICLE
     requestId,
     providerCode,
-    articleId)
-
-  ib.version ≥ Client.NEWS_QUERY_ORIGINS && o(newsArticleOptions)
+    articleId,
+    newsArticleOptions)
 
   sendmsg(ib, o)
 end
@@ -545,9 +530,8 @@ function reqHistoricalNews(ib::Connection, requestId::Int, conId::Int, providerC
     providerCodes,
     startDateTime,
     endDateTime,
-    totalResults)
-
-  ib.version ≥ Client.NEWS_QUERY_ORIGINS && o(historicalNewsOptions)
+    totalResults,
+    historicalNewsOptions)
 
   sendmsg(ib, o)
 end
@@ -618,9 +602,9 @@ function reqTickByTickData(ib::Connection, reqId::Int, contract::Contract, tickT
   o(97,      ### REQ_TICK_BY_TICK_DATA
     reqId,
     splat(contract, 1:12),
-    tickType)
-
-  ib.version ≥ Client.TICK_BY_TICK_IGNORE_SIZE && o(numberOfTicks, ignoreSize)
+    tickType,
+    numberOfTicks,
+    ignoreSize)
 
   sendmsg(ib, o)
 end

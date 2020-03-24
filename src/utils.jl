@@ -2,7 +2,7 @@ using TimeZones
 
 function from_ibtime(s::AbstractString)
 
-  if length(s)==17 && s[9] == '-'
+  if length(s) == 17 && s[9] == '-'
     ZonedDateTime(DateTime(s, "yyyymmdd-HH:MM:SS"), TimeZones.utc_tz)
 
   elseif length(s) > 20 && s[9] == ' '
