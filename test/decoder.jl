@@ -46,7 +46,7 @@
 
   # unmask()
   @test Jib.Reader.Decoder.unmask(NamedTuple{(:a, :b),NTuple{2,Bool}}, 2) == (a=false, b=true)
-  @test_logs (:warn, "unmask(): wrong attribs") Jib.Reader.Decoder.unmask(NamedTuple{(:a, :b),NTuple{2,Bool}}, 4)
+  @test_logs (:error, "unmask(): wrong attribs") Jib.Reader.Decoder.unmask(NamedTuple{(:a, :b),NTuple{2,Bool}}, 4)
 
   # tagvalue2nt()
   v =  Jib.Reader.Decoder.Field.(["a", "1", "b", "2"])

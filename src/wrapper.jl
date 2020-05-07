@@ -115,16 +115,16 @@ function simple_wrap()
                   println("String: $tickerId $tickType $value"),
 
     orderStatus= function(orderId::Int, status::String, filled::Float64, remaining::Float64, avgFillPrice::Float64, permId::Int, parentId::Int, lastFillPrice::Float64, clientId::Int, whyHeld::String, mktCapPrice::Union{Float64,Nothing})
-                   d[:orderstatus] = (orderId=orderId,
-                                      status=status,
-                                      filled=filled,
-                                      remaining=remaining,
-                                      avgFillPrice=avgFillPrice,
-                                      permId=permId,
-                                      lastFillPrice=lastFillPrice,
-                                      clientId=clientId,
-                                      whyHeld=whyHeld,
-                                      mktCapPrice=mktCapPrice)
+                   d[:orderstatus] = (orderId=       orderId,
+                                      status=        status,
+                                      filled=        filled,
+                                      remaining=     remaining,
+                                      avgFillPrice=  avgFillPrice,
+                                      permId=        permId,
+                                      lastFillPrice= lastFillPrice,
+                                      clientId=      clientId,
+                                      whyHeld=       whyHeld,
+                                      mktCapPrice=   mktCapPrice)
                    println("OrderStatus: $orderId $status")
                  end,
 
@@ -200,12 +200,12 @@ function simple_wrap()
                        end,
 
     scannerData= function(reqId::Int, rank::Vector{Int}, contractDetails::Vector{ContractDetails}, distance::Vector{String}, benchmark::Vector{String}, projection::Vector{String}, legsStr::Vector{String})
-                   d[:scannerdata] = (rank=rank,
-                                      cd=contractDetails,
-                                      distance=distance,
-                                      benchmark=benchmark,
-                                      projection=projection,
-                                      legsStr=legsStr)
+                   d[:scannerdata] = (rank=       rank,
+                                      cd=         contractDetails,
+                                      distance=   distance,
+                                      benchmark=  benchmark,
+                                      projection= projection,
+                                      legsStr=    legsStr)
                    println("ScannerData: $reqId")
                  end,
 
@@ -251,7 +251,8 @@ function simple_wrap()
     accountUpdateMultiEnd= (reqId::Int) -> println("AccountUpdateMultiEnd: $reqId"),
 
     securityDefinitionOptionalParameter= function(reqId::Int, exchange::String, underlyingConId::Int, tradingClass::String, multiplier::String, expirations::Vector{String}, strikes::Vector{Float64})
-                                           d[:sdop] = (e=expirations, s=strikes)
+                                           d[:sdop] = (e= expirations,
+                                                       s= strikes)
                                            println("SDOP: $reqId $exchange $underlyingConId $tradingClass $multiplier $(length(expirations)) $(length(strikes))")
                                          end,
 

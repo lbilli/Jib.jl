@@ -1,6 +1,6 @@
 using TimeZones
 
-function from_ibtime(s::AbstractString)
+function from_ibtime(s)
 
   if length(s) == 17 && s[9] == '-'
     ZonedDateTime(DateTime(s, "yyyymmdd-HH:MM:SS"), TimeZones.utc_tz)
@@ -66,6 +66,6 @@ function Base.show(io::IO, x::T) where T<:Union{Contract,ContractDetails,Order,O
   for n ∈ fieldnames(T)
     v = getfield(x, n)
 
-    println("$n= ", something(v, "NA"))
+    println(n, "= ", something(v, "NA"))
   end
 end

@@ -3,7 +3,7 @@ module Encoder
 import ...AbstractCondition
 
 # Splat fields
-splat(x, idx=1:fieldcount(typeof(x))) = (getfield(x, i) for i ∈ idx)
+splat(x, idx=fieldnames(typeof(x))) = (getfield(x, i) for i ∈ idx)
 
 """
     Enc()

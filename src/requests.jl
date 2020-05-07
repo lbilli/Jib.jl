@@ -14,7 +14,7 @@ include("encoder.jl");   using .Encoder: Enc, splat
 
 
 # Send messasge
-function sendmsg(ib::Connection, e::Enc)
+function sendmsg(ib, e)
 
   Client.Core.write_one(ib.socket, e.buf, false)
 

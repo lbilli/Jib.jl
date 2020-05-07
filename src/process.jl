@@ -52,11 +52,11 @@ function tagvalue2nt(x)
 end
 
 
-function unmask(T::Type{NamedTuple{M,NTuple{N,Bool}}}, mask::Int) where {M,N}
+function unmask(T::Type{NamedTuple{M,NTuple{N,Bool}}}, mask) where {M,N}
 
   a = digits(Bool, mask, base=2, pad=N)
 
-  length(a) == N || @warn "unmask(): wrong attribs" T=T mask=mask
+  length(a) == N || @error "unmask(): wrong attribs" T=T mask=mask
 
   T(a)
 end
@@ -79,7 +79,7 @@ end
 
 Collection of parsers indexed by message ID
 """
-const process = Dict{Int,Function}(
+const process = Dict{Int,Function}(    # TODO Use a Tuple instead
 
   # TICK_PRICE
    1 => function(it, w, ver)

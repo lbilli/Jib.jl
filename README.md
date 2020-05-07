@@ -6,7 +6,7 @@
 [Interactive Brokers](https://www.interactivebrokers.com/) API to communicate with their
 TWS or IBGateway.
 
-It aims to be feature complete, however it does not intend to support legacy versions.
+It aims to be feature complete, however it does not legacy versions.
 Currently, only API versions ~`v100`~ `v142+` are supported.
 
 The package design follows the official C++/Java
@@ -21,13 +21,13 @@ To install from GitHub:
 ```
 
 ### Usage
-The user interacts mainly with these two object types:
+The user interacts mainly with these two objects:
 - `Connection`: created after establishing a connection with the server and
   holding a reference to it.
-- `Wrapper`: containing the methods that are executed when the server responses are processed.
+- `Wrapper`: containing the callbacks that are invoked when the server responses are processed.
 
 Other data structures, such as `Contract` and `Order`, are implemented as Julia `struct`
-that mirror the respective classes in the official IB API.
+and mirror the respective classes in the official IB API.
 
 A complete minimal working example is shown.
 For this code to work, an instance of the IB TWS or IBGateway needs to be running
@@ -37,7 +37,7 @@ on the local machine, listening on port `4002`.
 using Jib
 
 wrap = Jib.Wrapper(
-         # Customized methods
+         # Customized methods go here
          error= (id, errorCode, errorString) -> println("Error: $(something(id, "NA")) $errorCode $errorString"),
 
          nextValidId= (orderId) -> println("Next OrderId: $orderId"),
@@ -92,22 +92,22 @@ or types described here need to be prefixed by `Jib.*`.
 
 As Julia is not an object-oriented language, the functionality of the IB
 `EClient` class is provided here by regular functions. In particular:
-- `connect(port, clientId, connectOptions)`: establish a connection. Return
+- `connect(port, clientId, connectOptions)`: establish a connection and return
   a `Connection` object.
-- `disconnect(::Connection)`: close the connection.
+- `disconnect(::Connection)`: terminate the connection.
 - `check_all(::Connection, ::Wrapper)`: process available responses, **not blocking**.
   Return the number of messages processed. **Needs to be called regularly**.
 - `start_reader(::Connection, ::Wrapper)`: start a `Task` for background processing.
-- all other methods that send specific requests to the server.
-  Refer to the official IB `EClient` class documentation for details and method signatures.
-  The only caveat is to remeber to pass a `Connection` as first argument: _e.g._
+- methods that send specific requests to the server.
+  Refer to the official IB `EClient` class documentation for further details and method signatures.
+  The only caveat is to remember to pass a `Connection` as first argument: _e.g._
   `reqContractDetails(ib::Connection, reqId:Int, contract::Contract)`
 
 ##### [`Wrapper`](src/wrapper.jl)
 Like the official IB `EWrapper` class, this `struct` holds the callbacks that are dispatched when
 responses are processed.
 By default it is filled with dummy functions. The user should override in the constructor
-the desired methods, as shown in the [example](#usage) above.
+the desired methods, as shown [above](#usage).
 
 A more comprehensive example is provided by [`simple_wrap()`](src/wrapper.jl),
 which is used like this:
@@ -121,12 +121,12 @@ start_reader(ib, wrap);
 
 reqContractDetails(ib, 99, Contract(conId=208813720, exchange="SMART"))
 
-# Wait for response and then access the "ContractDetails" result:
+# Wait for the response and then access the "ContractDetails" result:
 data[:cd]
 ```
 Thanks to closures, `data` (a `Dict` in this case) is accessible by all
-`wrap` methods as well as the main program. This way it is possible to easily
-propagate the incoming data to different parts of the program.
+`wrap` methods as well as the main program. This is one way to
+propagate incoming data to different parts of the program.
 
 For more details about callback definitions and signatures,
 refer to the official IB `EWrapper` class documentation.
@@ -136,7 +136,7 @@ are found [here](data/wrapper_signatures.jl).
 #### Notes
 Callbacks are generally invoked with arguments and types matching the signatures
 as described in the official documentation.
-However, there are few notable exceptions:
+However, there are few exceptions:
 - `tickPrice()` has an extra `size::Int` argument,
   which is meaningful only when `TickType ∈ {BID, ASK, LAST}`.
   In these cases, the official IB API fires an extra `tickSize()` event instead.
@@ -149,18 +149,18 @@ However, there are few notable exceptions:
 These modifications make it possible to establish the rule:
 _one callback per server response_.
 
-As a corollary, `historicalDataEnd()` and `scannerDataEnd()` are redundant and
-thus are **not** used in this package.
+Consequently, `historicalDataEnd()` and `scannerDataEnd()` are redundant and
+are **not** used in this package.
 
-`DataFrame` structures are also used as arguments in several other callbacks,
-such as: `mktDepthExchanges()`, `smartComponents()`, `newsProviders()`, `histogramData()`,
+`DataFrame` are passed to several other callbacks, such as:
+`mktDepthExchanges()`, `smartComponents()`, `newsProviders()`, `histogramData()`,
 `marketRule()` and the `historicalTicks*()` family.
 
 ##### Data Structures
 Other classes that mainly hold data are also defined.
 They are implemented as Julia `struct` or `mutable struct` with names,
-types and default values matching the IB API counterparts.
-Examples are `Contract`, `Order`, `ComboLeg`, `ExecutionFilter`, `ScannerSubscription`
+types and default values matching the IB API counterparts: _e.g._
+`Contract`, `Order`, `ComboLeg`, `ExecutionFilter`, `ScannerSubscription`
 and `Condition*`.
 
 `TagValueList` are implemented as Julia `NamedTuple`.
@@ -170,4 +170,4 @@ tagvaluelist = (tag1="value1", tag2="value2")
 # or, in case of an empty list:
 emptylist = NamedTuple()
 ```
-Values don't need to be of type `String`; `Int` and `Float64` are also allowed.
+Values don't need to be of type `String`. `Int` and `Float64` are also allowed.

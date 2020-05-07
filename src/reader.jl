@@ -23,7 +23,7 @@ end
 
 Process one message and dispatch the appropriate callback. **Blocking**.
 """
-function check_msg(ib::Connection, w::Wrapper)
+function check_msg(ib, w)
 
   msg = read_msg(ib.socket)
 
@@ -39,7 +39,7 @@ If `flush=true`, messages are read but callbacks are not dispatched.
 
 Return number of messages processed.
 """
-function check_all(ib::Connection, w::Wrapper, flush::Bool=false)
+function check_all(ib, w, flush=false)
 
   count = 0
   while bytesavailable(ib.socket) > 0 || ib.socket.status == Base.StatusOpen # =3
@@ -60,7 +60,7 @@ end
 
 Start a new [`Task`](@ref) to process messages asynchronously.
 """
-function start_reader(ib::Connection, w::Wrapper)
+function start_reader(ib, w)
 
   @async  begin
             try

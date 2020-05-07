@@ -15,7 +15,7 @@ Connect to host `host` on port `port` and set client ID `clientId`.
 
 Return a [`Connection`](@ref) instance.
 """
-function connect(host, port::Int, clientId::Int, connectOptions::String="", optionalCapabilities::String="")
+function connect(host, port, clientId, connectOptions::String="", optionalCapabilities::String="")
 
   s = Sockets.connect(host, port)
 
@@ -45,7 +45,7 @@ function connect(host, port::Int, clientId::Int, connectOptions::String="", opti
   ib
 end
 
-function connect(port::Int, clientId::Int, connectOptions::String="", optionalCapabilities::String="")
+function connect(port, clientId, connectOptions::String="", optionalCapabilities::String="")
 
   localip = getalladdrinfo("localhost")
 
@@ -58,6 +58,6 @@ end
 
 Close the socket connection.
 """
-disconnect(ib::Connection) = close(ib.socket)
+disconnect(ib) = close(ib.socket)
 
 end
