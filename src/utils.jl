@@ -1,5 +1,3 @@
-using TimeZones
-
 function from_ibtime(s)
 
   if length(s) == 17 && s[9] == '-'

@@ -2,9 +2,9 @@ using Test,
       DataFrames,
       Jib
 
-include("core.jl")
-include("encoder.jl")
+include("client.jl")
 include("decoder.jl")
+include("requests.jl")
 include("roundtrip.jl")
 
 

@@ -6,9 +6,9 @@
   cv = Jib.ConditionVolume("o", true, 1, 2, "ex")
 
 
-  o = Jib.Requests.Encoder.Enc()
+  o = Jib.Requests.Encoder(IOBuffer())
 
-  o(i, f, s, b, Jib.Requests.Encoder.splat(cl)..., cv)
+  o(i, f, s, b, Jib.Requests.splat(cl)..., cv)
 
   m = split(String(take!(o.buf)), '\0')
 

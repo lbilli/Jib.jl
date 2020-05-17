@@ -1,39 +1,31 @@
-module Encoder
-
-import ...AbstractCondition
-
-# Splat fields
-splat(x, idx=fieldnames(typeof(x))) = (getfield(x, i) for i ∈ idx)
-
 """
-    Enc()
+    Encoder()
 
-Wrap an `IOBuffer` to hold the outbound message
+Wrap a buffer holding the outbound message
 """
-struct Enc
+struct Encoder
   buf::IOBuffer
 end
-Enc() = Enc(IOBuffer(sizehint=64))
 
 
 """
-    (e::Enc)(::T)
+    (e::Encoder)(::T)
 
 Define various encodings for known types
 """
-(e::Enc)(::T) where T = error("Unknown Type: $T")
+(e::Encoder)(::T) where T = error("Unknown Type: $T")
 
-(e::Enc)(x::Union{AbstractString,Int,Float64,Symbol}) = print(e.buf, x, '\0')
+(e::Encoder)(x::Union{AbstractString,Int,Float64,Symbol}) = print(e.buf, x, '\0')
 
-(e::Enc)(::Nothing) = e("")
+(e::Encoder)(::Nothing) = e("")
 
-(e::Enc)(x::Bool) = e(x ? "1" : "0")
+(e::Encoder)(x::Bool) = e(x ? "1" : "0")
 
 # Enums
-(e::Enc)(x::Enum{Int32}) = e(Int(x))
+(e::Encoder)(x::Enum{Int32}) = e(Int(x))
 
 # NamedTuples
-function (e::Enc)(x::NamedTuple)
+function (e::Encoder)(x::NamedTuple)
 
   for (n, v) ∈ pairs(x)
     v isa Union{AbstractString,Int,Float64} ||
@@ -46,15 +38,14 @@ function (e::Enc)(x::NamedTuple)
 end
 
 # Condition Types
-(e::Enc)(x::AbstractCondition{E}) where E = e(E, splat(x))
+(e::Encoder)(x::AbstractCondition{E}) where E = e(E, splat(x))
 
 # Generators, as returned by splat()
-(e::Enc)(x::Base.Generator) = foreach(e, x)
+(e::Encoder)(x::Base.Generator) = foreach(e, x)
 
 # Multiple arguments
-function (e::Enc)(x, y...)
+function (e::Encoder)(x, y...)
   e(x)
   foreach(e, y)
 end
 
-end

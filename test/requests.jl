@@ -1,6 +1,6 @@
-@testset "Encoder" begin
+@testset "Requests" begin
 
-  o = Jib.Requests.Encoder.Enc()
+  o = Jib.Requests.Encoder(IOBuffer())
 
   o(nothing, true, 1, 1.1, Jib.PRICE, :a, "test", (a=1, b="2"))
 
@@ -23,8 +23,8 @@
 
   # splat
   c = Jib.ComboLeg(conId=1, action="action")
-  o(Jib.Requests.Encoder.splat(c, [1,3]),
-    Jib.Requests.Encoder.splat(c))
+  o(Jib.Requests.splat(c, [1,3]),
+    Jib.Requests.splat(c))
 
   m = split(String(take!(o.buf)), '\0')
   @test m == ["1", "action", "1", "0", "action", "", "0", "0", "", "-1", ""]

@@ -1,8 +1,6 @@
 module Reader
 
-using ..Client: Connection, Core.read_one
-
-import ..Wrapper
+using ..Client: read_one
 
 include("decoder.jl")
 
