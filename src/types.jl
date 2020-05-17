@@ -26,7 +26,7 @@ end
 struct ExecutionFilter
   clientId::Int
   acctCode::String
-  time::String                 # "yyyymmdd hh:mm:ss ttz" format
+  time::String
   symbol::String
   secType::String
   exchange::String

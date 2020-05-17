@@ -4,7 +4,7 @@ struct CommissionReport
   currency::String
   realizedPNL::Union{Float64,Nothing}
   yield::Union{Float64,Nothing}
-  yieldRedemptionDate::Union{Int,Nothing}     # yyyymmdd format TODO: -> String or Date
+  yieldRedemptionDate::Union{Int,Nothing}
 end
 
 

@@ -24,7 +24,7 @@ import ...ComboLeg,
 """
     slurp(::Type{T}, it)
 
-Utility functions to read from an iterator `it` and convert to predefined types `T`.
+Utility functions to read from an iterator `it` and convert to types `T`.
 """
 slurp(::Type{T}, it) where T<:Union{Bool,Int,Enum{Int32},Float64,String} = convert(T, pop(it))
 
@@ -79,7 +79,7 @@ end
 
 Collection of parsers indexed by message ID
 """
-const process = Dict{Int,Function}(    # TODO Use a Tuple instead
+const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
   # TICK_PRICE
    1 => function(it, w, ver)
@@ -162,7 +162,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead
                      :parentId,
                      :triggerMethod), it)
 
-          slurp!(o, 54:57, it)    # :volatility" through :deltaNeutralAuxPrice"
+          slurp!(o, 54:57, it)    # :volatility through :deltaNeutralAuxPrice
 
           !isempty(o.deltaNeutralOrderType) && slurp!(o, 58:65, it)  # :deltaNeutralConId through :deltaNeutralDesignatedLocation
 
@@ -929,7 +929,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead
                      :ocaType,
                      :triggerMethod), it)
 
-          slurp!(o, 54:57, it)    # :volatility" through :deltaNeutralAuxPrice"
+          slurp!(o, 54:57, it)    # :volatility through :deltaNeutralAuxPrice
 
           !isempty(o.deltaNeutralOrderType) && slurp!(o, [58; 63:65], it)  # :deltaNeutralConId through :deltaNeutralDesignatedLocation
 

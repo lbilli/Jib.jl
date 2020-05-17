@@ -43,7 +43,6 @@ function decode(msg, w, ver)
 
     isempty(it) || @error "Decoder: messsage not fully parsed" ID=id
   end
-
 end
 
 end

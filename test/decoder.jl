@@ -44,7 +44,7 @@
   Jib.Reader.Decoder.slurp!(c, (:conId, :secType, :symbol), it)
   @test c.symbol == Jib.Contract(symbol="action").symbol == "action"
 
-  # unmask()
+  # unmask
   @test Jib.Reader.Decoder.unmask(NamedTuple{(:a, :b),NTuple{2,Bool}}, 2) == (a=false, b=true)
   @test_logs (:error, "unmask(): wrong attribs") Jib.Reader.Decoder.unmask(NamedTuple{(:a, :b),NTuple{2,Bool}}, 4)
 
@@ -53,7 +53,7 @@
   it = Iterators.Stateful(v)
   @test Jib.Reader.Decoder.tagvalue2nt(Iterators.take(it, 4)) == (a="1", b="2")
 
-  # fill_df()
+  # fill_df
   it = Iterators.Stateful(v)
   @test Jib.Reader.Decoder.fill_df([String, Int], [:a, :b], 2, it) == DataFrame(:a => ["a", "b"], :b => [1,2])
 
