@@ -29,7 +29,7 @@ function validatetz(tz)
   elseif tz ∈ ["EST", "EDT", "Eastern Standard Time"]
     tz"America/New_York"
 
-  elseif tz ∈ ["CST", "CDT"]
+  elseif tz ∈ ["CST", "CDT", "Central Standard Time"]
     tz"America/Chicago"
 
   elseif tz ∈ ["PST", "PDT"]
