@@ -12,7 +12,7 @@ Currently, only API versions ~`v100`~ `v142+` are supported.
 The package design follows the official C++/Java
 [IB API](http://interactivebrokers.github.io/tws-api/),
 which is based on an asynchronous request-response communication model
-over a TCP socket.
+over TCP.
 
 ### Installation
 To install from GitHub:

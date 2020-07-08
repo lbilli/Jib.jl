@@ -459,6 +459,10 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           tickerId::Int,
           ticktype::Int = it
 
+          tickAttrib = if ver ≥ Client.PRICE_BASED_VOLATILITY
+                         slurp(Int, it)
+                       end
+
           v = collect(Union{Float64,Nothing}, take(it, 8))
 
           # (impliedVol, optPrice, pvDividend, undPrice) == -1 means NA
@@ -468,7 +472,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           v[filter(i -> v[i] == -2, [2, 5, 6, 7])] .= nothing
 
 
-          w.tickOptionComputation(tickerId, tickname(ticktype), v...)
+          w.tickOptionComputation(tickerId, tickname(ticktype), tickAttrib, v...)
         end,
 
   # TICK_GENERIC

@@ -2,7 +2,7 @@ tickPrice= function(tickerId::Int, field::String, price::Float64, size::Int, att
 
 tickSize= function(tickerId::Int, field::String, size::Int)
 
-tickOptionComputation= function(tickerId::Int, tickType::String, impliedVol::Union{Float64,Nothing}, delta::Union{Float64,Nothing}, optPrice::Union{Float64,Nothing}, pvDividend::Union{Float64,Nothing}, gamma::Union{Float64,Nothing}, vega::Union{Float64,Nothing}, theta::Union{Float64,Nothing}, undPrice::Union{Float64,Nothing})
+tickOptionComputation= function(tickerId::Int, tickType::String, tickAttrib::Union{Int,Nothing}, impliedVol::Union{Float64,Nothing}, delta::Union{Float64,Nothing}, optPrice::Union{Float64,Nothing}, pvDividend::Union{Float64,Nothing}, gamma::Union{Float64,Nothing}, vega::Union{Float64,Nothing}, theta::Union{Float64,Nothing}, undPrice::Union{Float64,Nothing})
 
 tickGeneric= function(tickerId::Int, tickType::String, value::Float64)
 

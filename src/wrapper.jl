@@ -103,8 +103,8 @@ function simple_wrap()
 
     tickSize= (tickerId::Int, field::String, size::Int) -> println("Size: $tickerId $field $size"),
 
-    tickOptionComputation= function(tickerId::Int, tickType::String, impliedVol::Union{Float64,Nothing}, delta::Union{Float64,Nothing}, optPrice::Union{Float64,Nothing}, pvDividend::Union{Float64,Nothing}, gamma::Union{Float64,Nothing}, vega::Union{Float64,Nothing}, theta::Union{Float64,Nothing}, undPrice::Union{Float64,Nothing})
-                             d[:option] = (tickType, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta, undPrice)
+    tickOptionComputation= function(tickerId::Int, tickType::String, tickAttrib::Union{Int,Nothing}, impliedVol::Union{Float64,Nothing}, delta::Union{Float64,Nothing}, optPrice::Union{Float64,Nothing}, pvDividend::Union{Float64,Nothing}, gamma::Union{Float64,Nothing}, vega::Union{Float64,Nothing}, theta::Union{Float64,Nothing}, undPrice::Union{Float64,Nothing})
+                             d[:option] = (tickType, tickAttrib, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta, undPrice)
                              println("Option: $tickerId $tickType")
                            end,
 
