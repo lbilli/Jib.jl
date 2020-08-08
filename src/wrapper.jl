@@ -311,6 +311,12 @@ function simple_wrap()
     historicalDataUpdate= (reqId::Int, bar::NamedTuple) ->
                             println("HistoricalDataUpdate: $reqId $bar"),
 
+    rerouteMktDataReq= (reqId::Int, conid::Int, exchange::String) ->
+                         println("RerouteMktDataReq: $reqId $conid $exchange"),
+
+    rerouteMktDepthReq= (reqId::Int, conid::Int, exchange::String) ->
+                          println("RerouteMktDepthReq: $reqId $conid $exchange"),
+
     marketRule= function(marketRuleId::Int, priceIncrements::DataFrame)
                   d[:marketrule] = priceIncrements
                   println("MarketRule: $marketRuleId")

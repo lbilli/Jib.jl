@@ -71,7 +71,7 @@ function start_reader(ib, w)
               if e isa EOFError
                 @warn "Connection Terminated"
               else
-                @error "Exception thrown" E=e
+                @error "Exception thrown" e
               end
             end
 

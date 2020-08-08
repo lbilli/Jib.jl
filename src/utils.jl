@@ -41,6 +41,9 @@ function validatetz(tz)
   elseif tz ∈ ["BST", "British Summer Time", "Greenwich Mean Time"]
     tz"Europe/London"
 
+  elseif tz ∈ ["EET", "EEST"]
+    tz"Europe/Riga"
+
   elseif tz == "JST"
     tz"Asia/Tokyo"
 
@@ -59,11 +62,11 @@ function validatetz(tz)
 end
 
 
-function Base.show(io::IO, x::T) where T<:Union{Contract,ContractDetails,Order,OrderState,ScannerSubscription}
+function Base.show(io::IO, ::MIME"text/plain", x::T) where T<:Union{Contract,ContractDetails,Order,OrderState,ScannerSubscription}
 
   for n ∈ fieldnames(T)
     v = getfield(x, n)
 
-    println(n, "= ", something(v, "NA"))
+    println(io, n, "= ", something(v, "NA"))
   end
 end

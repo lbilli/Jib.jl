@@ -56,7 +56,7 @@ function unmask(T::Type{NamedTuple{M,NTuple{N,Bool}}}, mask) where {M,N}
 
   a = digits(Bool, mask, base=2, pad=N)
 
-  length(a) == N || @error "unmask(): wrong attribs" T=T mask=mask
+  length(a) == N || @error "unmask(): wrong attribs" T mask
 
   T(a)
 end
