@@ -168,6 +168,6 @@ Wherever a TagValue is needed, something like this can be used:
 ```julia
 tagvaluelist = (tag1="value1", tag2="value2")
 # or, in case of an empty list:
-emptylist = NamedTuple()
+emptylist = (;)
 ```
 Values don't need to be of type `String`. `Int` and `Float64` are also allowed.

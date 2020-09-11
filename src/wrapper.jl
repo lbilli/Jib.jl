@@ -81,6 +81,7 @@ struct Wrapper
   orderBound::Function
   completedOrder::Function
   completedOrdersEnd::Function
+  replaceFAEnd::Function
 end
 function Wrapper(; kw...)
 
@@ -184,9 +185,9 @@ function simple_wrap()
 
     managedAccounts= (accountsList::String) -> d[:accounts] = accountsList,
 
-    receiveFA= function(pFaDataType::faDataType, cxml::String)
-                 d[:fa] = cxml
-                 println("ReceiveFA: $pFaDataType")
+    receiveFA= function(faDataType::FaDataType, xml::String)
+                 d[:fa] = xml
+                 println("ReceiveFA: $faDataType")
                end,
 
     historicalData= function(reqId::Int, bar::DataFrame)
@@ -366,6 +367,8 @@ function simple_wrap()
               end,
 
     completedOrdersEnd= () -> println("CompletedOrdersEnd."),
+
+    replaceFAEnd= (reqId::Int, text::String) -> println("ReplaceFAEnd: $reqId $text"),
   )
 
   d, w

@@ -29,7 +29,7 @@ function (e::Encoder)(x::NamedTuple)
 
   for (n, v) ∈ pairs(x)
     v isa Union{AbstractString,Int,Float64} ||
-      @warn "Unsupported Type in NamedTuple" N=n V=v T=typeof(v)
+      @warn "Unsupported Type in NamedTuple" n v T=typeof(v)
 
     print(e.buf, n, '=', v, ';')
   end

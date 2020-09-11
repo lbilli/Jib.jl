@@ -46,7 +46,7 @@ updateNewsBulletin= function(msgId::Int, msgType::Int, newsMessage::String, orig
 
 managedAccounts= function(accountsList::String)
 
-receiveFA= function(pFaDataType::faDataType, cxml::String)
+receiveFA= function(faDataType::FaDataType, xml::String)
 
 historicalData= function(reqId::Int, bar::DataFrame)
 
@@ -155,3 +155,5 @@ orderBound= function(orderId::Int, apiClientId::Int, apiOrderId::Int)
 completedOrder= function(contract::Contract, order::Order, orderState::OrderState)
 
 completedOrdersEnd= function()
+
+replaceFAEnd= function(reqId::Int, text::String)

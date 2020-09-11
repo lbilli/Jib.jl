@@ -9,7 +9,7 @@ import ...ComboLeg,
        ...DeltaNeutralContract,
        ...Execution,
        ...FamilyCode,
-       ...faDataType,
+       ...FaDataType,
        ...MarketDataType,
        ...Order,
        ...OrderState,
@@ -353,7 +353,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
   15 => (it, w, ver) -> w.managedAccounts(slurp(String, it)),
 
   # RECEIVE_FA
-  16 => (it, w, ver) -> w.receiveFA(slurp((faDataType,String), it)...),
+  16 => (it, w, ver) -> w.receiveFA(slurp((FaDataType,String), it)...),
 
   # HISTORICAL_DATA
   17 => function(it, w, ver)
@@ -1023,5 +1023,9 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
          end,
 
   # COMPLETED_ORDERS_END
- 102 => (it, w, ver) -> w.completedOrdersEnd()
+ 102 => (it, w, ver) -> w.completedOrdersEnd(),
+
+  # REPLACE_FA_END
+ 103 => (it, w, ver) -> w.replaceFAEnd(slurp((Int,String), it)...)
+
 )

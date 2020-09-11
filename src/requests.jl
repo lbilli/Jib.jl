@@ -6,7 +6,7 @@ import ..AbstractCondition,
        ..Connection,
        ..Contract,
        ..ExecutionFilter,
-       ..faDataType,
+       ..FaDataType,
        ..MarketDataType,
        ..Order,
        ..ScannerSubscription
@@ -41,7 +41,7 @@ end
 #
 # Requests
 #
-function reqMktData(ib::Connection, tickerId::Int, contract::Contract, genericTicks::String, snapshot::Bool, regulatorySnaphsot::Bool=false, mktDataOptions::NamedTuple=NamedTuple())
+function reqMktData(ib::Connection, tickerId::Int, contract::Contract, genericTicks::String, snapshot::Bool, regulatorySnaphsot::Bool=false, mktDataOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -266,7 +266,7 @@ function reqContractDetails(ib::Connection, reqId::Int, contract::Contract)
   sendmsg(ib, o)
 end
 
-function reqMktDepth(ib::Connection, tickerId::Int, contract::Contract, numRows::Int, isSmartDepth::Bool, mktDepthOptions::NamedTuple=NamedTuple())
+function reqMktDepth(ib::Connection, tickerId::Int, contract::Contract, numRows::Int, isSmartDepth::Bool, mktDepthOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -307,28 +307,30 @@ reqAllOpenOrders(ib::Connection) = req_simple(ib, 16, 1) ### REQ_ALL_OPEN_ORDERS
 
 reqManagedAccts(ib::Connection) = req_simple(ib, 17, 1)  ### REQ_MANAGED_ACCTS
 
-function requestFA(ib::Connection, pFaDataType::faDataType)
+function requestFA(ib::Connection, faDataType::FaDataType)
 
   o = enc()
 
   o(18, 1,   ### REQ_FA
-    Int(pFaDataType))
+    Int(faDataType))
 
   sendmsg(ib, o)
 end
 
-function replaceFA(ib::Connection, pFaDataType::faDataType, cxml::String)
+function replaceFA(ib::Connection, reqId::Int, faDataType::FaDataType, xml::String)
 
   o = enc()
 
   o(19, 1,    ### REPLACE_FA
-    Int(pFaDataType),
-    cxml)
+    Int(faDataType),
+    xml)
+
+  ib.version ≥ Client.REPLACE_FA_END && o(reqId)
 
   sendmsg(ib, o)
 end
 
-function reqHistoricalData(ib::Connection, tickerId::Int, contract::Contract, endDateTime::String, durationStr::String, barSizeSetting::String, whatToShow::String, useRTH::Bool, formatDate::Int, keepUpToDate::Bool, chartOptions::NamedTuple=NamedTuple())
+function reqHistoricalData(ib::Connection, tickerId::Int, contract::Contract, endDateTime::String, durationStr::String, barSizeSetting::String, whatToShow::String, useRTH::Bool, formatDate::Int, keepUpToDate::Bool, chartOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -372,7 +374,7 @@ function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exer
   sendmsg(ib, o)
 end
 
-function reqScannerSubscription(ib::Connection, tickerId::Int, subscription::ScannerSubscription, scannerSubscriptionOptions::NamedTuple=NamedTuple(), scannerSubscriptionFilterOptions::NamedTuple=NamedTuple())
+function reqScannerSubscription(ib::Connection, tickerId::Int, subscription::ScannerSubscription, scannerSubscriptionOptions::NamedTuple=(;), scannerSubscriptionFilterOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -398,7 +400,7 @@ cancelHistoricalData(ib::Connection, tickerId::Int) =  req_simple(ib, 25, 1, tic
 
 reqCurrentTime(ib::Connection) = req_simple(ib, 49, 1) ### REQ_CURRENT_TIME
 
-function reqRealTimeBars(ib::Connection, tickerId::Int, contract::Contract, barSize::Int, whatToShow::String, useRTH::Bool, realTimeBarsOptions::NamedTuple=NamedTuple())
+function reqRealTimeBars(ib::Connection, tickerId::Int, contract::Contract, barSize::Int, whatToShow::String, useRTH::Bool, realTimeBarsOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -415,7 +417,7 @@ end
 
 cancelRealTimeBars(ib::Connection, tickerId::Int) = req_simple(ib, 51, 1, tickerId) ### CANCEL_REAL_TIME_BARS
 
-function reqFundamentalData(ib::Connection, reqId::Int, contract::Contract, reportType::String, fundamentalDataOptions::NamedTuple=NamedTuple())
+function reqFundamentalData(ib::Connection, reqId::Int, contract::Contract, reportType::String, fundamentalDataOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -430,7 +432,7 @@ end
 
 cancelFundamentalData(ib::Connection, reqId::Int) = req_simple(ib, 53, 1, reqId) ### CANCEL_FUNDAMENTAL_DATA
 
-function calculateImpliedVolatility(ib::Connection, reqId::Int, contract::Contract, optionPrice::Float64, underPrice::Float64, miscOptions::NamedTuple=NamedTuple())
+function calculateImpliedVolatility(ib::Connection, reqId::Int, contract::Contract, optionPrice::Float64, underPrice::Float64, miscOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -444,7 +446,7 @@ function calculateImpliedVolatility(ib::Connection, reqId::Int, contract::Contra
   sendmsg(ib, o)
 end
 
-function calculateOptionPrice(ib::Connection, reqId::Int, contract::Contract, volatility::Float64, underPrice::Float64, miscOptions::NamedTuple=NamedTuple())
+function calculateOptionPrice(ib::Connection, reqId::Int, contract::Contract, volatility::Float64, underPrice::Float64, miscOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -512,7 +514,7 @@ reqMktDepthExchanges(ib::Connection) = req_simple(ib, 82) ### REQ_MKT_DEPTH_EXCH
 
 reqSmartComponents(ib::Connection, reqId::Int, bboExchange::String) = req_simple(ib, 83, reqId, bboExchange) ### REQ_SMART_COMPONENTS
 
-function reqNewsArticle(ib::Connection, requestId::Int, providerCode::String, articleId::String, newsArticleOptions::NamedTuple=NamedTuple())
+function reqNewsArticle(ib::Connection, requestId::Int, providerCode::String, articleId::String, newsArticleOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -527,7 +529,7 @@ end
 
 reqNewsProviders(ib::Connection) = req_simple(ib, 85) ### REQ_NEWS_PROVIDERS
 
-function reqHistoricalNews(ib::Connection, requestId::Int, conId::Int, providerCodes::String, startDateTime::String, endDateTime::String, totalResults::Int, historicalNewsOptions::NamedTuple=NamedTuple())
+function reqHistoricalNews(ib::Connection, requestId::Int, conId::Int, providerCodes::String, startDateTime::String, endDateTime::String, totalResults::Int, historicalNewsOptions::NamedTuple=(;))
 
   o = enc()
 
@@ -584,7 +586,7 @@ reqPnLSingle(ib::Connection, reqId::Int, account::String, modelCode::String, con
 
 cancelPnLSingle(ib::Connection, reqId::Int) = req_simple(ib, 95, reqId) ### CANCEL_PNL_SINGLE
 
-function reqHistoricalTicks(ib::Connection, reqId::Int, contract::Contract, startDateTime::String, endDateTime::String, numberOfTicks::Int, whatToShow::String, useRTH::Bool, ignoreSize::Bool, miscOptions::NamedTuple=NamedTuple())
+function reqHistoricalTicks(ib::Connection, reqId::Int, contract::Contract, startDateTime::String, endDateTime::String, numberOfTicks::Int, whatToShow::String, useRTH::Bool, ignoreSize::Bool, miscOptions::NamedTuple=(;))
 
   o = enc()
 
