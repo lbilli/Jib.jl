@@ -160,14 +160,14 @@ mutable struct Order
   parentPermId::Union{Int,Nothing}
   usePriceMgmtAlgo::Union{Bool,Nothing}
 end
-Order() = Order(0, 0, 0, ns, 0.0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0,
-                false, false, 0, 0, false, false, ns, ns, ns, false, nothing, nothing,
-                false, nothing, nothing, ns, ns, ns, ns, ns, CUSTOMER, 0, ns, -1, 0.0,
-                true, true, nothing, false, UNSET, fill(nothing, 5)..., false, false,
-                nothing, nothing, ns, nothing, 0, ns, ns, ns, ns, false, 0, ns, false,
-                fill(nothing, 9)..., false, nothing, nothing, false, fill(ns, 8)...,
-                (;), (;), ns, false, false, false, ns, [],
-                (;), 0, 0.0, false, 0, ns, ns, fill(nothing, 4)..., 0, nothing, [],
+Order() = Order(0, 0, 0, ns, 0.0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0, #16
+                false, false, 0, 0, false, false, ns, ns, ns, false, nothing, nothing, #28
+                false, nothing, nothing, ns, ns, ns, ns, ns, CUSTOMER, 0, ns, -1, 0.0, #41
+                true, true, nothing, false, UNSET, fill(nothing, 5)..., false, false, #53
+                nothing, nothing, ns, nothing, 0, ns, ns, ns, ns, false, 0, ns, false, #66
+                fill(nothing, 9)..., false, nothing, nothing, false, fill(ns, 8)..., #87
+				NamedTuple(), NamedTuple(), ns, false, false, false, ns, [],
+				NamedTuple(), 0, 0.0, false, 0, ns, ns, fill(nothing, 4)..., 0, nothing, [],
                 false, false, ns, SoftDollarTier(), nothing, ns, ns, ns, ns, false, false, false,
                 ns, nothing, nothing, false, ns, false, false, nothing, nothing)
 
