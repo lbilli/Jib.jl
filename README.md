@@ -7,10 +7,10 @@
 TWS or IBGateway.
 
 It aims to be feature complete, however it does not legacy versions.
-Currently, only API versions ~`v100`~ `v142+` are supported.
+Currently, only API versions ~`v100`~ ~`v142+`~ `v155+` are supported.
 
 The package design follows the official C++/Java
-[IB API](http://interactivebrokers.github.io/tws-api/),
+[IB API](https://interactivebrokers.github.io/tws-api/),
 which is based on an asynchronous request-response communication model
 over TCP.
 
@@ -109,7 +109,7 @@ responses are processed.
 By default it is filled with dummy functions. The user should override in the constructor
 the desired methods, as shown [above](#usage).
 
-A more comprehensive example is provided by [`simple_wrap()`](src/wrapper.jl),
+A more comprehensive example is provided by [`simple_wrap()`](src/wrapper.jl#L96),
 which is used like this:
 ```julia
 using Jib: Jib, Contract, reqContractDetails, simple_wrap, start_reader

@@ -75,11 +75,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   o = enc()
 
-  o(3) ### PLACE_ORDER
-
-  ib.version < Client.ORDER_CONTAINER && o(45)
-
-  o(id,
+  o(3, ### PLACE_ORDER
+    id,
     splat(contract, [1:12; 14; 15]),
     splat(order, [4:9; 12; 83; 36; 37; 14:22]))  # "action" -> "tif"
                                                  # "ocaGroup" "account" "openClose" "origin"
@@ -149,7 +146,7 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :scalePriceIncrement)))
 
   !isnothing(order.scalePriceIncrement) &&
-  order.scalePriceIncrement > 0.0       && o(splat(order, 73:79))
+  order.scalePriceIncrement > 0         && o(splat(order, 73:79))
 
   o(splat(order, (:scaleTable,
                   :activeStartTime,
@@ -224,13 +221,10 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :mifid2DecisionAlgo,
                   :mifid2ExecutionTrader,
                   :mifid2ExecutionAlgo,
-                  :dontUseAutoPriceForHedge)))
-
-  ib.version ≥ Client.ORDER_CONTAINER && o(order.isOmsContainer)
-
-  ib.version ≥ Client.D_PEG_ORDERS && o(order.discretionaryUpToLimitPrice)
-
-  ib.version ≥ Client.PRICE_MGMT_ALGO && o(order.usePriceMgmtAlgo)
+                  :dontUseAutoPriceForHedge,
+                  :isOmsContainer,
+                  :discretionaryUpToLimitPrice,
+                  :usePriceMgmtAlgo)))
 
   sendmsg(ib, o)
 end
@@ -272,13 +266,10 @@ function reqMktDepth(ib::Connection, tickerId::Int, contract::Contract, numRows:
 
   o(10, 5,      ### REQ_MKT_DEPTH
     tickerId,
-    splat(contract,
-          ib.version ≥ Client.MKT_DEPTH_PRIM_EXCHANGE ? (1:12) : [1:8; 10:12]),
-    numRows)
-
-  ib.version ≥ Client.SMART_DEPTH && o(isSmartDepth)
-
-  o(mktDepthOptions)
+    splat(contract, 1:12),
+    numRows,
+    isSmartDepth,
+    mktDepthOptions)
 
   sendmsg(ib, o)
 end
@@ -288,9 +279,8 @@ function cancelMktDepth(ib::Connection, tickerId::Int, isSmartDepth::Bool)
   o = enc()
 
   o(11, 1,   ### CANCEL_MKT_DEPTH
-    tickerId)
-
-  ib.version ≥ Client.SMART_DEPTH && o(isSmartDepth)
+    tickerId,
+    isSmartDepth)
 
   sendmsg(ib, o)
 end
@@ -378,16 +368,11 @@ function reqScannerSubscription(ib::Connection, tickerId::Int, subscription::Sca
 
   o = enc()
 
-  o(22)    ### REQ_SCANNER_SUBSCRIPTION
-
-  ib.version < Client.SCANNER_GENERIC_OPTS && o(4)
-
-  o(tickerId,
-    splat(subscription))
-
-  ib.version ≥ Client.SCANNER_GENERIC_OPTS && o(scannerSubscriptionFilterOptions)
-
-  o(scannerSubscriptionOptions)
+  o(22,    ### REQ_SCANNER_SUBSCRIPTION
+    tickerId,
+    splat(subscription),
+    scannerSubscriptionFilterOptions,
+    scannerSubscriptionOptions)
 
   sendmsg(ib, o)
 end

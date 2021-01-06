@@ -64,7 +64,7 @@ end
 
 function fill_df(eltypes, names, n, it)
 
-  df = DataFrame(eltypes, names, n)
+  df = DataFrame([Vector{T}(undef, n) for T ∈ eltypes], names; copycols=false)
 
   for r ∈ 1:nrow(df), c ∈ 1:ncol(df)
     df[r, c] = pop(it)
@@ -195,7 +195,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :scalePriceIncrement), it)
 
           !isnothing(o.scalePriceIncrement) &&
-          o.scalePriceIncrement > 0.0       && slurp!(o, 73:79, it) # scalePriceAdjustValue through scaleRandomPercent
+          o.scalePriceIncrement > 0         && slurp!(o, 73:79, it) # scalePriceAdjustValue through scaleRandomPercent
 
           o.hedgeType = pop(it)
 
@@ -254,14 +254,11 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           o.softDollarTier = slurp(SoftDollarTier, it)
 
-          o.cashQty,
-          o.dontUseAutoPriceForHedge = it
-
-          ver ≥ Client.ORDER_CONTAINER && (o.isOmsContainer = pop(it))
-
-          ver ≥ Client.D_PEG_ORDERS && (o.discretionaryUpToLimitPrice = pop(it))
-
-          ver ≥ Client.PRICE_MGMT_ALGO && (o.usePriceMgmtAlgo = pop(it))
+          slurp!(o, (:cashQty,
+                     :dontUseAutoPriceForHedge,
+                     :isOmsContainer,
+                     :discretionaryUpToLimitPrice,
+                     :usePriceMgmtAlgo), it)
 
           w.openOrder(o.orderId, c, o, os)
         end,
@@ -308,13 +305,12 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           n::Int = pop(it)
           n > 0 && (cd.secIdList = tagvalue2nt(take(it, 2n)))
 
-          cd.aggGroup,
-          cd.underSymbol,
-          cd.underSecType,
-          cd.marketRuleIds,
-          cd.realExpirationDate = it
-
-          ver ≥ Client.STOCK_TYPE && (cd.stockType = pop(it))
+          slurp!(cd, (:aggGroup,
+                      :underSymbol,
+                      :underSecType,
+                      :marketRuleIds,
+                      :realExpirationDate,
+                      :stockType), it)
 
           w.contractDetails(reqId, cd)
         end,
@@ -337,14 +333,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
   12 => (it, w, ver) -> w.updateMktDepth(slurp((Int,Int,Int,Int,Float64,Int), it)...),
 
   # MARKET_DEPTH_L2
-  13 => function(it, w, ver)
-
-          args = slurp((Int,Int,String,Int,Int,Float64,Int), it)
-
-          isSmartDepth = ver ≥ Client.SMART_DEPTH ? slurp(Bool, it) : false
-
-          w.updateMktDepthL2(args..., isSmartDepth)
-        end,
+  13 => (it, w, ver) -> w.updateMktDepthL2(slurp((Int,Int,String,Int,Int,Float64,Int,Bool), it)...),
 
   # NEWS_BULLETINS
   14 => (it, w, ver) -> w.updateNewsBulletin(slurp((Int,Int,String,String), it)...),
@@ -859,7 +848,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           mask::Int = 0  # To avoid "multiple type declarations" error
 
-          if ticktype ∈ [1, 2]
+          if ticktype ∈ (1, 2)
 
             price::Float64,
             size::Int,
@@ -964,7 +953,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :scalePriceIncrement), it)
 
           !isnothing(o.scalePriceIncrement) &&
-          o.scalePriceIncrement > 0.0       && slurp!(o, 73:79, it) # scalePriceAdjustValue through scaleRandomPercent
+          o.scalePriceIncrement > 0         && slurp!(o, 73:79, it) # scalePriceAdjustValue through scaleRandomPercent
 
           o.hedgeType = pop(it)
 
@@ -1011,9 +1000,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           slurp!(o, (:trailStopPrice,
                      :lmtPriceOffset,
                      :cashQty,
-                     :dontUseAutoPriceForHedge), it)
-
-          ver ≥ Client.ORDER_CONTAINER && (o.isOmsContainer = pop(it))
+                     :dontUseAutoPriceForHedge,
+                     :isOmsContainer), it)
 
           slurp!(o, 122:129, it)    # :autoCancelDate through :parentPermId
 
