@@ -6,7 +6,7 @@
 [Interactive Brokers](https://www.interactivebrokers.com/) API to communicate with their
 TWS or IBGateway.
 
-It aims to be feature complete, however it does not legacy versions.
+It aims to be feature complete, however it does not support legacy versions.
 Currently, only API versions ~`v100`~ ~`v142+`~ `v155+` are supported.
 
 The package design follows the official C++/Java
