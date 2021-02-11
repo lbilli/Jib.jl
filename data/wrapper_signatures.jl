@@ -10,7 +10,7 @@ tickString= function(tickerId::Int, tickType::String, value::String)
 
 tickEFP= function(tickerId::Int, tickType::String, basisPoints::Float64, formattedBasisPoints::String, totalDividends::Float64, holdDays::Int, futureLastTradeDate::String, dividendImpact::Float64, dividendsToLastTradeDate::Float64)
 
-orderStatus= function(orderId::Int, status::String, filled::Float64, remaining::Float64, avgFillPrice::Float64, permId::Int, parentId::Int, lastFillPrice::Float64, clientId::Int, whyHeld::String, mktCapPrice::Union{Float64,Nothing})
+orderStatus= function(orderId::Int, status::String, filled::Float64, remaining::Float64, avgFillPrice::Float64, permId::Int, parentId::Int, lastFillPrice::Float64, clientId::Int, whyHeld::String, mktCapPrice::Float64)
 
 openOrder= function(orderId::Int, contract::Contract, order::Order, orderstate::OrderState)
 

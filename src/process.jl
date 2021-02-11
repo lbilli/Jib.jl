@@ -455,11 +455,10 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           v = collect(Union{Float64,Nothing}, take(it, 8))
 
           # (impliedVol, optPrice, pvDividend, undPrice) == -1 means NA
-          v[filter(i -> v[i] == -1, [1, 3, 4, 8])] .= nothing
+          replace!(view(v, [1, 3, 4, 8]), -1 => nothing)
 
           # (delta, gamma, vega, theta) == -2 means NA
-          v[filter(i -> v[i] == -2, [2, 5, 6, 7])] .= nothing
-
+          replace!(view(v, [2, 5, 6, 7]), -2 => nothing)
 
           w.tickOptionComputation(tickerId, tickname(ticktype), tickAttrib, v...)
         end,

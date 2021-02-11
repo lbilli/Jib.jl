@@ -115,7 +115,7 @@ function simple_wrap()
     tickString= (tickerId::Int, tickType::String, value::String) ->
                   println("String: $tickerId $tickType $value"),
 
-    orderStatus= function(orderId::Int, status::String, filled::Float64, remaining::Float64, avgFillPrice::Float64, permId::Int, parentId::Int, lastFillPrice::Float64, clientId::Int, whyHeld::String, mktCapPrice::Union{Float64,Nothing})
+    orderStatus= function(orderId::Int, status::String, filled::Float64, remaining::Float64, avgFillPrice::Float64, permId::Int, parentId::Int, lastFillPrice::Float64, clientId::Int, whyHeld::String, mktCapPrice::Float64)
                    d[:orderstatus] = (orderId=       orderId,
                                       status=        status,
                                       filled=        filled,
