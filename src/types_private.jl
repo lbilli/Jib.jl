@@ -57,10 +57,9 @@ mutable struct ContractDetails
   nextOptionPartial::Bool
   notes::String
 end
-ContractDetails() = ContractDetails(Contract(), ns, 0.0, ns, ns, 0, 0, fill(ns, 9)..., 0,
-                                    nothing, nothing, fill(ns, 6)..., (;),
-                                    fill(ns, 5)..., false, false, 0, false, ns, ns, ns, ns,
-                                    false, ns)
+ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)..., 0,
+                                    nothing, nothing, fill(ns, 6)..., (;), fill(ns, 5)...,
+                                    false, false, 0, false, ns, ns, ns, ns, false, ns)
 
 
 struct Execution

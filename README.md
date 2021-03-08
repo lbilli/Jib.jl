@@ -43,6 +43,8 @@ wrap = Jib.Wrapper(
          nextValidId= (orderId) -> println("Next OrderId: $orderId"),
 
          managedAccounts= (accountsList) -> println("Managed Accounts: $accountsList")
+
+         # more method overrides can go here...
        );
 
 # Connect to the server with clientId = 1
