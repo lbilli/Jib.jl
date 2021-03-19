@@ -49,11 +49,11 @@ function connect(host, port, clientId, connectOptions::String="", optionalCapabi
   s = Sockets.connect(host, port)
 
   # Init string
-  m, M = Int(typemin(Client.Version)), Int(typemax(Client.Version))
+  m, M = Client.Version .|> (typemin, typemax) .|> Int
 
   buf = Client.buffer(true)
   print(buf, m == M ? "v$m" : "v$m..$M")
-  isempty(connectOptions) || print(buf, " ", connectOptions)
+  isempty(connectOptions) || print(buf, ' ', connectOptions)
 
   # Handshake
   Client.write_one(s, buf)

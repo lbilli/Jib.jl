@@ -32,7 +32,7 @@ mutable struct ContractDetails
   liquidHours::String
   evRule::String
   evMultiplier::Union{Float64,Nothing}
-  mdSizeMultiplier::Union{Int,Nothing}
+  mdSizeMultiplier::Int
   aggGroup::Union{Int,Nothing}
   underSymbol::String
   underSecType::String
@@ -48,7 +48,7 @@ mutable struct ContractDetails
   couponType::String
   callable::Bool
   putable::Bool
-  coupon::Float64
+  coupon::Union{Float64,Nothing}
   convertible::Bool
   maturity::String
   issueDate::String
@@ -57,9 +57,9 @@ mutable struct ContractDetails
   nextOptionPartial::Bool
   notes::String
 end
-ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)..., 0,
-                                    nothing, nothing, fill(ns, 6)..., (;), fill(ns, 5)...,
-                                    false, false, 0, false, ns, ns, ns, ns, false, ns)
+ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)...,
+                                    nothing, 0, nothing, fill(ns, 6)..., (;), fill(ns, 5)...,
+                                    false, false, nothing, false, ns, ns, ns, ns, false, ns)
 
 
 struct Execution

@@ -155,6 +155,11 @@ function simple_wrap()
                         println("ContractDetails: $reqId ", contractDetails.contract.conId)
                       end,
 
+    bondContractDetails = function(reqId::Int, contractDetails::ContractDetails)
+                        d[:cdbond] = contractDetails
+                        println("BondContractDetails: $reqId ", contractDetails.contract.conId)
+                      end,
+
     contractDetailsEnd= (reqId::Int) -> println("ContractDetailsEnd: $reqId"),
 
     execDetails= function(reqId::Int, contract::Contract, execution::Execution)

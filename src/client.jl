@@ -48,7 +48,7 @@ function buffer(sign)
   mark(buf)
 
   # Leave space for the header
-  write(buf, HEADTYPE(0))
+  write(buf, zero(HEADTYPE))
 
   buf
 end

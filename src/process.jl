@@ -355,8 +355,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           n::Int = pop(it)
 
           df = fill_df([String,Float64,Float64,Float64,Float64,Int,Float64,Int],
-                        [:time, :open, :high, :low, :close, :volume, :wap, :count],
-                        n, it)
+                       [:time, :open, :high, :low, :close, :volume, :wap, :count],
+                       n, it)
 
           w.historicalData(reqId, df)
         end,

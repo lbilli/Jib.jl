@@ -14,23 +14,23 @@ Base.convert(::Type{String}, x::Field) = String(x.value)
 # Int
 function Base.convert(::Type{Int}, x::Field)
 
-  x.value ∈ ["", "2147483647", "9223372036854775807"] ? nothing :   # typemax(Int32) typemax(Int64)
+  x.value ∈ ("", "2147483647", "9223372036854775807") ? nothing :   # typemax(Int32) typemax(Int64)
                                                         parse(Int, x.value)
 end
 
 # Float
 function Base.convert(::Type{Float64}, x::Field)
 
-  x.value ∈ ["", "1.7976931348623157E308"] ? nothing :  # prevfloat(Inf)
+  x.value ∈ ("", "1.7976931348623157E308") ? nothing :  # prevfloat(Inf)
                                              parse(Float64, x.value)
 end
 
 # Bool
 function Base.convert(::Type{Bool}, x::Field)
 
-  res = findfirst(==(x.value), ["1", "true", "0", "false"])
+  res = findfirst(==(x.value), ("1", "true", "0", "false"))
 
-  isnothing(res) && error("Invalid Bool: |$(x.value)|")
+  isnothing(res) && error("Invalid Bool: $(x.value)")
 
   res < 3
 end
