@@ -102,7 +102,7 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
     end
   end
 
-  o(nothing,
+  o(nothing, # Deprecated sharesAllocation
     splat(order, (:discretionaryAmt,
                   :goodAfterTime,
                   :goodTillDate,
@@ -119,11 +119,13 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :settlingFirm,
                   :allOrNone,
                   :minQty,
-                  :percentOffset,
-                  :eTradeOnly,
-                  :firmQuoteOnly,
-                  :nbboPriceCap,
-                  :auctionStrategy,
+                  :percentOffset)),
+
+    false,   # Deprecated eTradeOnly
+    false,   # Deprecated firmQuoteOnly
+    nothing, # Deprecated nbboPriceCap
+
+    splat(order, (:auctionStrategy,
                   :startingPrice,
                   :stockRefPrice,
                   :delta,
@@ -225,6 +227,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :isOmsContainer,
                   :discretionaryUpToLimitPrice,
                   :usePriceMgmtAlgo)))
+
+  ib.version ≥ Client.DURATION && o(order.duration)
 
   sendmsg(ib, o)
 end

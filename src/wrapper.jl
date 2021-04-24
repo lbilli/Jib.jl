@@ -307,6 +307,12 @@ function simple_wrap()
                    println("NewsArticle: $requestId $articleType")
                  end,
 
+    historicalNews= function(requestId::Int, time::String, providerCode::String, articleId::String, headline::String)
+                      println("HistoricalNews: $requestId $time $providerCode $articleId $headline")
+                    end,
+
+    historicalNewsEnd= (requestId::Int, hasMore::Bool) -> println("HistoricalNewsEnd: $requestId $hasMore"),
+
     headTimestamp= (reqId::Int, headTimestamp::String) -> println("HeadTimestamp: $reqId $headTimestamp"),
 
     histogramData= function(reqId::Int, data::DataFrame)

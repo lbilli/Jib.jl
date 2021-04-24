@@ -133,7 +133,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :discretionaryAmt,
                      :goodAfterTime), it)
 
-          pop(it)   # Ignore :sharesAllocation
+          pop(it)    # Deprecated sharesAllocation
 
           slurp!(o, (:faGroup,
                      :faMethod,
@@ -148,23 +148,25 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :designatedLocation,
                      :exemptCode), it)
 
-          slurp!(o, 46:51, it)    # :auctionStrategy through :stockRangeUpper
+          slurp!(o, 43:48, it)    # :auctionStrategy through :stockRangeUpper
 
           slurp!(o, (:displaySize,
                      :blockOrder,
                      :sweepToFill,
                      :allOrNone,
                      :minQty,
-                     :ocaType,
-                     :eTradeOnly,
-                     :firmQuoteOnly,
-                     :nbboPriceCap,
-                     :parentId,
+                     :ocaType), it)
+
+          pop(it)    # Deprecated eTradeOnly
+          pop(it)    # Deprecated firmQuoteOnly
+          pop(it)    # Deprecated nbboPriceCap
+
+          slurp!(o, (:parentId,
                      :triggerMethod), it)
 
-          slurp!(o, 54:57, it)    # :volatility through :deltaNeutralAuxPrice
+          slurp!(o, 51:54, it)    # :volatility through :deltaNeutralAuxPrice
 
-          !isempty(o.deltaNeutralOrderType) && slurp!(o, 58:65, it)  # :deltaNeutralConId through :deltaNeutralDesignatedLocation
+          !isempty(o.deltaNeutralOrderType) && slurp!(o, 55:62, it)  # :deltaNeutralConId through :deltaNeutralDesignatedLocation
 
           slurp!(o, (:continuousUpdate,
                      :referencePriceType,
@@ -195,7 +197,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :scalePriceIncrement), it)
 
           !isnothing(o.scalePriceIncrement) &&
-          o.scalePriceIncrement > 0         && slurp!(o, 73:79, it) # scalePriceAdjustValue through scaleRandomPercent
+          o.scalePriceIncrement > 0         && slurp!(o, 70:76, it) # scalePriceAdjustValue through scaleRandomPercent
 
           o.hedgeType = pop(it)
 
@@ -259,6 +261,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :isOmsContainer,
                      :discretionaryUpToLimitPrice,
                      :usePriceMgmtAlgo), it)
+
+          ver ≥ Client.DURATION && (o.duration = pop(it))
 
           w.openOrder(o.orderId, c, o, os)
         end,
@@ -349,8 +353,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           reqId::Int = pop(it)
 
-          # Ignore startDate, endDate
-          collect(take(it, 2))   # Must materialize
+          pop(it) # Ignore startDate
+          pop(it) # Ignore endDate
 
           n::Int = pop(it)
 
@@ -642,22 +646,20 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          f = function()
+          cd = map(1:n) do _
 
-                c = Contract()
+                  c = Contract()
 
-                slurp!(c, (:conId,
-                           :symbol,
-                           :secType,
-                           :primaryExchange,
-                           :currency), it)
+                  slurp!(c, (:conId,
+                             :symbol,
+                             :secType,
+                             :primaryExchange,
+                             :currency), it)
 
-                nd::Int = pop(it)
+                  nd::Int = pop(it)
 
-                ContractDescription(c, collect(String, take(it, nd)))
-          end
-
-          cd = [f() for _ ∈ 1:n]
+                  ContractDescription(c, collect(String, take(it, nd)))
+                end
 
           w.symbolSamples(reqId, cd)
         end,
@@ -912,7 +914,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :designatedLocation,
                      :exemptCode), it)
 
-          slurp!(o, 47:51, it)    # :startingPrice through :stockRangeUpper
+          slurp!(o, 44:48, it)    # :startingPrice through :stockRangeUpper
 
           slurp!(o, (:displaySize,
                      :sweepToFill,
@@ -921,9 +923,9 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :ocaType,
                      :triggerMethod), it)
 
-          slurp!(o, 54:57, it)    # :volatility through :deltaNeutralAuxPrice
+          slurp!(o, 51:54, it)    # :volatility through :deltaNeutralAuxPrice
 
-          !isempty(o.deltaNeutralOrderType) && slurp!(o, [58; 63:65], it)  # :deltaNeutralConId through :deltaNeutralDesignatedLocation
+          !isempty(o.deltaNeutralOrderType) && slurp!(o, [55; 60:62], it)  # :deltaNeutralConId through :deltaNeutralDesignatedLocation
 
           slurp!(o, (:continuousUpdate,
                      :referencePriceType,
@@ -952,7 +954,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :scalePriceIncrement), it)
 
           !isnothing(o.scalePriceIncrement) &&
-          o.scalePriceIncrement > 0         && slurp!(o, 73:79, it) # scalePriceAdjustValue through scaleRandomPercent
+          o.scalePriceIncrement > 0         && slurp!(o, 70:76, it) # scalePriceAdjustValue through scaleRandomPercent
 
           o.hedgeType = pop(it)
 
@@ -1002,7 +1004,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :dontUseAutoPriceForHedge,
                      :isOmsContainer), it)
 
-          slurp!(o, 122:129, it)    # :autoCancelDate through :parentPermId
+          slurp!(o, 119:126, it)    # :autoCancelDate through :parentPermId
 
           os = OrderState(ostatus, fill(ns, 9)..., fill(nothing, 3)..., ns, ns, take(it, 2)...)
 
