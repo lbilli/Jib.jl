@@ -135,7 +135,7 @@ refer to the official IB `EWrapper` class documentation.
 As reference, the exact signatures used in this package
 are found [here](data/wrapper_signatures.jl).
 
-#### Notes
+### Notes
 Callbacks are generally invoked with arguments and types matching the signatures
 as described in the official documentation.
 However, there are few exceptions:
@@ -157,6 +157,20 @@ are **not** used in this package.
 `DataFrame` are passed to several other callbacks, such as:
 `mktDepthExchanges()`, `smartComponents()`, `newsProviders()`, `histogramData()`,
 `marketRule()` and the `historicalTicks*()` family.
+
+##### Missing Values
+Occasionally there is the need for numerical types to represent
+the lack of a value.
+
+The IB API does not adopt a uniform solution for all situations, but rather
+various sentinel values are used.
+They can be either the plain `0` or the largest representable value
+of a given type such as `2147483647` and `9223372036854775807`
+for 32 and 64 bit integers respectively or `1.7976931348623157E308`
+for 64 bit floating point.
+
+Within this package an effort is made to replace all these values with
+Julia built-in `Nothing`.
 
 ##### Data Structures
 Other classes that mainly hold data are also defined.
