@@ -230,6 +230,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.DURATION && o(order.duration)
 
+  ib.version ≥ Client.POST_TO_ATS && o(order.postToAts)
+
   sendmsg(ib, o)
 end
 

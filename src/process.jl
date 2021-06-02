@@ -264,6 +264,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           ver ≥ Client.DURATION && (o.duration = pop(it))
 
+          ver ≥ Client.POST_TO_ATS && (o.postToAts = pop(it))
+
           w.openOrder(o.orderId, c, o, os)
         end,
 
