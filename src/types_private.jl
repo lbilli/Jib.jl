@@ -80,7 +80,7 @@ struct Execution
   evRule::String
   evMultiplier::Union{Float64,Nothing}
   modelCode::String
-  lastLiquidity::Int
+  lastLiquidity::Union{Int,Nothing}
 end
 
 
