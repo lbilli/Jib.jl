@@ -69,13 +69,13 @@ function start_reader(ib, w)
             catch e
 
               if e isa EOFError
-                @warn "Connection Terminated"
+                @warn "connection terminated"
               else
-                @error "Exception thrown" e
+                @error "exception thrown" e
               end
             end
 
-            @info "Reader Exiting"
+            @info "reader exiting"
           end
 end
 

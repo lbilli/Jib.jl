@@ -62,10 +62,10 @@ function connect(host, port, clientId, connectOptions::String="", optionalCapabi
 
   @assert length(res) == 2
 
-  @info "Connected" V=res[1] T=res[2]
+  @info "connected" V=res[1] T=res[2]
 
   v = parse(Int, res[1])
-  m ≤ v ≤ M || error("Unsupported version.")
+  m ≤ v ≤ M || error("unsupported version")
 
   ib = Connection(s, clientId, connectOptions, Client.Version(v), from_ibtime(res[2]))
 

@@ -82,6 +82,8 @@ struct Wrapper
   completedOrder::Function
   completedOrdersEnd::Function
   replaceFAEnd::Function
+  wshMetaData::Function
+  wshEventData::Function
 end
 function Wrapper(; kw...)
 
@@ -136,7 +138,7 @@ function simple_wrap()
                  println("OpenOrder: $orderId $(orderstate.status)")
               end,
 
-    openOrderEnd= () -> println("OpenOrderEnd."),
+    openOrderEnd= () -> println("OpenOrderEnd"),
 
     updateAccountValue= (key::String, val::String, currency::String, accountName::String) ->
                           println("AccountValue: $key $val $currency $accountName"),
@@ -202,7 +204,7 @@ function simple_wrap()
 
     scannerParameters= function(xml::String)
                         d[:scannerparam] = xml
-                        println("ScannerParameters.")
+                        println("ScannerParameters")
                        end,
 
     scannerData= function(reqId::Int, rank::Vector{Int}, contractDetails::Vector{ContractDetails}, distance::Vector{String}, benchmark::Vector{String}, projection::Vector{String}, legsStr::Vector{String})
@@ -231,13 +233,13 @@ function simple_wrap()
 
     commissionReport= function(commissionReport::CommissionReport)
                         d[:commission] = commissionReport
-                        println("CommissionReport.")
+                        println("CommissionReport")
                       end,
 
     position= (account::String, contract::Contract, position::Float64, avgCost::Float64) ->
                 println("Position: $account $(contract.symbol) $position $avgCost"),
 
-    positionEnd= () -> println("PositionEnd."),
+    positionEnd= () -> println("PositionEnd"),
 
     accountSummary= (reqId::Int, account::String, tag::String, value::String, currency::String) -> println("AccountSummary: $reqId $account $tag $value $currency"),
 
@@ -281,7 +283,7 @@ function simple_wrap()
 
     mktDepthExchanges= function(depthMktDataDescriptions::DataFrame)
                         d[:mktdepthexchanges] = depthMktDataDescriptions
-                        println("MktDepthExchanges.")
+                        println("MktDepthExchanges")
                       end,
 
     tickNews= (tickerId::Int, timeStamp::Int, providerCode::String, articleId::String, headline::String, extraData::String) ->
@@ -299,7 +301,7 @@ function simple_wrap()
 
     newsProviders= function(newsProviders::DataFrame)
                      d[:newsproviders] = newsProviders
-                     println("NewsProviders.")
+                     println("NewsProviders")
                    end,
 
     newsArticle= function(requestId::Int, articleType::Int, articleText::String)
@@ -377,9 +379,13 @@ function simple_wrap()
                  println("CompletedOrder: $(contract.symbol) $(orderState.status)")
               end,
 
-    completedOrdersEnd= () -> println("CompletedOrdersEnd."),
+    completedOrdersEnd= () -> println("CompletedOrdersEnd"),
 
     replaceFAEnd= (reqId::Int, text::String) -> println("ReplaceFAEnd: $reqId $text"),
+
+    wshMetaData= (reqId::Int, dataJson::String) -> println("WshMetaData: $reqId $dataJson"),
+
+    wshEventData= (reqId::Int, dataJson::String) -> println("WshEventData: $reqId $dataJson"),
   )
 
   d, w

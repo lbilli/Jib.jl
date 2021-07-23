@@ -876,7 +876,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
             w.tickByTickMidPoint(reqId, time, slurp(Float64, it))
 
           else
-            @warn "TICK_BY_TICK: Unknown ticktype" T=ticktype
+            @warn "TICK_BY_TICK: unknown ticktype" T=ticktype
           end
         end,
 
@@ -1017,6 +1017,12 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
  102 => (it, w, ver) -> w.completedOrdersEnd(),
 
   # REPLACE_FA_END
- 103 => (it, w, ver) -> w.replaceFAEnd(slurp((Int,String), it)...)
+ 103 => (it, w, ver) -> w.replaceFAEnd(slurp((Int,String), it)...),
+
+ # WSH_META_DATA
+ 104 => (it, w, ver) -> w.wshMetaData(slurp((Int,String), it)...),
+
+ # WSH_EVENT_DATA
+ 105 => (it, w, ver) -> w.wshEventData(slurp((Int,String), it)...)
 
 )

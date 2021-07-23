@@ -13,7 +13,7 @@ end
 
 Define various encodings for known types
 """
-(e::Encoder)(::T) where T = error("Unknown Type: $T")
+(e::Encoder)(::T) where T = error("unknown Type: $T")
 
 (e::Encoder)(x::Union{AbstractString,Int,Float64,Symbol}) = print(e.buf, x, '\0')
 
@@ -29,7 +29,7 @@ function (e::Encoder)(x::NamedTuple)
 
   for (n, v) ∈ pairs(x)
     v isa Union{AbstractString,Int,Float64} ||
-      @warn "Unsupported Type in NamedTuple" n v T=typeof(v)
+      @warn "unsupported Type in NamedTuple" n v T=typeof(v)
 
     print(e.buf, n, '=', v, ';')
   end

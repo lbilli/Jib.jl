@@ -10,7 +10,7 @@ function from_ibtime(s)
     ZonedDateTime(DateTime(s[1:17], "yyyymmdd HH:MM:SS"), tz)
 
   else
-    error("Unknown format $s")
+    error("unknown format $s")
   end
 end
 
@@ -57,7 +57,7 @@ function validatetz(tz)
     tz"Asia/Shanghai"
 
   else
-    error("Unknown TZ: $tz")
+    error("unknown TZ: $tz")
   end
 end
 

@@ -27,20 +27,20 @@ function decode(msg, w, ver)
   f = get(process, id, nothing)
 
   if isnothing(f)
-    @error "Decoder: unknown message" id
+    @error "decoder: unknown message" id
 
   else
     try
       f(it, w, ver)
     catch e
       if e isa EOFError
-        @error "Decoder: reached end of message" id
+        @error "decoder: reached end of message" id
       else
         rethrow()
       end
     end
 
-    isempty(it) || @error "Decoder: messsage not fully parsed" id
+    isempty(it) || @error "decoder: message not fully parsed" id
   end
 end
 

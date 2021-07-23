@@ -613,6 +613,13 @@ cancelTickByTickData(ib::Connection, reqId::Int) = req_simple(ib, 98, reqId) ###
 
 reqCompletedOrders(ib::Connection, apiOnly::Bool) = req_simple(ib, 99, apiOnly) ### REQ_COMPLETED_ORDERS
 
+reqWshMetaData(ib::Connection, reqId::Int) = req_simple(ib, 100, reqId) ### REQ_WSH_META_DATA
+
+cancelWshMetaData(ib::Connection, reqId::Int) = req_simple(ib, 101, reqId) ### CANCEL_WSH_META_DATA
+
+reqWshEventData(ib::Connection, reqId::Int, conId::Int) = req_simple(ib, 102, reqId) ### REQ_WSH_EVENT_DATA
+
+cancelWshEventData(ib::Connection, reqId::Int) = req_simple(ib, 103, reqId) ### CANCEL_WSH_EVENT_DATA
 
 # Exports
 export reqMktData,
@@ -689,5 +696,9 @@ export reqMktData,
        reqHistoricalTicks,
        reqTickByTickData,
        cancelTickByTickData,
-       reqCompletedOrders
+       reqCompletedOrders,
+       reqWshMetaData,
+       cancelWshMetaData,
+       reqWshEventData,
+       cancelWshEventData
 end
