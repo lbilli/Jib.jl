@@ -87,7 +87,7 @@ struct Wrapper
 end
 function Wrapper(; kw...)
 
-  default = (_...) -> println("Default Implementation")
+  default = (_...) -> println("default implementation")
 
   args = (get(kw, a, default) for a ∈ fieldnames(Wrapper))
 
@@ -102,20 +102,20 @@ function simple_wrap()
   w = Wrapper(
 
     tickPrice= (tickerId::Int, field::String, price::Float64, size::Int, attrib::TickAttrib) ->
-                 println("Price: $tickerId $field $price $size $attrib"),
+                 println("tickPrice: $tickerId $field $price $size $attrib"),
 
-    tickSize= (tickerId::Int, field::String, size::Int) -> println("Size: $tickerId $field $size"),
+    tickSize= (tickerId::Int, field::String, size::Int) -> println("tickSize: $tickerId $field $size"),
 
     tickOptionComputation= function(tickerId::Int, tickType::String, tickAttrib::Union{Int,Nothing}, impliedVol::Union{Float64,Nothing}, delta::Union{Float64,Nothing}, optPrice::Union{Float64,Nothing}, pvDividend::Union{Float64,Nothing}, gamma::Union{Float64,Nothing}, vega::Union{Float64,Nothing}, theta::Union{Float64,Nothing}, undPrice::Union{Float64,Nothing})
                              d[:option] = (tickType, tickAttrib, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta, undPrice)
-                             println("Option: $tickerId $tickType")
+                             println("tickOption: $tickerId $tickType")
                            end,
 
     tickGeneric= (tickerId::Int, tickType::String, value::Float64) ->
-                   println("Generic: $tickerId $tickType $value"),
+                   println("tickGeneric: $tickerId $tickType $value"),
 
     tickString= (tickerId::Int, tickType::String, value::String) ->
-                  println("String: $tickerId $tickType $value"),
+                  println("tickString: $tickerId $tickType $value"),
 
     orderStatus= function(orderId::Int, status::String, filled::Float64, remaining::Float64, avgFillPrice::Float64, permId::Int, parentId::Int, lastFillPrice::Float64, clientId::Int, whyHeld::String, mktCapPrice::Float64)
                    d[:orderstatus] = (orderId=       orderId,
@@ -128,65 +128,65 @@ function simple_wrap()
                                       clientId=      clientId,
                                       whyHeld=       whyHeld,
                                       mktCapPrice=   mktCapPrice)
-                   println("OrderStatus: $orderId $status")
+                   println("orderStatus: $orderId $status")
                  end,
 
     openOrder= function(orderId::Int, contract::Contract, order::Order, orderstate::OrderState)
                  d[:order_contract] = contract
                  d[:order] = order
                  d[:orderstate] = orderstate
-                 println("OpenOrder: $orderId $(orderstate.status)")
+                 println("openOrder: $orderId $(orderstate.status)")
               end,
 
-    openOrderEnd= () -> println("OpenOrderEnd"),
+    openOrderEnd= () -> println("openOrderEnd"),
 
     updateAccountValue= (key::String, val::String, currency::String, accountName::String) ->
-                          println("AccountValue: $key $val $currency $accountName"),
+                          println("accountValue: $key $val $currency $accountName"),
 
     updatePortfolio= (contract::Contract, position::Float64, marketPrice::Float64, marketValue::Float64, averageCost::Float64, unrealizedPNL::Float64, realizedPNL::Float64, accountName::String) ->
-                       println("Portfolio:  $(contract.symbol) $position $marketPrice $marketValue $averageCost $unrealizedPNL $realizedPNL $accountName"),
+                       println("portfolio:  $(contract.symbol) $position $marketPrice $marketValue $averageCost $unrealizedPNL $realizedPNL $accountName"),
 
-    updateAccountTime= (timeStamp::String) -> println("AccountTime: $timeStamp"),
+    updateAccountTime= (timeStamp::String) -> println("accountTime: $timeStamp"),
 
-    accountDownloadEnd= (accountName::String) -> println("AccountDownloadEnd: $accountName"),
+    accountDownloadEnd= (accountName::String) -> println("accountDownloadEnd: $accountName"),
 
     nextValidId= (orderId::Int) -> d[:nextId] = orderId,
 
     contractDetails = function(reqId::Int, contractDetails::ContractDetails)
                         d[:cd] = contractDetails
-                        println("ContractDetails: $reqId ", contractDetails.contract.conId)
+                        println("contractDetails: $reqId ", contractDetails.contract.conId)
                       end,
 
     bondContractDetails = function(reqId::Int, contractDetails::ContractDetails)
                         d[:cdbond] = contractDetails
-                        println("BondContractDetails: $reqId ", contractDetails.contract.conId)
+                        println("bondContractDetails: $reqId ", contractDetails.contract.conId)
                       end,
 
-    contractDetailsEnd= (reqId::Int) -> println("ContractDetailsEnd: $reqId"),
+    contractDetailsEnd= (reqId::Int) -> println("contractDetailsEnd: $reqId"),
 
     execDetails= function(reqId::Int, contract::Contract, execution::Execution)
                     d[:ex_con] = contract
                     d[:execution] = execution
-                    println("ExecDetails: $reqId")
+                    println("execDetails: $reqId")
                  end,
 
-    execDetailsEnd= (reqId::Int) -> println("ExecDetailsEnd: $reqId"),
+    execDetailsEnd= (reqId::Int) -> println("execDetailsEnd: $reqId"),
 
     error= (id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String) ->
-                     println("Error: ",
+                     println("error: ",
                              something(id, "NA"), " ",
                              something(errorCode, "NA"), " ",
                              errorString),
 
     updateMktDepth= (id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Int) ->
-                      println("MktDepth: $id $position $operation $side $price $size"),
+                      println("mktDepth: $id $position $operation $side $price $size"),
 
     updateMktDepthL2= (id::Int, position::Int, marketMaker::String, operation::Int, side::Int, price::Float64, size::Int, isSmartDepth::Bool) ->
-                        println("MktDepthL2: $id $position $marketMaker $operation $side $price $size $isSmartDepth"),
+                        println("mktDepthL2: $id $position $marketMaker $operation $side $price $size $isSmartDepth"),
 
     updateNewsBulletin= function(msgId::Int, msgType::Int, newsMessage::String, originExch::String)
                           d[:newsbulletin] = newsMessage
-                          println("NewsBulletin: $msgId $msgType $originExch")
+                          println("newsBulletin: $msgId $msgType $originExch")
                           println(newsMessage)
                         end,
 
@@ -194,17 +194,17 @@ function simple_wrap()
 
     receiveFA= function(faDataType::FaDataType, xml::String)
                  d[:fa] = xml
-                 println("ReceiveFA: $faDataType")
+                 println("receiveFA: $faDataType")
                end,
 
     historicalData= function(reqId::Int, bar::DataFrame)
                       d[:history] = bar
-                      println("HistoricalData: $reqId $(size(bar))")
+                      println("historicalData: $reqId $(size(bar))")
                     end,
 
     scannerParameters= function(xml::String)
                         d[:scannerparam] = xml
-                        println("ScannerParameters")
+                        println("scannerParameters")
                        end,
 
     scannerData= function(reqId::Int, rank::Vector{Int}, contractDetails::Vector{ContractDetails}, distance::Vector{String}, benchmark::Vector{String}, projection::Vector{String}, legsStr::Vector{String})
@@ -214,178 +214,178 @@ function simple_wrap()
                                       benchmark=  benchmark,
                                       projection= projection,
                                       legsStr=    legsStr)
-                   println("ScannerData: $reqId")
+                   println("scannerData: $reqId")
                  end,
 
     realtimeBar= (reqId::Int, time::Int, open::Float64, high::Float64, low::Float64, close::Float64, volume::Int, wap::Float64, count::Int) ->
-                   println("RealTimeBar: $reqId $time $open $high, $low $close $volume $wap $count"),
+                   println("realtimeBar: $reqId $time $open $high, $low $close $volume $wap $count"),
 
-    currentTime= (time::Int) -> println("CurrentTime: $time"),
+    currentTime= (time::Int) -> println("currentTime: $time"),
 
     fundamentalData= function(reqId::Int, data::String)
                        d[:fundamental] = data
-                       println("FundamentalData: $reqId")
+                       println("fundamentalData: $reqId")
                      end,
 
-    tickSnapshotEnd= (reqId::Int) -> println("TickSnapshotEnd: $reqId"),
+    tickSnapshotEnd= (reqId::Int) -> println("tickSnapshotEnd: $reqId"),
 
-    marketDataType= (reqId::Int, marketDataType::MarketDataType) -> println("MarketDataType: $reqId $marketDataType"),
+    marketDataType= (reqId::Int, marketDataType::MarketDataType) -> println("marketDataType: $reqId $marketDataType"),
 
     commissionReport= function(commissionReport::CommissionReport)
                         d[:commission] = commissionReport
-                        println("CommissionReport")
+                        println("commissionReport")
                       end,
 
     position= (account::String, contract::Contract, position::Float64, avgCost::Float64) ->
-                println("Position: $account $(contract.symbol) $position $avgCost"),
+                println("position: $account $(contract.symbol) $position $avgCost"),
 
-    positionEnd= () -> println("PositionEnd"),
+    positionEnd= () -> println("positionEnd"),
 
-    accountSummary= (reqId::Int, account::String, tag::String, value::String, currency::String) -> println("AccountSummary: $reqId $account $tag $value $currency"),
+    accountSummary= (reqId::Int, account::String, tag::String, value::String, currency::String) -> println("accountSummary: $reqId $account $tag $value $currency"),
 
-    accountSummaryEnd= (reqId::Int) -> println("AccountSummaryEnd: $reqId"),
+    accountSummaryEnd= (reqId::Int) -> println("accountSummaryEnd: $reqId"),
 
-    displayGroupList= (reqId::Int, groups::String) -> println("DisplayGroupList: $reqId $groups"),
+    displayGroupList= (reqId::Int, groups::String) -> println("displayGroupList: $reqId $groups"),
 
-    displayGroupUpdated= (reqId::Int, contractInfo::String) -> println("DisplayGroupUpdated: $reqId $contractInfo"),
+    displayGroupUpdated= (reqId::Int, contractInfo::String) -> println("displayGroupUpdated: $reqId $contractInfo"),
 
     positionMulti= (reqId::Int, account::String, modelCode::String, contract::Contract, position::Float64, avgCost::Float64) ->
-                     println("PositionMulti: $reqId $account $modelCode $(contract.symbol) $position $avgCost"),
+                     println("positionMulti: $reqId $account $modelCode $(contract.symbol) $position $avgCost"),
 
-    positionMultiEnd= (reqId::Int) -> println("PositionMultiEnd $reqId"),
+    positionMultiEnd= (reqId::Int) -> println("positionMultiEnd $reqId"),
 
-    accountUpdateMulti= (reqId::Int, account::String, modelCode::String, key::String, value::String, currency::String) -> println("AccountUpdateMulti: $reqId $account, $modelCode $key=$value $currency"),
+    accountUpdateMulti= (reqId::Int, account::String, modelCode::String, key::String, value::String, currency::String) -> println("accountUpdateMulti: $reqId $account, $modelCode $key=$value $currency"),
 
-    accountUpdateMultiEnd= (reqId::Int) -> println("AccountUpdateMultiEnd: $reqId"),
+    accountUpdateMultiEnd= (reqId::Int) -> println("accountUpdateMultiEnd: $reqId"),
 
     securityDefinitionOptionalParameter= function(reqId::Int, exchange::String, underlyingConId::Int, tradingClass::String, multiplier::String, expirations::Vector{String}, strikes::Vector{Float64})
                                            d[:sdop] = (e= expirations,
                                                        s= strikes)
-                                           println("SDOP: $reqId $exchange $underlyingConId $tradingClass $multiplier $(length(expirations)) $(length(strikes))")
+                                           println("sdop: $reqId $exchange $underlyingConId $tradingClass $multiplier $(length(expirations)) $(length(strikes))")
                                          end,
 
-    securityDefinitionOptionalParameterEnd= (reqId::Int) -> println("SDOPEnd: $reqId"),
+    securityDefinitionOptionalParameterEnd= (reqId::Int) -> println("sdopEnd: $reqId"),
 
     softDollarTiers= function(reqId::Int, tiers::Vector{SoftDollarTier})
                        d[:softdollar] = tiers
-                       println("SoftDollarTiers: $reqId $(length(tiers))")
+                       println("softDollarTiers: $reqId $(length(tiers))")
                      end,
 
     familyCodes= function(familyCodes::Vector{FamilyCode})
                    d[:familycodes] = familyCodes
-                   println("FamilyCodes: $(length(familyCodes))")
+                   println("familyCodes: $(length(familyCodes))")
                  end,
 
     symbolSamples= function(reqId::Int, contractDescriptions::Vector{ContractDescription})
                      d[:symbolsamples] = contractDescriptions
-                     println("SymbolSamples: $reqId")
+                     println("symbolSamples: $reqId")
                    end,
 
     mktDepthExchanges= function(depthMktDataDescriptions::DataFrame)
                         d[:mktdepthexchanges] = depthMktDataDescriptions
-                        println("MktDepthExchanges")
+                        println("mktDepthExchanges")
                       end,
 
     tickNews= (tickerId::Int, timeStamp::Int, providerCode::String, articleId::String, headline::String, extraData::String) ->
-                println("TickNews: $tickerId $timeStamp $providerCode $articleId $headline $extraData"),
+                println("tickNews: $tickerId $timeStamp $providerCode $articleId $headline $extraData"),
 
     smartComponents= function(reqId::Int, theMap::DataFrame)
                        d[:smartcomponents] = theMap
-                       println("SmartComponents: $reqId $(size(theMap))")
+                       println("smartComponents: $reqId $(size(theMap))")
                      end,
 
     tickReqParams= (tickerId::Int, minTick::Union{Float64,Nothing}, bboExchange::String, snapshotPermissions::Int) ->
-                     println("TickReqParams: $tickerId ",
+                     println("tickReqParams: $tickerId ",
                              something(minTick, "NA"),
                              " $bboExchange $snapshotPermissions"),
 
     newsProviders= function(newsProviders::DataFrame)
                      d[:newsproviders] = newsProviders
-                     println("NewsProviders")
+                     println("newsProviders")
                    end,
 
     newsArticle= function(requestId::Int, articleType::Int, articleText::String)
                    d[:newsarticle] = articleText
-                   println("NewsArticle: $requestId $articleType")
+                   println("newsArticle: $requestId $articleType")
                  end,
 
     historicalNews= function(requestId::Int, time::String, providerCode::String, articleId::String, headline::String)
-                      println("HistoricalNews: $requestId $time $providerCode $articleId $headline")
+                      println("historicalNews: $requestId $time $providerCode $articleId $headline")
                     end,
 
-    historicalNewsEnd= (requestId::Int, hasMore::Bool) -> println("HistoricalNewsEnd: $requestId $hasMore"),
+    historicalNewsEnd= (requestId::Int, hasMore::Bool) -> println("historicalNewsEnd: $requestId $hasMore"),
 
-    headTimestamp= (reqId::Int, headTimestamp::String) -> println("HeadTimestamp: $reqId $headTimestamp"),
+    headTimestamp= (reqId::Int, headTimestamp::String) -> println("headTimestamp: $reqId $headTimestamp"),
 
     histogramData= function(reqId::Int, data::DataFrame)
                     d[:histogram] = data
-                    println("HistogramData: $reqId")
+                    println("histogramData: $reqId")
                   end,
 
     historicalDataUpdate= (reqId::Int, bar::NamedTuple) ->
-                            println("HistoricalDataUpdate: $reqId $bar"),
+                            println("historicalDataUpdate: $reqId $bar"),
 
     rerouteMktDataReq= (reqId::Int, conid::Int, exchange::String) ->
-                         println("RerouteMktDataReq: $reqId $conid $exchange"),
+                         println("rerouteMktDataReq: $reqId $conid $exchange"),
 
     rerouteMktDepthReq= (reqId::Int, conid::Int, exchange::String) ->
-                          println("RerouteMktDepthReq: $reqId $conid $exchange"),
+                          println("rerouteMktDepthReq: $reqId $conid $exchange"),
 
     marketRule= function(marketRuleId::Int, priceIncrements::DataFrame)
                   d[:marketrule] = priceIncrements
-                  println("MarketRule: $marketRuleId")
+                  println("marketRule: $marketRuleId")
                 end,
 
     pnl= (reqId::Int, dailyPnL::Float64, unrealizedPnL::Float64, realizedPnL::Float64) ->
-           println("PnL: $reqId $dailyPnL $unrealizedPnL $realizedPnL"),
+           println("pnl: $reqId $dailyPnL $unrealizedPnL $realizedPnL"),
 
     pnlSingle= (reqId::Int, pos::Int, dailyPnL::Float64, unrealizedPnL::Union{Float64,Nothing}, realizedPnL::Union{Float64,Nothing}, value::Float64) ->
-                 println("PnLSingle: $reqId $pos $dailyPnL ",
+                 println("pnlSingle: $reqId $pos $dailyPnL ",
                          something(unrealizedPnL, "NA"), " ",
                          something(realizedPnL, "NA"),   " ",
                          value),
 
     historicalTicks= function(reqId::Int, ticks::DataFrame, done::Bool)
                        d[:historyticks] = ticks
-                       println("HistoricalTicks: $reqId $done")
+                       println("historicalTicks: $reqId $done")
                      end,
 
     historicalTicksBidAsk= function(reqId::Int, ticks::DataFrame, done::Bool)
                              d[:historyticksbidask] = ticks
-                             println("HistoricalTicksBidAsk: $reqId $done")
+                             println("historicalTicksBidAsk: $reqId $done")
                            end,
 
     historicalTicksLast= function(reqId::Int, ticks::DataFrame, done::Bool)
                            d[:historytickslast] = ticks
-                           println("HistoricalTicksLast: $reqId $done")
+                           println("historicalTicksLast: $reqId $done")
                          end,
 
     tickByTickAllLast= (reqId::Int, tickType::Int, time::Int, price::Float64, size::Int, attribs::TickAttribLast, exchange::String, specialConditions::String) ->
-                         println("TickByTickAllLast: $reqId $tickType $time $price $size $attribs $exchange $specialConditions"),
+                         println("tickByTickAllLast: $reqId $tickType $time $price $size $attribs $exchange $specialConditions"),
 
     tickByTickBidAsk= (reqId::Int, time::Int, bidPrice::Float64, askPrice::Float64, bidSize::Int, askSize::Int, attribs::TickAttribBidAsk) ->
-                        println("TickByTickBidAsk: $reqId $time $bidPrice $askPrice $bidSize $askSize $attribs"),
+                        println("tickByTickBidAsk: $reqId $time $bidPrice $askPrice $bidSize $askSize $attribs"),
 
     tickByTickMidPoint= (reqId::Int, time::Int, midPoint::Float64) ->
-                          println("TickByTickMidPoint: $reqId $time $midPoint"),
+                          println("tickByTickMidPoint: $reqId $time $midPoint"),
 
     orderBound= (orderId::Int, apiClientId::Int, apiOrderId::Int) ->
-                  println("OrderBound: $orderId $apiClientId $apiOrderId"),
+                  println("orderBound: $orderId $apiClientId $apiOrderId"),
 
     completedOrder= function(contract::Contract, order::Order, orderState::OrderState)
                       d[:completed_contract] = contract
                       d[:completed] = order
                       d[:completed_state] = orderState
-                 println("CompletedOrder: $(contract.symbol) $(orderState.status)")
+                 println("completedOrder: $(contract.symbol) $(orderState.status)")
               end,
 
-    completedOrdersEnd= () -> println("CompletedOrdersEnd"),
+    completedOrdersEnd= () -> println("completedOrdersEnd"),
 
-    replaceFAEnd= (reqId::Int, text::String) -> println("ReplaceFAEnd: $reqId $text"),
+    replaceFAEnd= (reqId::Int, text::String) -> println("replaceFAEnd: $reqId $text"),
 
-    wshMetaData= (reqId::Int, dataJson::String) -> println("WshMetaData: $reqId $dataJson"),
+    wshMetaData= (reqId::Int, dataJson::String) -> println("wshMetaData: $reqId $dataJson"),
 
-    wshEventData= (reqId::Int, dataJson::String) -> println("WshEventData: $reqId $dataJson"),
+    wshEventData= (reqId::Int, dataJson::String) -> println("wshEventData: $reqId $dataJson"),
   )
 
   d, w

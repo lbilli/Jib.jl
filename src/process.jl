@@ -266,6 +266,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           ver ≥ Client.POST_TO_ATS && (o.postToAts = pop(it))
 
+          ver ≥ Client.AUTO_CANCEL_PARENT && (o.autoCancelParent = pop(it))
+
           w.openOrder(o.orderId, c, o, os)
         end,
 

@@ -232,6 +232,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.POST_TO_ATS && o(order.postToAts)
 
+  ib.version ≥ Client.AUTO_CANCEL_PARENT && o(order.autoCancelParent)
+
   sendmsg(ib, o)
 end
 

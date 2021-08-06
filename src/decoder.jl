@@ -40,7 +40,7 @@ function decode(msg, w, ver)
       end
     end
 
-    isempty(it) || @error "decoder: message not fully parsed" id
+    isempty(it) || @error "decoder: message not fully parsed" id ignored=collect(String, it)
   end
 end
 

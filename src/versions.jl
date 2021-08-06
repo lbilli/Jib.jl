@@ -7,5 +7,6 @@
   MARKET_DATA_IN_SHARES    = 159
   POST_TO_ATS              = 160
   WSHE_CALENDAR            = 161
+  AUTO_CANCEL_PARENT       = 162
 
 end
