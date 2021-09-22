@@ -101,10 +101,10 @@ function simple_wrap()
 
   w = Wrapper(
 
-    tickPrice= (tickerId::Int, field::String, price::Float64, size::Int, attrib::TickAttrib) ->
+    tickPrice= (tickerId::Int, field::String, price::Float64, size::Float64, attrib::TickAttrib) ->
                  println("tickPrice: $tickerId $field $price $size $attrib"),
 
-    tickSize= (tickerId::Int, field::String, size::Int) -> println("tickSize: $tickerId $field $size"),
+    tickSize= (tickerId::Int, field::String, size::Float64) -> println("tickSize: $tickerId $field $size"),
 
     tickOptionComputation= function(tickerId::Int, tickType::String, tickAttrib::Union{Int,Nothing}, impliedVol::Union{Float64,Nothing}, delta::Union{Float64,Nothing}, optPrice::Union{Float64,Nothing}, pvDividend::Union{Float64,Nothing}, gamma::Union{Float64,Nothing}, vega::Union{Float64,Nothing}, theta::Union{Float64,Nothing}, undPrice::Union{Float64,Nothing})
                              d[:option] = (tickType, tickAttrib, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta, undPrice)
@@ -178,10 +178,10 @@ function simple_wrap()
                              something(errorCode, "NA"), " ",
                              errorString),
 
-    updateMktDepth= (id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Int) ->
+    updateMktDepth= (id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Float64) ->
                       println("mktDepth: $id $position $operation $side $price $size"),
 
-    updateMktDepthL2= (id::Int, position::Int, marketMaker::String, operation::Int, side::Int, price::Float64, size::Int, isSmartDepth::Bool) ->
+    updateMktDepthL2= (id::Int, position::Int, marketMaker::String, operation::Int, side::Int, price::Float64, size::Float64, isSmartDepth::Bool) ->
                         println("mktDepthL2: $id $position $marketMaker $operation $side $price $size $isSmartDepth"),
 
     updateNewsBulletin= function(msgId::Int, msgType::Int, newsMessage::String, originExch::String)
@@ -217,7 +217,7 @@ function simple_wrap()
                    println("scannerData: $reqId")
                  end,
 
-    realtimeBar= (reqId::Int, time::Int, open::Float64, high::Float64, low::Float64, close::Float64, volume::Int, wap::Float64, count::Int) ->
+    realtimeBar= (reqId::Int, time::Int, open::Float64, high::Float64, low::Float64, close::Float64, volume::Float64, wap::Float64, count::Int) ->
                    println("realtimeBar: $reqId $time $open $high, $low $close $volume $wap $count"),
 
     currentTime= (time::Int) -> println("currentTime: $time"),
@@ -360,10 +360,10 @@ function simple_wrap()
                            println("historicalTicksLast: $reqId $done")
                          end,
 
-    tickByTickAllLast= (reqId::Int, tickType::Int, time::Int, price::Float64, size::Int, attribs::TickAttribLast, exchange::String, specialConditions::String) ->
+    tickByTickAllLast= (reqId::Int, tickType::Int, time::Int, price::Float64, size::Float64, attribs::TickAttribLast, exchange::String, specialConditions::String) ->
                          println("tickByTickAllLast: $reqId $tickType $time $price $size $attribs $exchange $specialConditions"),
 
-    tickByTickBidAsk= (reqId::Int, time::Int, bidPrice::Float64, askPrice::Float64, bidSize::Int, askSize::Int, attribs::TickAttribBidAsk) ->
+    tickByTickBidAsk= (reqId::Int, time::Int, bidPrice::Float64, askPrice::Float64, bidSize::Float64, askSize::Float64, attribs::TickAttribBidAsk) ->
                         println("tickByTickBidAsk: $reqId $time $bidPrice $askPrice $bidSize $askSize $attribs"),
 
     tickByTickMidPoint= (reqId::Int, time::Int, midPoint::Float64) ->

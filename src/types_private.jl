@@ -40,6 +40,7 @@ mutable struct ContractDetails
   realExpirationDate::String
   lastTradeTime::String
   stockType::String
+  sizeMinTick::Union{Float64,Nothing}
   secIdList::NamedTuple
   cusip::String
   ratings::String
@@ -58,8 +59,9 @@ mutable struct ContractDetails
   notes::String
 end
 ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)...,
-                                    nothing, 0, nothing, fill(ns, 6)..., (;), fill(ns, 5)...,
-                                    false, false, nothing, false, ns, ns, ns, ns, false, ns)
+                                    nothing, 0, nothing, fill(ns, 6)..., nothing, (;),
+                                    fill(ns, 5)..., false, false, nothing, false, ns,
+                                    ns, ns, ns, false, ns)
 
 
 struct Execution

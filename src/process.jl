@@ -87,7 +87,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           tickerId::Int,
           ticktype::Int,
           price::Float64,
-          size::Int,
+          size::Float64,
           mask::Int = it
 
           w.tickPrice(tickerId, tickname(ticktype), price, size, unmask(TickAttrib, mask))
@@ -98,7 +98,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           tickerId::Int,
           ticktype::Int,
-          size::Int = it
+          size::Float64 = it
 
           w.tickSize(tickerId, tickname(ticktype), size)
         end,
@@ -320,6 +320,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                       :realExpirationDate,
                       :stockType), it)
 
+          ver ≥ Client.FRACTIONAL_SIZE_SUPPORT && (cd.sizeMinTick = pop(it))
+
           w.contractDetails(reqId, cd)
         end,
 
@@ -338,10 +340,10 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
         end,
 
   # MARKET_DEPTH
-  12 => (it, w, ver) -> w.updateMktDepth(slurp((Int,Int,Int,Int,Float64,Int), it)...),
+  12 => (it, w, ver) -> w.updateMktDepth(slurp((Int,Int,Int,Int,Float64,Float64), it)...),
 
   # MARKET_DEPTH_L2
-  13 => (it, w, ver) -> w.updateMktDepthL2(slurp((Int,Int,String,Int,Int,Float64,Int,Bool), it)...),
+  13 => (it, w, ver) -> w.updateMktDepthL2(slurp((Int,Int,String,Int,Int,Float64,Float64,Bool), it)...),
 
   # NEWS_BULLETINS
   14 => (it, w, ver) -> w.updateNewsBulletin(slurp((Int,Int,String,String), it)...),
@@ -362,7 +364,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           n::Int = pop(it)
 
-          df = fill_df([String,Float64,Float64,Float64,Float64,Int,Float64,Int],
+          df = fill_df([String,Float64,Float64,Float64,Float64,Float64,Float64,Int],
                        [:time, :open, :high, :low, :close, :volume, :wap, :count],
                        n, it)
 
@@ -508,7 +510,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
         end,
 
   # REAL_TIME_BARS
-  50 => (it, w, ver) -> w.realtimeBar(slurp((Int,Int,Float64,Float64,Float64,Float64,Int,Float64,Int), it)...),
+  50 => (it, w, ver) -> w.realtimeBar(slurp((Int,Int,Float64,Float64,Float64,Float64,Float64,Float64,Int), it)...),
 
   # FUNDAMENTAL_DATA
   51 => (it, w, ver) -> w.fundamentalData(slurp((Int,String), it)...),
@@ -731,7 +733,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          df = fill_df([Float64,Int], [:price, :size], n, it)
+          df = fill_df([Float64,Float64], [:price, :size], n, it)
 
           w.histogramData(reqId, df)
         end,
@@ -748,7 +750,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                             :high,
                             :low,
                             :wap,
-                            :volume)}(slurp((Int,String,Float64,Float64,Float64,Float64,Float64,Int), it))
+                            :volume)}(slurp((Int,String,Float64,Float64,Float64,Float64,Float64,Float64), it))
 
           w.historicalDataUpdate(reqId, bar)
         end,
@@ -801,11 +803,11 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          df = fill_df([Int,Int,Float64,Int], [:time, :ignore, :price, :size], n, it)
+          df = fill_df([Int,Int,Float64,Float64], [:time, :ignore, :price, :size], n, it)
 
           select!(df, Not(:ignore))
 
-          # TODO: Convert df[:time] to [Zoned]DateTime
+          # TODO: Convert df.time to [Zoned]DateTime
 
           done::Bool = pop(it)
 
@@ -818,10 +820,10 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          df = fill_df([Int,Int,Float64,Float64,Int,Int], [:time, :mask, :priceBid, :priceAsk, :sizeBid, :sizeAsk], n, it)
+          df = fill_df([Int,Int,Float64,Float64,Float64,Float64], [:time, :mask, :priceBid, :priceAsk, :sizeBid, :sizeAsk], n, it)
 
-          # TODO: Convert df[:time] to [Zoned]DateTime
-          # TODO: Unmask df[:mask]
+          # TODO: Convert df.time to [Zoned]DateTime
+          # TODO: Unmask df.mask
 
           done::Bool = pop(it)
 
@@ -834,10 +836,10 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          df = fill_df([Int,Int,Float64,Int,String,String], [:time, :mask, :price, :size, :exchange, :specialConditions], n, it)
+          df = fill_df([Int,Int,Float64,Float64,String,String], [:time, :mask, :price, :size, :exchange, :specialConditions], n, it)
 
-          # TODO: Convert df[:time] to [Zoned]DateTime
-          # TODO: Unmask df[:mask]
+          # TODO: Convert df.time to [Zoned]DateTime
+          # TODO: Unmask df.mask
 
           done::Bool = pop(it)
 
@@ -851,12 +853,12 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           ticktype::Int,
           time::Int = it
 
-          mask::Int = 0  # To avoid "multiple type declarations" error
+          local mask::Int  # To avoid "multiple type declarations" error
 
           if ticktype ∈ (1, 2)
 
             price::Float64,
-            size::Int,
+            size::Float64,
             mask,
             exchange::String,
             specialConditions::String = it
@@ -867,8 +869,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
             bidPrice::Float64,
             askPrice::Float64,
-            bidSize::Int,
-            askSize::Int,
+            bidSize::Float64,
+            askSize::Float64,
             mask = it
 
             w.tickByTickBidAsk(reqId, time, bidPrice, askPrice, bidSize, askSize, unmask(TickAttribBidAsk, mask))

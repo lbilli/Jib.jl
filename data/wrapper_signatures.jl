@@ -1,6 +1,6 @@
-tickPrice= function(tickerId::Int, field::String, price::Float64, size::Int, attrib::TickAttrib)
+tickPrice= function(tickerId::Int, field::String, price::Float64, size::Float64, attrib::TickAttrib)
 
-tickSize= function(tickerId::Int, field::String, size::Int)
+tickSize= function(tickerId::Int, field::String, size::Float64)
 
 tickOptionComputation= function(tickerId::Int, tickType::String, tickAttrib::Union{Int,Nothing}, impliedVol::Union{Float64,Nothing}, delta::Union{Float64,Nothing}, optPrice::Union{Float64,Nothing}, pvDividend::Union{Float64,Nothing}, gamma::Union{Float64,Nothing}, vega::Union{Float64,Nothing}, theta::Union{Float64,Nothing}, undPrice::Union{Float64,Nothing})
 
@@ -38,9 +38,9 @@ execDetailsEnd= function(reqId::Int)
 
 error= function(id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String)
 
-updateMktDepth= function(id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Int)
+updateMktDepth= function(id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Float64)
 
-updateMktDepthL2= function(id::Int, position::Int, marketMaker::String, operation::Int, side::Int, price::Float64, size::Int, isSmartDepth::Bool)
+updateMktDepthL2= function(id::Int, position::Int, marketMaker::String, operation::Int, side::Int, price::Float64, size::Float64, isSmartDepth::Bool)
 
 updateNewsBulletin= function(msgId::Int, msgType::Int, newsMessage::String, originExch::String)
 
@@ -54,7 +54,7 @@ scannerParameters= function(xml::String)
 
 scannerData= function(reqId::Int, rank::Vector{Int}, contractDetails::Vector{ContractDetails}, distance::Vector{String}, benchmark::Vector{String}, projection::Vector{String}, legsStr::Vector{String})
 
-realtimeBar= function(reqId::Int, time::Int, open::Float64, high::Float64, low::Float64, close::Float64, volume::Int, wap::Float64, count::Int)
+realtimeBar= function(reqId::Int, time::Int, open::Float64, high::Float64, low::Float64, close::Float64, volume::Float64, wap::Float64, count::Int)
 
 currentTime= function(time::Int)
 
@@ -144,9 +144,9 @@ historicalTicksBidAsk= function(reqId::Int, ticks::DataFrame, done::Bool)
 
 historicalTicksLast= function(reqId::Int, ticks::DataFrame, done::Bool)
 
-tickByTickAllLast= function(reqId::Int, tickType::Int, time::Int, price::Float64, size::Int, attribs::TickAttribLast, exchange::String, specialConditions::String)
+tickByTickAllLast= function(reqId::Int, tickType::Int, time::Int, price::Float64, size::Float64, attribs::TickAttribLast, exchange::String, specialConditions::String)
 
-tickByTickBidAsk= function(reqId::Int, time::Int, bidPrice::Float64, askPrice::Float64, bidSize::Int, askSize::Int, attribs::TickAttribBidAsk)
+tickByTickBidAsk= function(reqId::Int, time::Int, bidPrice::Float64, askPrice::Float64, bidSize::Float64, askSize::Float64, attribs::TickAttribBidAsk)
 
 tickByTickMidPoint= function(reqId::Int, time::Int, midPoint::Float64)
 
