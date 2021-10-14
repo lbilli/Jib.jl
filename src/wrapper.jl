@@ -87,9 +87,11 @@ struct Wrapper
 end
 function Wrapper(; kw...)
 
-  default = (_...) -> println("default implementation")
+  function default(field::Symbol)
+    return (_...) -> println("$field default implementation")
+  end
 
-  args = (get(kw, a, default) for a ∈ fieldnames(Wrapper))
+  args = (get(kw, a, default(a)) for a ∈ fieldnames(Wrapper))
 
   Wrapper(args...)
 end
