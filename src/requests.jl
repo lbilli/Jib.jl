@@ -321,9 +321,8 @@ function replaceFA(ib::Connection, reqId::Int, faDataType::FaDataType, xml::Stri
 
   o(19, 1,    ### REPLACE_FA
     Int(faDataType),
-    xml)
-
-  ib.version ≥ Client.REPLACE_FA_END && o(reqId)
+    xml,
+    reqId)
 
   sendmsg(ib, o)
 end

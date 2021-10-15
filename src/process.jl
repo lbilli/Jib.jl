@@ -62,9 +62,9 @@ function unmask(T::Type{NamedTuple{M,NTuple{N,Bool}}}, mask) where {M,N}
 end
 
 
-function fill_df(eltypes, names, n, it)
+function fill_df(cols, n, it)
 
-  df = DataFrame([Vector{T}(undef, n) for T ∈ eltypes], names; copycols=false)
+  df = DataFrame([k => Vector{T}(undef, n) for (k, T) ∈ pairs(cols)]; copycols=false)
 
   for r ∈ 1:nrow(df), c ∈ 1:ncol(df)
     df[r, c] = pop(it)
@@ -364,8 +364,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           n::Int = pop(it)
 
-          df = fill_df([String,Float64,Float64,Float64,Float64,Float64,Float64,Int],
-                       [:time, :open, :high, :low, :close, :volume, :wap, :count],
+          df = fill_df((time=String, open=Float64, high=Float64, low=Float64,
+                        close=Float64, volume=Float64, wap=Float64, count=Int),
                        n, it)
 
           w.historicalData(reqId, df)
@@ -456,11 +456,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
   21 => function(it, w, ver)
 
           tickerId::Int,
-          ticktype::Int = it
-
-          tickAttrib = if ver ≥ Client.PRICE_BASED_VOLATILITY
-                         slurp(Int, it)
-                       end
+          ticktype::Int,
+          tickAttrib::Int = it
 
           v = collect(Union{Float64,Nothing}, take(it, 8))
 
@@ -675,8 +672,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           n::Int = pop(it)
 
-          df = fill_df([String,String,String,String,Union{Int,Nothing}],
-                       [:exchange, :secType, :listingExch, :serviceDataType, :aggGroup],
+          df = fill_df((exchange=String, secType=String, listingExch=String,
+                        serviceDataType=String, aggGroup=Union{Int,Nothing}),
                        n, it)
 
           w.mktDepthExchanges(df)
@@ -691,7 +688,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          df = fill_df([Int,String,String], [:bit, :exchange, :exchangeLetter], n, it)
+          df = fill_df((bit=Int, exchange=String, exchangeLetter=String), n, it)
 
           w.smartComponents(reqId, df)
         end,
@@ -713,7 +710,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           n::Int = pop(it)
 
-          df = fill_df([String,String], [:providerCode, :providerName], n, it)
+          df = fill_df((providerCode=String, providerName=String), n, it)
 
           w.newsProviders(df)
         end,
@@ -733,7 +730,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          df = fill_df([Float64,Float64], [:price, :size], n, it)
+          df = fill_df((price=Float64, size=Float64), n, it)
 
           w.histogramData(reqId, df)
         end,
@@ -767,7 +764,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           marketRuleId::Int,
           n::Int = it
 
-          df = fill_df([Float64,Float64], [:lowEdge, :increment], n, it)
+          df = fill_df((lowEdge=Float64, increment=Float64), n, it)
 
           w.marketRule(marketRuleId, df)
         end,
@@ -803,7 +800,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          df = fill_df([Int,Int,Float64,Float64], [:time, :ignore, :price, :size], n, it)
+          df = fill_df((time=Int, ignore=Int, price=Float64, size=Float64), n, it)
 
           select!(df, Not(:ignore))
 
@@ -820,7 +817,9 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          df = fill_df([Int,Int,Float64,Float64,Float64,Float64], [:time, :mask, :priceBid, :priceAsk, :sizeBid, :sizeAsk], n, it)
+          df = fill_df((time=Int, mask=Int, priceBid=Float64, priceAsk=Float64,
+                        sizeBid=Float64, sizeAsk=Float64),
+                       n, it)
 
           # TODO: Convert df.time to [Zoned]DateTime
           # TODO: Unmask df.mask
@@ -836,7 +835,9 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           reqId::Int,
           n::Int = it
 
-          df = fill_df([Int,Int,Float64,Float64,String,String], [:time, :mask, :price, :size, :exchange, :specialConditions], n, it)
+          df = fill_df((time=Int, mask=Int, price=Float64, size=Float64,
+                        exchange=String, specialConditions=String),
+                       n, it)
 
           # TODO: Convert df.time to [Zoned]DateTime
           # TODO: Unmask df.mask

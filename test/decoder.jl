@@ -55,6 +55,6 @@
 
   # fill_df
   it = Iterators.Stateful(v)
-  @test Jib.Reader.Decoder.fill_df([String, Int], [:a, :b], 2, it) == DataFrame(:a => ["a", "b"], :b => [1, 2])
+  @test Jib.Reader.Decoder.fill_df((a=String, b=Int), 2, it) == DataFrame(:a => ["a", "b"], :b => [1, 2])
 
 end
