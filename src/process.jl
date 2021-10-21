@@ -133,7 +133,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :discretionaryAmt,
                      :goodAfterTime), it)
 
-          pop(it)    # Deprecated sharesAllocation
+          pop(it)    # deprecated sharesAllocation
 
           slurp!(o, (:faGroup,
                      :faMethod,
@@ -157,9 +157,9 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :minQty,
                      :ocaType), it)
 
-          pop(it)    # Deprecated eTradeOnly
-          pop(it)    # Deprecated firmQuoteOnly
-          pop(it)    # Deprecated nbboPriceCap
+          pop(it)    # deprecated eTradeOnly
+          pop(it)    # deprecated firmQuoteOnly
+          pop(it)    # deprecated nbboPriceCap
 
           slurp!(o, (:parentId,
                      :triggerMethod), it)
@@ -302,9 +302,11 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           cd.marketName,
           cd.contract.tradingClass,
           cd.contract.conId,
-          cd.minTick,
-          cd.mdSizeMultiplier,
-          cd.contract.multiplier = it
+          cd.minTick = it
+
+          ver < Client.SIZE_RULES && pop(it)  # deprecated mdSizeMultiplier
+
+          cd.contract.multiplier = pop(it)
 
           slurp!(cd, 4:8, it)
           cd.contract.primaryExchange = pop(it)
@@ -320,7 +322,12 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                       :realExpirationDate,
                       :stockType), it)
 
-          ver ≥ Client.FRACTIONAL_SIZE_SUPPORT && (cd.sizeMinTick = pop(it))
+          Client.FRACTIONAL_SIZE_SUPPORT ≤ ver < Client.SIZE_RULES && pop(it)  # deprecated sizeMinTick
+
+          ver ≥ Client.SIZE_RULES && slurp!(cd, (:minSize,
+                                                 :sizeIncrement,
+                                                 :suggestedSizeIncrement,
+                                                 :minCashQtySize), it)
 
           w.contractDetails(reqId, cd)
         end,
@@ -359,8 +366,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           reqId::Int = pop(it)
 
-          pop(it) # Ignore startDate
-          pop(it) # Ignore endDate
+          pop(it)  # ignore startDate
+          pop(it)  # ignore endDate
 
           n::Int = pop(it)
 
@@ -396,11 +403,12 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           cd.contract.currency,
           cd.marketName,
           cd.contract.tradingClass,
-          cd.contract.conId = it
+          cd.contract.conId,
+          cd.minTick = it
 
-          slurp!(cd, (:minTick,
-                      :mdSizeMultiplier,
-                      :orderTypes,
+          ver < Client.SIZE_RULES && pop(it)  # deprecated mdSizeMultiplier
+
+          slurp!(cd, (:orderTypes,
                       :validExchanges,
                       :nextOptionDate,
                       :nextOptionType,
@@ -415,6 +423,11 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           cd.aggGroup,
           cd.marketRuleIds = it
+
+          ver ≥ Client.SIZE_RULES && slurp!(cd, (:minSize,
+                                                 :sizeIncrement,
+                                                 :suggestedSizeIncrement,
+                                                 :minCashQtySize), it)
 
           w.bondContractDetails(reqId, cd)
         end,

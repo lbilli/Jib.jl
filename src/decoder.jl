@@ -19,7 +19,8 @@ function decode(msg, w, ver)
   id::Int = pop(it)
 
   # The second field (version) is ignored for id < 75 and != 3, 5, 11, 17, 21
-  if id  < 75 && id ∉ (3, 5, 11, 17, 21)
+  if id  < 75 && id ∉ (3, 5, 10, 11, 17, 18, 21) ||
+     id ∈ (10, 18) && ver < Client.SIZE_RULES
     pop(it)
   end
 

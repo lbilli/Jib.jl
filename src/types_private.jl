@@ -32,7 +32,6 @@ mutable struct ContractDetails
   liquidHours::String
   evRule::String
   evMultiplier::Union{Float64,Nothing}
-  mdSizeMultiplier::Int
   aggGroup::Union{Int,Nothing}
   underSymbol::String
   underSecType::String
@@ -40,7 +39,10 @@ mutable struct ContractDetails
   realExpirationDate::String
   lastTradeTime::String
   stockType::String
-  sizeMinTick::Union{Float64,Nothing}
+  minSize::Union{Float64,Nothing}
+  sizeIncrement::Union{Float64,Nothing}
+  suggestedSizeIncrement::Union{Float64,Nothing}
+  minCashQtySize::Union{Float64,Nothing}
   secIdList::NamedTuple
   cusip::String
   ratings::String
@@ -59,9 +61,9 @@ mutable struct ContractDetails
   notes::String
 end
 ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)...,
-                                    nothing, 0, nothing, fill(ns, 6)..., nothing, (;),
-                                    fill(ns, 5)..., false, false, nothing, false, ns,
-                                    ns, ns, ns, false, ns)
+                                    nothing, nothing, fill(ns, 6)..., nothing, nothing,
+                                    nothing, nothing, (;), fill(ns, 5)..., false, false,
+                                    nothing, false, ns, ns, ns, ns, false, ns)
 
 
 struct Execution
