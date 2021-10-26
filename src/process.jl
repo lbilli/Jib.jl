@@ -326,8 +326,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           ver ≥ Client.SIZE_RULES && slurp!(cd, (:minSize,
                                                  :sizeIncrement,
-                                                 :suggestedSizeIncrement,
-                                                 :minCashQtySize), it)
+                                                 :suggestedSizeIncrement), it)
 
           w.contractDetails(reqId, cd)
         end,
@@ -426,8 +425,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           ver ≥ Client.SIZE_RULES && slurp!(cd, (:minSize,
                                                  :sizeIncrement,
-                                                 :suggestedSizeIncrement,
-                                                 :minCashQtySize), it)
+                                                 :suggestedSizeIncrement), it)
 
           w.bondContractDetails(reqId, cd)
         end,
