@@ -25,15 +25,8 @@ function Base.convert(::Type{Float64}, x::Field)
                                              parse(Float64, x.value)
 end
 
-# Bool
-function Base.convert(::Type{Bool}, x::Field)
-
-  res = findfirst(==(x.value), ("1", "true", "0", "false"))
-
-  isnothing(res) && error("invalid Bool: $(x.value)")
-
-  res < 3
-end
+# Bool: allowed values "1", "0", "true", "false"
+Base.convert(::Type{Bool}, x::Field) = parse(Bool, x.value)
 
 # Enum
 Base.convert(::Type{T}, x::Field) where T<:Enum{Int32} = T(convert(Int, x))

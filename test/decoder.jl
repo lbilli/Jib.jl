@@ -4,7 +4,7 @@
   v = Jib.Reader.Decoder.Field.(["0", "1", "false", "true", ""])
   @test collect(Bool, v[1:4]) == [false, true, false, true]
 
-  @test_throws ErrorException convert(Bool, v[5])
+  @test_throws ArgumentError convert(Bool, v[5])
 
   # Int
   v = Jib.Reader.Decoder.Field.(["", "1", "2147483647", "9223372036854775807", "a"])

@@ -157,3 +157,9 @@ completedOrder= function(contract::Contract, order::Order, orderState::OrderStat
 completedOrdersEnd= function()
 
 replaceFAEnd= function(reqId::Int, text::String)
+
+wshMetaData= function (reqId::Int, dataJson::String)
+
+wshEventData= function(reqId::Int, dataJson::String)
+
+historicalSchedule= function(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::DataFrame)

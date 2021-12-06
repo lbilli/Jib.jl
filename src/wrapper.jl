@@ -82,7 +82,8 @@ const callbacks = [:tickPrice,
                    :completedOrdersEnd,
                    :replaceFAEnd,
                    :wshMetaData,
-                   :wshEventData]
+                   :wshEventData,
+                   :historicalSchedule]
 
 
 struct Wrapper
@@ -184,7 +185,7 @@ function simple_wrap()
 
     contractDetails = function(reqId::Int, contractDetails::ContractDetails)
                         d[:cd] = contractDetails
-                        println("contractDetails: $reqId ", contractDetails.contract.conId)
+                        println("contractDetails: $reqId $(contractDetails.contract.conId) $(contractDetails.contract.localSymbol)")
                       end,
 
     bondContractDetails = function(reqId::Int, contractDetails::ContractDetails)
@@ -406,8 +407,8 @@ function simple_wrap()
                       d[:completed_contract] = contract
                       d[:completed] = order
                       d[:completed_state] = orderState
-                 println("completedOrder: $(contract.symbol) $(orderState.status)")
-              end,
+                      println("completedOrder: $(contract.symbol) $(orderState.status)")
+                    end,
 
     completedOrdersEnd= () -> println("completedOrdersEnd"),
 
@@ -416,6 +417,11 @@ function simple_wrap()
     wshMetaData= (reqId::Int, dataJson::String) -> println("wshMetaData: $reqId $dataJson"),
 
     wshEventData= (reqId::Int, dataJson::String) -> println("wshEventData: $reqId $dataJson"),
+
+    historicalSchedule= function(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::DataFrame)
+                          d[:schedule] = sessions
+                          println("historicalSchedule: $reqId $startDateTime $endDateTime $timeZone")
+                        end,
   )
 
   d, w

@@ -1039,6 +1039,19 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
  104 => (it, w, ver) -> w.wshMetaData(slurp((Int,String), it)...),
 
  # WSH_EVENT_DATA
- 105 => (it, w, ver) -> w.wshEventData(slurp((Int,String), it)...)
+ 105 => (it, w, ver) -> w.wshEventData(slurp((Int,String), it)...),
 
+ # HISTORICAL_SCHEDULE
+ 106 => function(it, w, ver)
+
+          reqId::Int,
+          startDateTime::String,
+          endDateTime::String,
+          timeZone::String,
+          n::Int = it
+
+          df = fill_df((startDateTime=String, endDateTime=String, refDate=String), n, it)
+
+          w.historicalSchedule(reqId, startDateTime, endDateTime, timeZone, df)
+        end
 )

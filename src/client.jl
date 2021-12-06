@@ -14,12 +14,12 @@ function write_one(socket, buf)
 
   s = reset(buf)
 
-  len = bytesavailable(buf) - sizeof(HEADTYPE)
+  len = bytesavailable(buf)
 
   @assert len ≤ MAX_LEN
 
-  # Write length
-  s += write(buf, hton(HEADTYPE(len)))
+  # Rewind and write length
+  write(skip(buf, -sizeof(HEADTYPE)), hton(HEADTYPE(len)))
 
   msg = take!(buf)
 
@@ -45,10 +45,10 @@ function buffer(sign)
 
   sign && write(buf, API_SIGN)
 
-  mark(buf)
-
   # Leave space for the header
   write(buf, zero(HEADTYPE))
+
+  mark(buf)
 
   buf
 end
