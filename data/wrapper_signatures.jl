@@ -36,7 +36,7 @@ execDetails= function(reqId::Int, contract::Contract, execution::Execution)
 
 execDetailsEnd= function(reqId::Int)
 
-error= function(id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String)
+error= function(id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String, advancedOrderRejectJson::String)
 
 updateMktDepth= function(id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Float64)
 

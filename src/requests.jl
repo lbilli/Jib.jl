@@ -234,6 +234,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.AUTO_CANCEL_PARENT && o(order.autoCancelParent)
 
+  ib.version ≥ Client.ADVANCED_ORDER_REJECT && o(order.advancedErrorOverride)
+
   sendmsg(ib, o)
 end
 

@@ -107,7 +107,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
    3 => (it, w, ver) -> w.orderStatus(slurp((Int,String,Float64,Float64,Float64,Int,Int,Float64,Int,String,Float64), it)...),
 
   # ERR_MSG
-   4 => (it, w, ver) -> w.error(slurp((Int,Int,String), it)...),
+   4 => (it, w, ver) -> w.error(slurp((Int,Int,String), it)...,
+                                ver ≥ Client.ADVANCED_ORDER_REJECT ? slurp(String, it) : ""),
 
   # OPEN_ORDER
    5 => function(it, w, ver)

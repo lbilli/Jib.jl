@@ -158,6 +158,7 @@ mutable struct Order
   usePriceMgmtAlgo::Union{Bool,Nothing}
   duration::Union{Int,Nothing}
   postToAts::Union{Int,Nothing}
+  advancedErrorOverride::String
 end
 Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0,
                 false, false, nothing, 0, false, false, ns, ns, ns, false, nothing, nothing,
@@ -168,7 +169,7 @@ Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, tru
                 (;), (;), ns, false, false, false, ns, [], (;), 0, 0, false, 0, ns, ns,
                 fill(nothing, 4)..., 0, nothing, [], false, false, ns, SoftDollarTier(),
                 nothing, ns, ns, ns, ns, false, false, false, ns, nothing, nothing,
-                false, ns, false, false, nothing, nothing, nothing, nothing)
+                false, ns, false, false, nothing, nothing, nothing, nothing, ns)
 
 
 mutable struct ScannerSubscription
