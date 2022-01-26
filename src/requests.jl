@@ -624,6 +624,8 @@ reqWshEventData(ib::Connection, reqId::Int, conId::Int) = req_simple(ib, 102, re
 
 cancelWshEventData(ib::Connection, reqId::Int) = req_simple(ib, 103, reqId) ### CANCEL_WSH_EVENT_DATA
 
+reqUserInfo(ib::Connection, reqId::Int) = req_simple(ib, 104, reqId) ### REQ_USER_INFO
+
 # Exports
 export reqMktData,
        cancelMktData,
@@ -703,5 +705,6 @@ export reqMktData,
        reqWshMetaData,
        cancelWshMetaData,
        reqWshEventData,
-       cancelWshEventData
+       cancelWshEventData,
+       reqUserInfo
 end

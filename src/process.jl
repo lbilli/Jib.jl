@@ -1054,5 +1054,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           df = fill_df((startDateTime=String, endDateTime=String, refDate=String), n, it)
 
           w.historicalSchedule(reqId, startDateTime, endDateTime, timeZone, df)
-        end
+        end,
+
+  # USER_INFO
+  107 => (it, w, ver) -> w.userInfo(slurp((Int,String), it)...)
 )

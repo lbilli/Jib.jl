@@ -10,5 +10,6 @@
   SIZE_RULES               = 164
   HISTORICAL_SCHEDULE      = 165
   ADVANCED_ORDER_REJECT    = 166
+  USER_INFO                = 167
 
 end
