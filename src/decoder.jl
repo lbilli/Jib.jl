@@ -33,14 +33,12 @@ function decode(msg, w, ver)
     try
       f(it, w, ver)
     catch e
-      if e isa EOFError
-        @error "decoder: reached end of message" id
-      else
-        rethrow()
-      end
+      @error "decoder: exception caught" M=join(msg, '|')
+      # Print stacktrace to stderr
+      Base.display_error(Base.current_exceptions())
     end
 
-    isempty(it) || @error "decoder: message not fully parsed" id ignored=collect(String, it)
+    isempty(it) || @error "decoder: message not fully parsed" M=join(msg, '|') ignored=collect(String, it)
   end
 end
 

@@ -38,7 +38,8 @@ using Jib
 
 wrap = Jib.Wrapper(
          # Customized methods go here
-         error= (id, errorCode, errorString) -> println("Error: $(something(id, "NA")) $errorCode $errorString"),
+         error= (id, errorCode, errorString, advancedOrderRejectJson) ->
+                  println("Error: $(something(id, "NA")) $errorCode $errorString $advancedOrderRejectJson"),
 
          nextValidId= (orderId) -> println("Next OrderId: $orderId"),
 
@@ -111,7 +112,7 @@ responses are processed.
 By default it is filled with dummy functions. The user should override in the constructor
 the desired methods, as shown [above](#usage).
 
-A more comprehensive example is provided by [`simple_wrap()`](src/wrapper.jl#L128),
+A more comprehensive example is provided by [`simple_wrap()`](src/wrapper.jl#L130),
 which is used like this:
 ```julia
 using Jib: Jib, Contract, reqContractDetails, simple_wrap, start_reader

@@ -18,7 +18,7 @@ include("encoder.jl")
 enc() = Encoder(Client.buffer(false))
 
 # Splat fields
-splat(x, idx=fieldnames(typeof(x))) = (getfield(x, i) for i ∈ idx)
+splat(x, idx=1:fieldcount(typeof(x))) = (getfield(x, i) for i ∈ idx)
 
 # Send messasge
 function sendmsg(ib, e)

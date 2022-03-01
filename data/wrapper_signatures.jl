@@ -163,3 +163,5 @@ wshMetaData= function (reqId::Int, dataJson::String)
 wshEventData= function(reqId::Int, dataJson::String)
 
 historicalSchedule= function(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::DataFrame)
+
+userInfo= function(reqId::Int, whiteBrandingId::String)

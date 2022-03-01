@@ -10,7 +10,11 @@
 
   o(i, f, s, b, Jib.Requests.splat(cl)..., cv)
 
-  m = split(String(take!(o.buf)), '\0')
+  msg = take!(o.buf)
+
+  @test pop!(msg) == 0x00
+
+  m = split(String(msg), '\0')
 
   it = Iterators.Stateful(Jib.Reader.Decoder.Field.(m))
 
@@ -30,7 +34,8 @@
   @test cl == cc
   @test cv == cw
 
-  popfirst!(it)
   @test isempty(it)
+
+  @test_throws EOFError popfirst!(it)
 
 end
