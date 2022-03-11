@@ -133,8 +133,8 @@ function simple_wrap()
 
   w = Wrapper(
 
-    tickPrice= (tickerId::Int, field::String, price::Float64, size::Float64, attrib::TickAttrib) ->
-                 println("tickPrice: $tickerId $field $price $size $attrib"),
+    tickPrice= (tickerId::Int, field::String, price::Union{Float64,Nothing}, size::Union{Float64,Nothing}, attrib::TickAttrib) ->
+                 println("tickPrice: $tickerId $field $(something(price, "NA")) $(something(size, "NA")) $attrib"),
 
     tickSize= (tickerId::Int, field::String, size::Float64) -> println("tickSize: $tickerId $field $size"),
 

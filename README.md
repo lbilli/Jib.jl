@@ -140,7 +140,7 @@ are found [here](data/wrapper_signatures.jl).
 Callbacks are generally invoked with arguments and types matching the signatures
 as described in the official documentation.
 However, there are few exceptions:
-- `tickPrice()` has an extra `size::Int` argument,
+- `tickPrice()` has an extra `size::Float64` argument,
   which is meaningful only when `TickType ∈ {BID, ASK, LAST}`.
   In these cases, the official IB API fires an extra `tickSize()` event instead.
 - `historicalData()` is invoked only once per request,

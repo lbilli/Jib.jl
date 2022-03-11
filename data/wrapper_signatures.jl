@@ -1,4 +1,4 @@
-tickPrice= function(tickerId::Int, field::String, price::Float64, size::Float64, attrib::TickAttrib)
+tickPrice= function(tickerId::Int, field::String, price::Union{Float64,Nothing}, size::Union{Float64,Nothing}, attrib::TickAttrib)
 
 tickSize= function(tickerId::Int, field::String, size::Float64)
 

@@ -86,8 +86,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           tickerId::Int,
           ticktype::Int,
-          price::Float64,
-          size::Float64,
+          price::Union{Float64,Nothing},
+          size::Union{Float64,Nothing},
           mask::Int = it
 
           w.tickPrice(tickerId, tickname(ticktype), price, size, unmask(TickAttrib, mask))
