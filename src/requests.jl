@@ -236,10 +236,22 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.ADVANCED_ORDER_REJECT && o(order.advancedErrorOverride)
 
+  ib.version ≥ Client.MANUAL_ORDER_TIME && o(order.manualOrderTime)
+
   sendmsg(ib, o)
 end
 
-cancelOrder(ib::Connection, id::Int) = req_simple(ib, 4, 1, id) ### CANCEL_ORDER
+function cancelOrder(ib::Connection, id::Int, manualOrderCancelTime::String)
+
+  o = enc()
+
+  o(4, 1,  ### CANCEL_ORDER
+    id)
+
+  ib.version ≥ Client.MANUAL_ORDER_TIME && o(manualOrderCancelTime)
+
+  sendmsg(ib, o)
+end
 
 reqOpenOrders(ib::Connection) = req_simple(ib, 5, 1) ### REQ_OPEN_ORDERS
 
