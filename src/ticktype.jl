@@ -99,4 +99,7 @@ const ticktype = ["BID_SIZE",                  #   0
                   "ETF_NAV_LAST",              #  96
                   "ETF_FROZEN_NAV_LAST",       #  97
                   "ETF_NAV_HIGH",              #  98
-                  "ETF_NAV_LOW"]               #  99
+                  "ETF_NAV_LOW",               #  99
+                  "SOCIAL_MARKET_ANALYTICS",   # 100
+                  "ESTIMATED_IPO_MIDPOINT",    # 101
+                  "FINAL_IPO_LAST"]            # 102

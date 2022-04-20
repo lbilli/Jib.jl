@@ -15,7 +15,9 @@ Define various encodings for known types
 """
 (e::Encoder)(::T) where T = error("unknown Type: $T")
 
-(e::Encoder)(x::Union{AbstractString,Int,Float64,Symbol}) = print(e.buf, x, '\0')
+(e::Encoder)(x::Union{AbstractString,Int}) = print(e.buf, x, '\0')
+
+(e::Encoder)(x::Float64) = x == Inf ? e("Infinity") : print(e.buf, x, '\0')
 
 (e::Encoder)(::Nothing) = e("")
 

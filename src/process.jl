@@ -269,6 +269,12 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           ver ≥ Client.AUTO_CANCEL_PARENT && (o.autoCancelParent = pop(it))
 
+          ver ≥ Client.PEGBEST_PEGMID_OFFSETS && slurp!(o, (:minTradeQty,
+                                                            :minCompeteSize,
+                                                            :competeAgainstBestOffset,
+                                                            :midOffsetAtWhole,
+                                                            :midOffsetAtHalf), it)
+
           w.openOrder(o.orderId, c, o, os)
         end,
 
@@ -1026,6 +1032,12 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           slurp!(o, 119:126, it)    # :autoCancelDate through :parentPermId
 
           os = OrderState(ostatus, fill(ns, 9)..., fill(nothing, 3)..., ns, ns, take(it, 2)...)
+
+          ver ≥ Client.PEGBEST_PEGMID_OFFSETS && slurp!(o, (:minTradeQty,
+                                                            :minCompeteSize,
+                                                            :competeAgainstBestOffset,
+                                                            :midOffsetAtWhole,
+                                                            :midOffsetAtHalf), it)
 
           w.completedOrder(c, o, os)
          end,

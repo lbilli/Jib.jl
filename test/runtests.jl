@@ -14,6 +14,6 @@ include("roundtrip.jl")
 
   @test Jib.Reader.Decoder.tickname(90) == "DELAYED_HALTED"
 
-  @test Jib.Reader.Decoder.tickname(99) == "ETF_NAV_LOW"
+  @test Jib.Reader.Decoder.tickname(102) == "FINAL_IPO_LAST"
 
 end

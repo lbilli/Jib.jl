@@ -47,3 +47,14 @@ struct SoftDollarTier
   displayName::String
 end
 SoftDollarTier() = SoftDollarTier(ns, ns, ns)
+
+
+struct WshEventData
+  conId::Union{Int,Nothing}
+  filter::String
+  fillWatchlist::Bool
+  fillPortfolio::Bool
+  fillCompetitors::Bool
+end
+WshEventData(conId::Int) = WshEventData(conId, ns, false, false, false)
+WshEventData(args...) = WshEventData(nothing, args...)

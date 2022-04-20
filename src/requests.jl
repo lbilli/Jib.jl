@@ -9,7 +9,8 @@ import ..AbstractCondition,
        ..FaDataType,
        ..MarketDataType,
        ..Order,
-       ..ScannerSubscription
+       ..ScannerSubscription,
+       ..WshEventData
 
 include("encoder.jl")
 
@@ -238,6 +239,21 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.MANUAL_ORDER_TIME && o(order.manualOrderTime)
 
+  if ib.version ≥ Client.PEGBEST_PEGMID_OFFSETS
+
+    contract.exchange == "IBKRATS" && o(order.minTradeQty)
+
+    order.orderType == "PEG BEST" && o(order.minCompeteSize,
+                                       order.competeAgainstBestOffset)
+
+    if order.orderType == "PEG BEST" && order.competeAgainstBestOffset == Inf ||
+       order.orderType == "PEG MID"
+
+      o(order.midOffsetAtWhole,
+        order.midOffsetAtHalf)
+    end
+  end
+
   sendmsg(ib, o)
 end
 
@@ -317,24 +333,16 @@ reqAutoOpenOrders(ib::Connection, bAutoBind::Bool) = req_simple(ib, 15, 1, bAuto
 
 reqAllOpenOrders(ib::Connection) = req_simple(ib, 16, 1) ### REQ_ALL_OPEN_ORDERS
 
-reqManagedAccts(ib::Connection) = req_simple(ib, 17, 1)  ### REQ_MANAGED_ACCTS
+reqManagedAccts(ib::Connection) = req_simple(ib, 17, 1) ### REQ_MANAGED_ACCTS
 
-function requestFA(ib::Connection, faDataType::FaDataType)
-
-  o = enc()
-
-  o(18, 1,   ### REQ_FA
-    Int(faDataType))
-
-  sendmsg(ib, o)
-end
+requestFA(ib::Connection, faDataType::FaDataType) = req_simple(ib, 18, 1, faDataType) ### REQ_FA
 
 function replaceFA(ib::Connection, reqId::Int, faDataType::FaDataType, xml::String)
 
   o = enc()
 
   o(19, 1,    ### REPLACE_FA
-    Int(faDataType),
+    faDataType,
     xml,
     reqId)
 
@@ -632,7 +640,18 @@ reqWshMetaData(ib::Connection, reqId::Int) = req_simple(ib, 100, reqId) ### REQ_
 
 cancelWshMetaData(ib::Connection, reqId::Int) = req_simple(ib, 101, reqId) ### CANCEL_WSH_META_DATA
 
-reqWshEventData(ib::Connection, reqId::Int, conId::Int) = req_simple(ib, 102, reqId) ### REQ_WSH_EVENT_DATA
+function reqWshEventData(ib::Connection, reqId::Int, wshEventData::WshEventData)
+
+  o = enc()
+
+  o(102,     ### REQ_WSH_EVENT_DATA
+    reqId)
+
+  ib.version ≥ Client.WSH_EVENT_DATA_FILTERS ? o(splat(wshEventData)) :
+                                               o(wshEventData.conId)
+
+  sendmsg(ib, o)
+end
 
 cancelWshEventData(ib::Connection, reqId::Int) = req_simple(ib, 103, reqId) ### CANCEL_WSH_EVENT_DATA
 
