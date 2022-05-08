@@ -13,7 +13,7 @@ const pop = popfirst!
 
 function decode(msg, w, ver)
 
-  it = Iterators.Stateful(Field.(msg))
+  it = Iterators.Stateful(Iterators.map(Field, msg))
 
   # The first field is the message ID
   id::Int = pop(it)

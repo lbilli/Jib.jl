@@ -26,30 +26,24 @@ import ...ComboLeg,
 
 Utility functions to read from an iterator `it` and convert to types `T`.
 """
-slurp(::Type{T}, it) where T<:Union{Bool,Int,Enum{Int32},Float64,String} = convert(T, pop(it))
+slurp(::Type{T}, it) where T<:Union{Bool,Int,Enum{Int32},Float64,String,Symbol} = convert(T, pop(it))
 
 slurp(::Type{T}, it) where T = T(take(it, fieldcount(T))...)
 
-slurp(t, it) = convert.(t, take(it, length(t)))
+slurp(t, it) = slurp.(t, Ref(it))
 
-slurp!(x::T, idx, it) where T = setfield!.(Ref(x), idx, slurp(fieldtype.(T, idx), it))
-
+slurp!(x::T, idx, it) where T = for i ∈ idx
+                                  setfield!(x, i, convert(fieldtype(T, i), pop(it)))
+                                end
 
 """
-    tagvalue2nt(x)
+    tagvalue2nt(n, it)
 
-Convert a `String[]` into a `NamedTuple` like this:
+Return a `NamedTuple` by popping `2n` elements from `it`:
 
     ["tag1", "value1", "tag2", "value2", ...] -> (tag1="value1", tag2="value2", ...)
 """
-function tagvalue2nt(x)
-
-  @assert iseven(length(x))
-
-  s = collect(String, x)
-
-  (; (Symbol(t) => v for (t, v) ∈ Iterators.partition(s, 2))...)
-end
+tagvalue2nt(n, it) = (; (slurp(Symbol, it) => slurp(String, it) for _ ∈ 1:n)...)
 
 
 function unmask(T::Type{NamedTuple{M,NTuple{N,Bool}}}, mask) where {M,N}
@@ -191,7 +185,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           # SmartComboRouting
           n = pop(it)
-          n > 0 && (o.smartComboRoutingParams = tagvalue2nt(take(it, 2n)))
+          n > 0 && (o.smartComboRoutingParams = tagvalue2nt(n, it))
 
           slurp!(o, (:scaleInitLevelSize,
                      :scaleSubsLevelSize,
@@ -217,7 +211,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           if !isempty(o.algoStrategy)
             n = pop(it)
-            n > 0 && (o.algoParams = tagvalue2nt(take(it, 2n)))
+            n > 0 && (o.algoParams = tagvalue2nt(n, it))
           end
 
           o.solicited,
@@ -320,7 +314,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           slurp!(cd, 9:17, it)
 
           n::Int = pop(it)
-          n > 0 && (cd.secIdList = tagvalue2nt(take(it, 2n)))
+          n > 0 && (cd.secIdList = tagvalue2nt(n, it))
 
           slurp!(cd, (:aggGroup,
                       :underSymbol,
@@ -425,7 +419,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                       :evMultiplier), it)
 
           n::Int = pop(it)
-          n > 0 && (cd.secIdList = tagvalue2nt(take(it, 2n)))
+          n > 0 && (cd.secIdList = tagvalue2nt(n, it))
 
           cd.aggGroup,
           cd.marketRuleIds = it
@@ -972,7 +966,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           # SmartComboRouting
           n = pop(it)
-          n > 0 && (o.smartComboRoutingParams = tagvalue2nt(take(it, 2n)))
+          n > 0 && (o.smartComboRoutingParams = tagvalue2nt(n, it))
 
           slurp!(o, (:scaleInitLevelSize,
                      :scaleSubsLevelSize,
@@ -997,7 +991,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           if !isempty(o.algoStrategy)
             n = pop(it)
-            n > 0 && (o.algoParams = tagvalue2nt(take(it, 2n)))
+            n > 0 && (o.algoParams = tagvalue2nt(n, it))
           end
 
           o.solicited,

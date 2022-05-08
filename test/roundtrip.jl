@@ -16,7 +16,7 @@
 
   m = split(String(msg), '\0')
 
-  it = Iterators.Stateful(Jib.Reader.Decoder.Field.(m))
+  it = makeit(m)
 
   j::Int,
   g::Float64,

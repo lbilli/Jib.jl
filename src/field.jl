@@ -8,8 +8,8 @@ struct Field{T<:AbstractString}
   value::T
 end
 
-# String
-Base.convert(::Type{String}, x::Field) = String(x.value)
+# String and Symbol
+Base.convert(::Type{T}, x::Field) where T<:Union{String,Symbol} = T(x.value)
 
 # Int
 function Base.convert(::Type{Int}, x::Field)

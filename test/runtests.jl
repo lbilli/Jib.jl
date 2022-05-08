@@ -2,6 +2,8 @@ using Test,
       DataFrames,
       Jib
 
+makeit(v) = Iterators.Stateful(Iterators.map(Jib.Reader.Decoder.Field, v))
+
 include("client.jl")
 include("decoder.jl")
 include("requests.jl")

@@ -28,33 +28,44 @@
   # String
   @test collect(String, v) == ["1", "2", "a"]
 
-  # slurp
-  v =  Jib.Reader.Decoder.Field.(["1", "0", "action", "", "0", "0", "", "-1", ""])
-  it = Iterators.Stateful(v)
+  # Symbol
+  @test convert(Symbol, v[3]) === :a
 
-  @test Jib.Reader.Decoder.slurp((Int, Float64, String), it) == [1, 0., "action"]
+  # slurp
+  v = ["1", "0", "action", "", "0", "0", "", "-1", ""]
+  it = makeit(v)
+
+  @test Jib.Reader.Decoder.slurp((Int, Float64, String), it) === (1, 0., "action")
 
   @test isnothing(Jib.Reader.Decoder.slurp(Int, it))
 
-  it = Iterators.Stateful(v)
+  it = makeit(v)
   @test Jib.Reader.Decoder.slurp(Jib.ComboLeg, it) == Jib.ComboLeg(conId=1, action="action")
 
-  it = Iterators.Stateful(v)
+  it = makeit(v)
   c = Jib.Contract()
   Jib.Reader.Decoder.slurp!(c, (:conId, :secType, :symbol), it)
-  @test c.symbol == Jib.Contract(symbol="action").symbol == "action"
+  @test c.symbol == v[3]
+
+  Jib.Reader.Decoder.slurp!(c, 2:4, it)
+  @test c.symbol == v[4]
+  @test c.secType == v[5]
+
+  cd = Jib.ContractDetails()
+  Jib.Reader.Decoder.slurp!(cd, (:evRule, :evMultiplier), it)
+  @test cd.evMultiplier == -1
 
   # unmask
   @test Jib.Reader.Decoder.unmask(NamedTuple{(:a, :b),NTuple{2,Bool}}, 2) == (a=false, b=true)
   @test_logs (:error, "unmask(): wrong attribs") Jib.Reader.Decoder.unmask(NamedTuple{(:a, :b),NTuple{2,Bool}}, 4)
 
   # tagvalue2nt()
-  v =  Jib.Reader.Decoder.Field.(["a", "1", "b", "2"])
-  it = Iterators.Stateful(v)
-  @test Jib.Reader.Decoder.tagvalue2nt(Iterators.take(it, 4)) == (a="1", b="2")
+  v =  ["a", "1", "b", "2"]
+  it = makeit(v)
+  @test Jib.Reader.Decoder.tagvalue2nt(2, it) == (a="1", b="2")
 
   # fill_df
-  it = Iterators.Stateful(v)
+  it = makeit(v)
   @test Jib.Reader.Decoder.fill_df((a=String, b=Int), 2, it) == DataFrame(:a => ["a", "b"], :b => [1, 2])
 
 end
