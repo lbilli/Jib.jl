@@ -55,6 +55,9 @@ struct WshEventData
   fillWatchlist::Bool
   fillPortfolio::Bool
   fillCompetitors::Bool
+  startDate::String
+  endDate::String
+  totalLimit::Union{Int,Nothing}
 end
-WshEventData(conId::Int) = WshEventData(conId, ns, false, false, false)
-WshEventData(args...) = WshEventData(nothing, args...)
+WshEventData(conId::Int, args...) = WshEventData(conId, "", args...)
+WshEventData(filter::String, args...) = WshEventData(nothing, filter, args...)

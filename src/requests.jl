@@ -647,8 +647,9 @@ function reqWshEventData(ib::Connection, reqId::Int, wshEventData::WshEventData)
   o(102,     ### REQ_WSH_EVENT_DATA
     reqId)
 
-  ib.version ≥ Client.WSH_EVENT_DATA_FILTERS ? o(splat(wshEventData)) :
-                                               o(wshEventData.conId)
+  ib.version ≥ Client.WSH_EVENT_DATA_FILTERS_DATE ? o(splat(wshEventData))      :
+  ib.version ≥ Client.WSH_EVENT_DATA_FILTERS      ? o(splat(wshEventData, 1:5)) :
+                                                    o(wshEventData.conId)
 
   sendmsg(ib, o)
 end
