@@ -1,4 +1,44 @@
 """
+    FieldIterator(msg)
+
+Stateful iterator over the fields of message `msg`.
+Return [`Field`](@ref) wrapped substrings.
+"""
+mutable struct FieldIterator
+  msg::String
+  c::Int
+  function FieldIterator(msg)
+    @assert !isempty(msg) && msg[end] == '\0'
+    new(msg, 1)
+  end
+end
+
+Base.IteratorSize(::Type{FieldIterator}) = Base.SizeUnknown()
+Base.IteratorEltype(::Type{FieldIterator}) = Base.HasEltype()
+Base.eltype(::Type{FieldIterator}) = Field
+Base.isdone(it::FieldIterator) = it.c > ncodeunits(it.msg)
+
+function Base.iterate(it::FieldIterator, s=nothing)
+
+  idx = findnext(==('\0'), it.msg, it.c)
+  isnothing(idx) && return nothing
+
+  res = @inbounds Field(SubString(it.msg, it.c, prevind(it.msg, idx)))
+
+  setfield!(it, :c, idx + 1)
+
+  res, nothing
+end
+
+function Base.popfirst!(it::FieldIterator)
+
+  x = iterate(it)
+
+  isnothing(x) ? throw(EOFError()) : x[1]
+end
+
+
+"""
     Field()
 
 Wrap inbound fields and define conversions to

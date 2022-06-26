@@ -58,7 +58,7 @@ function connect(host, port, clientId, connectOptions::String="", optionalCapabi
   # Handshake
   Client.write_one(s, buf)
 
-  res = Reader.read_msg(s)
+  res = collect(String, Reader.read_msg(s))
 
   @assert length(res) == 2
 

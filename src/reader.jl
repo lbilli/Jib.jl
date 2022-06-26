@@ -1,18 +1,16 @@
 module Reader
 
-using ..Client: read_one
+using ..Client: Client, read_one
 
-include("decoder.jl")
+include("decode.jl")
+include("field.jl")
 
 
 function read_msg(socket)
 
   msg = read_one(socket)
 
-  # Assert and chop last null char
-  @assert length(msg) > 1 && msg[1] != pop!(msg) == 0x00
-
-  split(String(msg), '\0')
+  FieldIterator(String(msg))
 end
 
 
@@ -23,9 +21,9 @@ Process one message and dispatch the appropriate callback. **Blocking**.
 """
 function check_msg(ib, w)
 
-  msg = read_msg(ib.socket)
+  it = read_msg(ib.socket)
 
-  Decoder.decode(msg, w, ib.version)
+  decode(it, w, ib.version)
 end
 
 
@@ -42,9 +40,9 @@ function check_all(ib, w, flush=false)
   count = 0
   while bytesavailable(ib.socket) > 0 || ib.socket.status == Base.StatusOpen # =3
 
-    msg = read_msg(ib.socket)
+    it = read_msg(ib.socket)
 
-    flush || Decoder.decode(msg, w, ib.version)
+    flush || decode(it, w, ib.version)
 
     count += 1
   end

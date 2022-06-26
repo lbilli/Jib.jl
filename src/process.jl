@@ -102,7 +102,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
   # ERR_MSG
    4 => (it, w, ver) -> w.error(slurp((Int,Int,String), it)...,
-                                ver ≥ Client.ADVANCED_ORDER_REJECT ? slurp(String, it) : ""),
+                                ver ≥ Client.ADVANCED_ORDER_REJECT ? slurp(String, it) : ns),
 
   # OPEN_ORDER
    5 => function(it, w, ver)

@@ -12,11 +12,7 @@
 
   msg = take!(o.buf)
 
-  @test pop!(msg) == 0x00
-
-  m = split(String(msg), '\0')
-
-  it = makeit(m)
+  it = Jib.Reader.FieldIterator(String(msg))
 
   j::Int,
   g::Float64,
@@ -24,9 +20,9 @@
   z::String,
   l::Bool = it
 
-  cc = Jib.Reader.Decoder.slurp(Jib.ComboLeg, it)
+  cc = Jib.Reader.slurp(Jib.ComboLeg, it)
 
-  cw = Jib.Reader.Decoder.slurp(Jib.condition_map[Jib.Reader.Decoder.slurp(Jib.ConditionType, it)], it)
+  cw = Jib.Reader.slurp(Jib.condition_map[Jib.Reader.slurp(Jib.ConditionType, it)], it)
 
   @test i == j
   @test f == g

@@ -1,19 +1,12 @@
-module Decoder
-
 using Base.Iterators: take
 
-using ...Client
-
-include("field.jl")
 include("process.jl")
 include("ticktype.jl")
 
 # Make a shortcut
 const pop = popfirst!
 
-function decode(msg, w, ver)
-
-  it = Iterators.Stateful(Iterators.map(Field, msg))
+function decode(it, w, ver)
 
   # The first field is the message ID
   id::Int = pop(it)
@@ -27,19 +20,18 @@ function decode(msg, w, ver)
   f = get(process, id, nothing)
 
   if isnothing(f)
-    @error "decoder: unknown message" id
+    @error "decode(): unknown message" id
 
   else
     try
       f(it, w, ver)
     catch e
-      @error "decoder: exception caught" M=join(msg, '|')
+      @error "decode(): exception caught" M=it.msg
       # Print stacktrace to stderr
       Base.display_error(Base.current_exceptions())
     end
 
-    isempty(it) || @error "decoder: message not fully parsed" M=join(msg, '|') ignored=collect(String, it)
+    isempty(it) || @error "decode(): message not fully parsed" M=it.msg ignored=collect(String, it)
   end
 end
 
-end

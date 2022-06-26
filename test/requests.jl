@@ -6,17 +6,16 @@
 
   m = split(String(take!(o.buf)), '\0')
 
-  @test length(m) == 10
-  @test m[1] == ""            # nothing
-  @test m[2] == "1"           # Bool
-  @test m[3] == "1"           # Int
-  @test m[4] == "1.1"         # Float64
-  @test m[5] == "Infinity"    # Inf
-  @test m[6] == "1"           # Enum{Int32}
-  @test m[7] == "a"           # Symbol
-  @test m[8] == "test"        # String
-  @test m[9] == "a=1;b=2;c=3.2;" # NamedTuple
-  @test m[10] == ""
+  @test m == ["",               # nothing
+              "1",              # Bool
+              "1",              # Int
+              "1.1",            # Float64
+              "Infinity",       # Inf
+              "1",              # Enum{Int32}
+              "a",              # Symbol
+              "test",           # String
+              "a=1;b=2;c=3.2;", # NamedTuple
+              ""]
 
   # Condition
   o(Jib.ConditionTime("o", true, "yyyymmdd"))
@@ -32,6 +31,6 @@
 
   # Unsuported types
   @test_throws ErrorException o(Int32(2))
-  @test_throws ErrorException o(Float32(1.))
+  @test_throws ErrorException o(Float32(1))
 
 end
