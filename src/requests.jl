@@ -227,13 +227,10 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :dontUseAutoPriceForHedge,
                   :isOmsContainer,
                   :discretionaryUpToLimitPrice,
-                  :usePriceMgmtAlgo)))
-
-  ib.version ≥ Client.DURATION && o(order.duration)
-
-  ib.version ≥ Client.POST_TO_ATS && o(order.postToAts)
-
-  ib.version ≥ Client.AUTO_CANCEL_PARENT && o(order.autoCancelParent)
+                  :usePriceMgmtAlgo,
+                  :duration,
+                  :postToAts,
+                  :autoCancelParent)))
 
   ib.version ≥ Client.ADVANCED_ORDER_REJECT && o(order.advancedErrorOverride)
 

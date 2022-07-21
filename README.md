@@ -7,7 +7,7 @@
 TWS or IBGateway.
 
 It aims to be feature complete, however it does not support legacy versions.
-Currently, only API versions `v157+` are supported.
+Currently, only API versions `v165+` are supported.
 
 The package design follows the official C++/Java
 [IB API](https://interactivebrokers.github.io/tws-api/),

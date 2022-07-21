@@ -255,13 +255,10 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :dontUseAutoPriceForHedge,
                      :isOmsContainer,
                      :discretionaryUpToLimitPrice,
-                     :usePriceMgmtAlgo), it)
-
-          ver ≥ Client.DURATION && (o.duration = pop(it))
-
-          ver ≥ Client.POST_TO_ATS && (o.postToAts = pop(it))
-
-          ver ≥ Client.AUTO_CANCEL_PARENT && (o.autoCancelParent = pop(it))
+                     :usePriceMgmtAlgo,
+                     :duration,
+                     :postToAts,
+                     :autoCancelParent), it)
 
           ver ≥ Client.PEGBEST_PEGMID_OFFSETS && slurp!(o, (:minTradeQty,
                                                             :minCompeteSize,
@@ -303,11 +300,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           cd.marketName,
           cd.contract.tradingClass,
           cd.contract.conId,
-          cd.minTick = it
-
-          ver < Client.SIZE_RULES && pop(it)  # deprecated mdSizeMultiplier
-
-          cd.contract.multiplier = pop(it)
+          cd.minTick,
+          cd.contract.multiplier = it
 
           slurp!(cd, 4:8, it)
           cd.contract.primaryExchange = pop(it)
@@ -321,13 +315,10 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                       :underSecType,
                       :marketRuleIds,
                       :realExpirationDate,
-                      :stockType), it)
-
-          Client.FRACTIONAL_SIZE_SUPPORT ≤ ver < Client.SIZE_RULES && pop(it)  # deprecated sizeMinTick
-
-          ver ≥ Client.SIZE_RULES && slurp!(cd, (:minSize,
-                                                 :sizeIncrement,
-                                                 :suggestedSizeIncrement), it)
+                      :stockType,
+                      :minSize,
+                      :sizeIncrement,
+                      :suggestedSizeIncrement), it)
 
           w.contractDetails(reqId, cd)
         end,
@@ -403,12 +394,10 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           cd.contract.currency,
           cd.marketName,
           cd.contract.tradingClass,
-          cd.contract.conId,
-          cd.minTick = it
+          cd.contract.conId = it
 
-          ver < Client.SIZE_RULES && pop(it)  # deprecated mdSizeMultiplier
-
-          slurp!(cd, (:orderTypes,
+          slurp!(cd, (:minTick,
+                      :orderTypes,
                       :validExchanges,
                       :nextOptionDate,
                       :nextOptionType,
@@ -421,12 +410,11 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           n::Int = pop(it)
           n > 0 && (cd.secIdList = tagvalue2nt(n, it))
 
-          cd.aggGroup,
-          cd.marketRuleIds = it
-
-          ver ≥ Client.SIZE_RULES && slurp!(cd, (:minSize,
-                                                 :sizeIncrement,
-                                                 :suggestedSizeIncrement), it)
+          slurp!(cd, (:aggGroup,
+                      :marketRuleIds,
+                      :minSize,
+                      :sizeIncrement,
+                      :suggestedSizeIncrement), it)
 
           w.bondContractDetails(reqId, cd)
         end,
