@@ -1,7 +1,7 @@
 name = "Jib"
 uuid = "f310f2d2-a263-11e8-3998-47bd686f18f7"
 authors = ["Luca Billi <noreply.section+dev@gmail.com>"]
-version = "0.18.0"
+version = "0.18.1"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"

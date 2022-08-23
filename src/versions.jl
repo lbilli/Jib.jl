@@ -9,5 +9,6 @@
   WSH_EVENT_DATA_FILTERS      = 171
   IPO_PRICES                  = 172
   WSH_EVENT_DATA_FILTERS_DATE = 173
+  INSTRUMENT_TIMEZONE         = 174
 
 end
