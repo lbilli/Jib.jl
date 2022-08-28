@@ -1,8 +1,7 @@
 module Jib
 
 using DataFrames,
-      Sockets,
-      TimeZones
+      Sockets
 
 include("client.jl")
 include("enums.jl")
@@ -25,15 +24,9 @@ struct Connection
   id::Int
   connectOptions::String
   version::Client.Version
-  time::ZonedDateTime
-  servertz::TimeZone
+  time::String
 end
-Connection(socket, id, connectOptions, version, time) = Connection(socket,
-                                                                   id,
-                                                                   connectOptions,
-                                                                   version,
-                                                                   time,
-                                                                   timezone(time))
+
 
 include("requests.jl")        ; using .Requests
 
@@ -67,7 +60,7 @@ function connect(host, port, clientId, connectOptions::String="", optionalCapabi
   v = parse(Int, res[1])
   m ≤ v ≤ M || error("unsupported version")
 
-  ib = Connection(s, clientId, connectOptions, Client.Version(v), from_ibtime(res[2]))
+  ib = Connection(s, clientId, connectOptions, Client.Version(v), res[2])
 
   Requests.startApi(ib, clientId, optionalCapabilities)
 
