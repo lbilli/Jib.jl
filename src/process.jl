@@ -661,7 +661,12 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
                   nd::Int = pop(it)
 
-                  ContractDescription(c, collect(String, take(it, nd)))
+                  dst = collect(String, take(it, nd))
+
+                  ver ≥ Client.BOND_ISSUERID && slurp!(c, (:description,
+                                                           :issuerId), it)
+
+                  ContractDescription(c, dst)
                 end
 
           w.symbolSamples(reqId, cd)

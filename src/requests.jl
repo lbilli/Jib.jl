@@ -292,6 +292,8 @@ function reqContractDetails(ib::Connection, reqId::Int, contract::Contract)
     reqId,
     splat(contract, 1:15))
 
+  ib.version ≥ Client.BOND_ISSUERID && o(contract.issuerId)
+
   sendmsg(ib, o)
 end
 
