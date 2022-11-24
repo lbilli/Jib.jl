@@ -1,3 +1,15 @@
+struct Bar
+  count::Int        # Fields reordered for convenience when constructing
+  time::String
+  open::Float64
+  close::Float64
+  high::Float64
+  low::Float64
+  wap::Float64
+  volume::Float64
+end
+
+
 struct CommissionReport
   execId::String
   commission::Float64

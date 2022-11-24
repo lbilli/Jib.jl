@@ -1,6 +1,7 @@
 using DataFrames
 
-import ...ComboLeg,
+import ...Bar,
+       ...ComboLeg,
        ...CommissionReport,
        ...ConditionType,
        ...Contract,
@@ -745,16 +746,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           reqId::Int = pop(it)
 
-          bar = NamedTuple{(:count,
-                            :time,
-                            :open,
-                            :close,
-                            :high,
-                            :low,
-                            :wap,
-                            :volume)}(slurp((Int,String,Float64,Float64,Float64,Float64,Float64,Float64), it))
-
-          w.historicalDataUpdate(reqId, bar)
+          w.historicalDataUpdate(reqId, slurp(Bar, it))
         end,
 
   # REROUTE_MKT_DATA_REQ

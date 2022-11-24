@@ -3,16 +3,15 @@
 **A Julia implementation of Interactive Brokers API**
 
 `Jib` is a native [Julia](https://julialang.org/) client that implements
-[Interactive Brokers](https://www.interactivebrokers.com/) API to communicate with their
-TWS or IBGateway.
+[Interactive Brokers](https://www.interactivebrokers.com/) API to communicate
+with TWS or IBGateway.
 
 It aims to be feature complete, however it does not support legacy versions.
 Currently, only API versions `v165+` are supported.
 
 The package design follows the official C++/Java
 [IB API](https://interactivebrokers.github.io/tws-api/),
-which is based on an asynchronous request-response communication model
-over TCP.
+which is based on an asynchronous communication model over TCP.
 
 ### Installation
 To install from GitHub:
@@ -22,9 +21,9 @@ To install from GitHub:
 
 ### Usage
 The user interacts mainly with these two objects:
-- `Connection`: created after establishing a connection with the server and
-  holding a reference to it.
-- `Wrapper`: containing the callbacks that are invoked when the server responses are processed.
+- `Connection`: holding a reference to an established connection with the server
+- `Wrapper`: containing the callbacks that are invoked when the server responses
+  are processed.
 
 Other data structures, such as `Contract` and `Order`, are implemented as Julia `struct`
 and mirror the respective classes in the official IB API.
@@ -80,7 +79,7 @@ Jib.disconnect(ib)
 It is possible to process the server responses either within the main process
 or in a separate background `Task`:
 - **foreground processing** is triggered by invoking `Jib.check_all(ib, wrap)`.
-  It is the user's responsability to call it on a **regular basis**,
+  It is the user's responsibility to call it on a **regular basis**,
   especially when data are streaming in.
 - **background processing** is started by `Jib.start_reader(ib, wrap)`.
   A separate `Task` is started in the background, which monitors the connection and processes
@@ -99,7 +98,7 @@ As Julia is not an object-oriented language, the functionality of the IB
   a `Connection` object.
 - `disconnect(::Connection)`: terminate the connection.
 - `check_all(::Connection, ::Wrapper)`: process available responses, **not blocking**.
-  Return the number of messages processed. **Needs to be called regularly**.
+  Return the number of messages processed. **Needs to be called regularly!**
 - `start_reader(::Connection, ::Wrapper)`: start a `Task` for background processing.
 - methods that send specific requests to the server.
   Refer to the official IB `EClient` class documentation for further details and method signatures.
@@ -107,10 +106,11 @@ As Julia is not an object-oriented language, the functionality of the IB
   `reqContractDetails(ib::Connection, reqId:Int, contract::Contract)`
 
 ##### [`Wrapper`](src/wrapper.jl)
-Like the official IB `EWrapper` class, this `struct` holds the callbacks that are dispatched when
-responses are processed.
-By default it is filled with dummy functions. The user should override in the constructor
-the desired methods, as shown [above](#usage).
+Like the official IB `EWrapper` class, this `struct` holds the callbacks
+that are dispatched when responses are processed.
+The user provides the callback definitions as keyword arguments
+in the constructor, as shown [above](#usage), and/or by setting
+the property of an existing instance.
 
 A more comprehensive example is provided by [`simple_wrap()`](src/wrapper.jl#L130),
 which is used like this:
@@ -160,21 +160,21 @@ are **not** used in this package.
 `marketRule()` and the `historicalTicks*()` family.
 
 ##### Missing Values
-Occasionally there is the need for numerical types to represent
+Occasionally, for numerical types, there is the need to represent
 the lack of a value.
 
-The IB API does not adopt a uniform solution for all situations, but rather
-various sentinel values are used.
+IB API does not have a uniform solution across the board, but rather
+it adopts a variety of sentinel values.
 They can be either the plain `0` or the largest representable value
 of a given type such as `2147483647` and `9223372036854775807`
-for 32 and 64 bit integers respectively or `1.7976931348623157E308`
-for 64 bit floating point.
+for 32- and 64-bit integers respectively or `1.7976931348623157E308`
+for 64-bit floating point.
 
-Within this package an effort is made to replace all these values with
-Julia built-in `Nothing`.
+This package makes an effort to use Julia built-in `Nothing`
+in all circumstances.
 
 ##### Data Structures
-Other classes that mainly hold data are also defined.
+Other classes that mainly hold data are also replicated.
 They are implemented as Julia `struct` or `mutable struct` with names,
 types and default values matching the IB API counterparts: _e.g._
 `Contract`, `Order`, `ComboLeg`, `ExecutionFilter`, `ScannerSubscription`

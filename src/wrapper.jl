@@ -355,7 +355,7 @@ function simple_wrap()
                     println("histogramData: $reqId")
                   end,
 
-    historicalDataUpdate= (reqId::Int, bar::NamedTuple) ->
+    historicalDataUpdate= (reqId::Int, bar::Bar) ->
                             println("historicalDataUpdate: $reqId $bar"),
 
     rerouteMktDataReq= (reqId::Int, conid::Int, exchange::String) ->

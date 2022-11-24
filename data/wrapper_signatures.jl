@@ -126,7 +126,7 @@ headTimestamp= function(reqId::Int, headTimestamp::String)
 
 histogramData= function(reqId::Int, data::DataFrame)
 
-historicalDataUpdate= function(reqId::Int, bar::NamedTuple)
+historicalDataUpdate= function(reqId::Int, bar::Bar)
 
 rerouteMktDataReq= function(reqId::Int, conid::Int, exchange::String)
 

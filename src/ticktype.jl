@@ -1,4 +1,7 @@
-tickname(i) = ticktype[i + 1]
+tickname(i) = get(ticktype, i + 1) do
+                                    @error "tickname(): unknown ticktype" T=i
+                                    "UNKNOWN"
+                                   end
 
 const ticktype = ["BID_SIZE",                  #   0
                   "BID",                       #   1
@@ -102,4 +105,6 @@ const ticktype = ["BID_SIZE",                  #   0
                   "ETF_NAV_LOW",               #  99
                   "SOCIAL_MARKET_ANALYTICS",   # 100
                   "ESTIMATED_IPO_MIDPOINT",    # 101
-                  "FINAL_IPO_LAST"]            # 102
+                  "FINAL_IPO_LAST",            # 102
+                  "DELAYED_YIELD_BID",         # 103
+                  "DELAYED_YIELD_ASK"]         # 104

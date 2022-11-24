@@ -16,4 +16,6 @@ include("roundtrip.jl")
 
   @test Jib.Reader.tickname(102) == "FINAL_IPO_LAST"
 
+  @test (@test_logs (:error, "tickname(): unknown ticktype") Jib.Reader.tickname(-1)) == "UNKNOWN"
+
 end
