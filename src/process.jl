@@ -102,8 +102,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
    3 => (it, w, ver) -> w.orderStatus(slurp((Int,String,Float64,Float64,Float64,Int,Int,Float64,Int,String,Float64), it)...),
 
   # ERR_MSG
-   4 => (it, w, ver) -> w.error(slurp((Int,Int,String), it)...,
-                                ver ≥ Client.ADVANCED_ORDER_REJECT ? slurp(String, it) : ns),
+   4 => (it, w, ver) -> w.error(slurp((Int,Int,String,String), it)...),
 
   # OPEN_ORDER
    5 => function(it, w, ver)
@@ -115,7 +114,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           slurp!(c, [1:8; 10:12], it)
 
-          slurp!(o, 4:9, it)  # :action through :tif
+          slurp!(o, 4:9, it) # :action -> :tif
 
           slurp!(o, (:ocaGroup,
                      :account,
@@ -129,13 +128,15 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :discretionaryAmt,
                      :goodAfterTime), it)
 
-          pop(it)    # deprecated sharesAllocation
+          ver < Client.FA_PROFILE_DESUPPORT && pop(it) # Deprecated sharesAllocation
 
           slurp!(o, (:faGroup,
                      :faMethod,
-                     :faPercentage,
-                     :faProfile,
-                     :modelCode,
+                     :faPercentage), it)
+
+          pop(it) # Deprecated faProfile
+
+          slurp!(o, (:modelCode,
                      :goodTillDate,
                      :rule80A,
                      :percentOffset,
@@ -144,7 +145,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :designatedLocation,
                      :exemptCode), it)
 
-          slurp!(o, 43:48, it)    # :auctionStrategy through :stockRangeUpper
+          slurp!(o, 42:47, it) # :auctionStrategy -> :stockRangeUpper
 
           slurp!(o, (:displaySize,
                      :blockOrder,
@@ -153,16 +154,16 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :minQty,
                      :ocaType), it)
 
-          pop(it)    # deprecated eTradeOnly
-          pop(it)    # deprecated firmQuoteOnly
-          pop(it)    # deprecated nbboPriceCap
+          pop(it) # Deprecated eTradeOnly
+          pop(it) # Deprecated firmQuoteOnly
+          pop(it) # Deprecated nbboPriceCap
 
           slurp!(o, (:parentId,
                      :triggerMethod), it)
 
-          slurp!(o, 51:54, it)    # :volatility through :deltaNeutralAuxPrice
+          slurp!(o, 50:53, it) # :volatility -> :deltaNeutralAuxPrice
 
-          !isempty(o.deltaNeutralOrderType) && slurp!(o, 55:62, it)  # :deltaNeutralConId through :deltaNeutralDesignatedLocation
+          !isempty(o.deltaNeutralOrderType) && slurp!(o, 54:61, it) # :deltaNeutralConId -> :deltaNeutralDesignatedLocation
 
           slurp!(o, (:continuousUpdate,
                      :referencePriceType,
@@ -193,7 +194,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :scalePriceIncrement), it)
 
           !isnothing(o.scalePriceIncrement) &&
-          o.scalePriceIncrement > 0         && slurp!(o, 70:76, it) # scalePriceAdjustValue through scaleRandomPercent
+          o.scalePriceIncrement > 0         && slurp!(o, 69:75, it) # :scalePriceAdjustValue -> :scaleRandomPercent
 
           o.hedgeType = pop(it)
 
@@ -259,13 +260,12 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :usePriceMgmtAlgo,
                      :duration,
                      :postToAts,
-                     :autoCancelParent), it)
-
-          ver ≥ Client.PEGBEST_PEGMID_OFFSETS && slurp!(o, (:minTradeQty,
-                                                            :minCompeteSize,
-                                                            :competeAgainstBestOffset,
-                                                            :midOffsetAtWhole,
-                                                            :midOffsetAtHalf), it)
+                     :autoCancelParent,
+                     :minTradeQty,
+                     :minCompeteSize,
+                     :competeAgainstBestOffset,
+                     :midOffsetAtWhole,
+                     :midOffsetAtHalf), it)
 
           w.openOrder(o.orderId, c, o, os)
         end,
@@ -358,8 +358,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           reqId::Int = pop(it)
 
-          pop(it)  # ignore startDate
-          pop(it)  # ignore endDate
+          pop(it) # Ignore startDate
+          pop(it) # Ignore endDate
 
           n::Int = pop(it)
 
@@ -664,8 +664,8 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
                   dst = collect(String, take(it, nd))
 
-                  ver ≥ Client.BOND_ISSUERID && slurp!(c, (:description,
-                                                           :issuerId), it)
+                  slurp!(c, (:description,
+                             :issuerId), it)
 
                   ContractDescription(c, dst)
                 end
@@ -893,7 +893,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           slurp!(c, [1:8; 10:12], it)
 
-          slurp!(o, 4:9, it)  # :action through :tif
+          slurp!(o, 4:9, it) # :action -> :tif
 
           slurp!(o, (:ocaGroup,
                      :account,
@@ -907,9 +907,11 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :goodAfterTime,
                      :faGroup,
                      :faMethod,
-                     :faPercentage,
-                     :faProfile,
-                     :modelCode,
+                     :faPercentage), it)
+
+          ver < Client.FA_PROFILE_DESUPPORT && pop(it) # Deprecated faProfile
+
+          slurp!(o, (:modelCode,
                      :goodTillDate,
                      :rule80A,
                      :percentOffset,
@@ -918,7 +920,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :designatedLocation,
                      :exemptCode), it)
 
-          slurp!(o, 44:48, it)    # :startingPrice through :stockRangeUpper
+          slurp!(o, 43:47, it) # :startingPrice -> :stockRangeUpper
 
           slurp!(o, (:displaySize,
                      :sweepToFill,
@@ -927,9 +929,9 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :ocaType,
                      :triggerMethod), it)
 
-          slurp!(o, 51:54, it)    # :volatility through :deltaNeutralAuxPrice
+          slurp!(o, 50:53, it) # :volatility -> :deltaNeutralAuxPrice
 
-          !isempty(o.deltaNeutralOrderType) && slurp!(o, [55; 60:62], it)  # :deltaNeutralConId through :deltaNeutralDesignatedLocation
+          !isempty(o.deltaNeutralOrderType) && slurp!(o, [54; 59:61], it) # :deltaNeutralConId -> :deltaNeutralDesignatedLocation
 
           slurp!(o, (:continuousUpdate,
                      :referencePriceType,
@@ -958,7 +960,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :scalePriceIncrement), it)
 
           !isnothing(o.scalePriceIncrement) &&
-          o.scalePriceIncrement > 0         && slurp!(o, 70:76, it) # scalePriceAdjustValue through scaleRandomPercent
+          o.scalePriceIncrement > 0         && slurp!(o, 69:75, it) # :scalePriceAdjustValue -> :scaleRandomPercent
 
           o.hedgeType = pop(it)
 
@@ -1008,15 +1010,15 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                      :dontUseAutoPriceForHedge,
                      :isOmsContainer), it)
 
-          slurp!(o, 119:126, it)    # :autoCancelDate through :parentPermId
+          slurp!(o, 118:125, it) # :autoCancelDate -> :parentPermId
 
           os = OrderState(ostatus, fill(ns, 9)..., fill(nothing, 3)..., ns, ns, take(it, 2)...)
 
-          ver ≥ Client.PEGBEST_PEGMID_OFFSETS && slurp!(o, (:minTradeQty,
-                                                            :minCompeteSize,
-                                                            :competeAgainstBestOffset,
-                                                            :midOffsetAtWhole,
-                                                            :midOffsetAtHalf), it)
+          slurp!(o, (:minTradeQty,
+                     :minCompeteSize,
+                     :competeAgainstBestOffset,
+                     :midOffsetAtWhole,
+                     :midOffsetAtHalf), it)
 
           w.completedOrder(c, o, os)
          end,

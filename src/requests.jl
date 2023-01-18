@@ -79,9 +79,9 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
   o(3, ### PLACE_ORDER
     id,
     splat(contract, [1:12; 14; 15]),
-    splat(order, [4:9; 12; 83; 36; 37; 14:22]))  # "action" -> "tif"
-                                                 # "ocaGroup" "account" "openClose" "origin"
-                                                 # "orderRef" -> "hidden"
+    splat(order, [4:9; 12; 79; 35; 36; 14:22])) # :action -> :tif
+                                                # :ocaGroup :account :openClose :origin
+                                                # :orderRef -> :hidden
 
   if contract.secType == "BAG"
 
@@ -104,14 +104,17 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
   end
 
   o(nothing, # Deprecated sharesAllocation
+
     splat(order, (:discretionaryAmt,
                   :goodAfterTime,
                   :goodTillDate,
                   :faGroup,
                   :faMethod,
-                  :faPercentage,
-                  :faProfile,
-                  :modelCode,
+                  :faPercentage)))
+
+  ib.version < Client.FA_PROFILE_DESUPPORT && o(nothing) # Deprecated faProfile
+
+  o(splat(order, (:modelCode,
                   :shortSaleSlot,
                   :designatedLocation,
                   :exemptCode,
@@ -138,7 +141,7 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :deltaNeutralOrderType,
                   :deltaNeutralAuxPrice)))
 
-  !isempty(order.deltaNeutralOrderType) && o(splat(order, 56:65))
+  !isempty(order.deltaNeutralOrderType) && o(splat(order, 54:61)) # :deltaNeutralConId -> :deltaNeutralDesignatedLocation
 
   o(splat(order, (:continuousUpdate,
                   :referencePriceType,
@@ -149,7 +152,7 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :scalePriceIncrement)))
 
   !isnothing(order.scalePriceIncrement) &&
-  order.scalePriceIncrement > 0         && o(splat(order, 73:79))
+  order.scalePriceIncrement > 0         && o(splat(order, 69:75)) # :scalePriceAdjustValue -> :scaleRandomPercent
 
   o(splat(order, (:scaleTable,
                   :activeStartTime,
@@ -230,25 +233,20 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :usePriceMgmtAlgo,
                   :duration,
                   :postToAts,
-                  :autoCancelParent)))
+                  :autoCancelParent,
+                  :advancedErrorOverride,
+                  :manualOrderTime)))
 
-  ib.version ≥ Client.ADVANCED_ORDER_REJECT && o(order.advancedErrorOverride)
+  contract.exchange == "IBKRATS" && o(order.minTradeQty)
 
-  ib.version ≥ Client.MANUAL_ORDER_TIME && o(order.manualOrderTime)
+  order.orderType == "PEG BEST" && o(order.minCompeteSize,
+                                     order.competeAgainstBestOffset)
 
-  if ib.version ≥ Client.PEGBEST_PEGMID_OFFSETS
+  if order.orderType == "PEG BEST" && order.competeAgainstBestOffset == Inf ||
+     order.orderType == "PEG MID"
 
-    contract.exchange == "IBKRATS" && o(order.minTradeQty)
-
-    order.orderType == "PEG BEST" && o(order.minCompeteSize,
-                                       order.competeAgainstBestOffset)
-
-    if order.orderType == "PEG BEST" && order.competeAgainstBestOffset == Inf ||
-       order.orderType == "PEG MID"
-
-      o(order.midOffsetAtWhole,
-        order.midOffsetAtHalf)
-    end
+    o(order.midOffsetAtWhole,
+      order.midOffsetAtHalf)
   end
 
   sendmsg(ib, o)
@@ -259,9 +257,8 @@ function cancelOrder(ib::Connection, id::Int, manualOrderCancelTime::String)
   o = enc()
 
   o(4, 1,  ### CANCEL_ORDER
-    id)
-
-  ib.version ≥ Client.MANUAL_ORDER_TIME && o(manualOrderCancelTime)
+    id,
+    manualOrderCancelTime)
 
   sendmsg(ib, o)
 end
@@ -274,9 +271,9 @@ function reqExecutions(ib::Connection, reqId::Int, filter::ExecutionFilter)
 
   o = enc()
 
-  o(7, 3) ### REQ_EXECUTIONS
-
-  o(reqId, splat(filter))
+  o(7, 3, ### REQ_EXECUTIONS
+    reqId,
+    splat(filter))
 
   sendmsg(ib, o)
 end
@@ -290,9 +287,7 @@ function reqContractDetails(ib::Connection, reqId::Int, contract::Contract)
 
   o(9, 8,   ### REQ_CONTRACT_DATA
     reqId,
-    splat(contract, 1:15))
-
-  ib.version ≥ Client.BOND_ISSUERID && o(contract.issuerId)
+    splat(contract, [1:15; 17]))
 
   sendmsg(ib, o)
 end
@@ -644,11 +639,8 @@ function reqWshEventData(ib::Connection, reqId::Int, wshEventData::WshEventData)
   o = enc()
 
   o(102,     ### REQ_WSH_EVENT_DATA
-    reqId)
-
-  ib.version ≥ Client.WSH_EVENT_DATA_FILTERS_DATE ? o(splat(wshEventData))      :
-  ib.version ≥ Client.WSH_EVENT_DATA_FILTERS      ? o(splat(wshEventData, 1:5)) :
-                                                    o(wshEventData.conId)
+    reqId,
+    splat(wshEventData))
 
   sendmsg(ib, o)
 end

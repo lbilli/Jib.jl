@@ -63,7 +63,6 @@ mutable struct Order
   trailStopPrice::Union{Float64,Nothing}
   trailingPercent::Union{Float64,Nothing}
   faGroup::String
-  faProfile::String
   faMethod::String
   faPercentage::String
   openClose::String
@@ -99,7 +98,7 @@ mutable struct Order
   basisPointsType::Union{Int,Nothing}
   scaleInitLevelSize::Union{Int,Nothing}
   scaleSubsLevelSize::Union{Int,Nothing}
-  scalePriceIncrement::Union{Int,Nothing}
+  scalePriceIncrement::Union{Float64,Nothing}
   scalePriceAdjustValue::Union{Float64,Nothing}
   scalePriceAdjustInterval::Union{Int,Nothing}
   scaleProfitOffset::Union{Float64,Nothing}
@@ -170,7 +169,7 @@ mutable struct Order
 end
 Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0,
                 false, false, nothing, 0, false, false, ns, ns, ns, false, nothing, nothing,
-                false, nothing, nothing, ns, ns, ns, ns, ns, CUSTOMER, 0, ns, -1, 0,
+                false, nothing, nothing, ns, ns, ns, ns, CUSTOMER, 0, ns, -1, 0,
                 false, UNSET, fill(nothing, 5)..., false, false,
                 nothing, nothing, ns, nothing, 0, ns, ns, ns, ns, false, 0, ns, false,
                 fill(nothing, 9)..., false, nothing, nothing, false, fill(ns, 8)...,

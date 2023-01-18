@@ -18,4 +18,10 @@ include("roundtrip.jl")
 
   @test (@test_logs (:error, "tickname(): unknown ticktype") Jib.Reader.tickname(-1)) == "UNKNOWN"
 
+  @test fieldname(Jib.Contract, 15) === :secId
+  @test fieldname(Jib.Contract, 17) === :issuerId
+
+  @test fieldname(Jib.Order, 79) === :account
+  @test fieldname(Jib.Order, 125) === :parentPermId
+
 end
