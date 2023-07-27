@@ -77,4 +77,6 @@
   reset!(it)
   @test Jib.Reader.fill_df((a=String, b=Int), 2, it) == DataFrame(:a => ["a", "b"], :b => [1, 2])
 
+  # process
+  @test typeof(Jib.Reader.process) == Dict{Int,Function}
 end

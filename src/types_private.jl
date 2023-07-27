@@ -96,6 +96,7 @@ struct Execution
   evMultiplier::Union{Float64,Nothing}
   modelCode::String
   lastLiquidity::Union{Int,Nothing}
+  pendingPriceRevision::Bool
 end
 
 

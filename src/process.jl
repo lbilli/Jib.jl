@@ -59,9 +59,12 @@ end
 
 function fill_df(cols, n, it)
 
-  df = DataFrame([k => Vector{T}(undef, n) for (k, T) ∈ pairs(cols)]; copycols=false)
+  df = DataFrame([k => Vector{T}(undef, n) for (k, T) ∈ pairs(cols)];
+                 copycols=false)
 
-  for r ∈ 1:nrow(df), c ∈ 1:ncol(df)
+  nr, nc = size(df)
+
+  for r ∈ 1:nr, c ∈ 1:nc
     df[r, c] = pop(it)
   end
 
@@ -74,7 +77,7 @@ end
 
 Collection of parsers indexed by message ID
 """
-const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
+const process = Dict(
 
   # TICK_PRICE
    1 => function(it, w, ver)
@@ -333,7 +336,11 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
           c = Contract()
           slurp!(c, [1:8; 10:12], it)
 
-          e = Execution(orderId, take(it, 17)...)
+          args = collect(take(it, 17))  # Must materialize
+
+          e = Execution(orderId,
+                        args...,
+                        ver ≥ Client.PENDING_PRICE_REVISION ? pop(it) : false)
 
           w.execDetails(reqId, c, e)
         end,
@@ -501,11 +508,7 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
         end,
 
   # CURRENT_TIME
-  49 => function(it, w, ver)
-
-          # TODO: Convert to [Zoned]DateTime
-          w.currentTime(slurp(Int, it))
-        end,
+  49 => (it, w, ver) -> w.currentTime(slurp(Int, it)),
 
   # REAL_TIME_BARS
   50 => (it, w, ver) -> w.realtimeBar(slurp((Int,Int,Float64,Float64,Float64,Float64,Float64,Float64,Int), it)...),
@@ -707,7 +710,6 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           args = slurp((Int,Int,String,String,String,String), it)
 
-          # TODO: Convert timeStamp to [Zoned]DateTime
           w.tickNews(args...)
         end,
 
@@ -801,8 +803,6 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
 
           select!(df, Not(:ignore))
 
-          # TODO: Convert df.time to [Zoned]DateTime
-
           done::Bool = pop(it)
 
           w.historicalTicks(reqId, df, done)
@@ -818,7 +818,6 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                         sizeBid=Float64, sizeAsk=Float64),
                        n, it)
 
-          # TODO: Convert df.time to [Zoned]DateTime
           # TODO: Unmask df.mask
 
           done::Bool = pop(it)
@@ -836,7 +835,6 @@ const process = Dict{Int,Function}(    # TODO Use a Tuple instead?
                         exchange=String, specialConditions=String),
                        n, it)
 
-          # TODO: Convert df.time to [Zoned]DateTime
           # TODO: Unmask df.mask
 
           done::Bool = pop(it)

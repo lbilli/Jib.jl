@@ -12,7 +12,7 @@
   # buffer
   buf = Jib.Client.buffer(true)
   @test ismarked(buf)
-  reset(buf)
+  @test reset(buf) == 8
   @test String(take!(buf)) == Jib.Client.API_SIGN * "\0\0\0\0"
 
   # write_one
