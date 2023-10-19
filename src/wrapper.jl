@@ -191,7 +191,7 @@ function simple_wrap()
 
     bondContractDetails = function(reqId::Int, contractDetails::ContractDetails)
                         d[:cdbond] = contractDetails
-                        println("bondContractDetails: $reqId ", contractDetails.contract.conId)
+                        println("bondContractDetails: $reqId $(contractDetails.contract.conId) $(contractDetails.contract.exchange) $(contractDetails.descAppend)")
                       end,
 
     contractDetailsEnd= (reqId::Int) -> println("contractDetailsEnd: $reqId"),
@@ -247,7 +247,7 @@ function simple_wrap()
                                       benchmark=  benchmark,
                                       projection= projection,
                                       legsStr=    legsStr)
-                   println("scannerData: $reqId")
+                   println("scannerData: $reqId $(length(rank))")
                  end,
 
     realtimeBar= (reqId::Int, time::Int, open::Float64, high::Float64, low::Float64, close::Float64, volume::Float64, wap::Float64, count::Int) ->

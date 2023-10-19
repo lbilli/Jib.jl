@@ -19,6 +19,8 @@ import ...Bar,
        ...TickAttribLast,
        ...TickAttribBidAsk,
        ...condition_map,
+       ...funddist,
+       ...fundtype,
        ...ns
 
 
@@ -323,6 +325,14 @@ const process = Dict(
                       :minSize,
                       :sizeIncrement,
                       :suggestedSizeIncrement), it)
+
+          if ver ≥ Client.FUND_DATA_FIELDS && cd.contract.secType == "FUND"
+
+            slurp!(cd, 44:58, it)
+
+            cd.fundDistributionPolicyIndicator = funddist(slurp(String, it))
+            cd.fundAssetType = fundtype(slurp(String, it))
+          end
 
           w.contractDetails(reqId, cd)
         end,

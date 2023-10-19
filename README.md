@@ -21,16 +21,16 @@ To install from GitHub:
 
 ### Usage
 The user interacts mainly with these two objects:
-- `Connection`: holding a reference to an established connection with the server
-- `Wrapper`: containing the callbacks that are invoked when the server responses
-  are processed.
+- `Connection`: a handle holding a connection to the server
+- `Wrapper`: a container for the callbacks that are invoked
+   when the server responses are processed.
 
 Other data structures, such as `Contract` and `Order`, are implemented as Julia `struct`
 and mirror the respective classes in the official IB API.
 
 A complete minimal working example is shown.
-For this code to work, an instance of the IB TWS or IBGateway needs to be running
-on the local machine, listening on port `4002`.
+For this code to work, an instance of IB TWS or IBGateway needs to be running
+on the local machine and listening on port `4002`.
 **Note:** _demo_ or _paper_ account recommended!! :smirk:
 ```julia
 using Jib
@@ -64,7 +64,7 @@ order = Jib.Order();
 order.action        = "BUY"
 order.totalQuantity = 10
 order.orderType     = "LMT"
-order.lmtPrice      = 1000
+order.lmtPrice      = 100
 
 orderId = 1    # Should match whatever is returned by the server
 

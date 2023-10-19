@@ -70,11 +70,29 @@ mutable struct ContractDetails
   nextOptionType::String
   nextOptionPartial::Bool
   notes::String
+  fundName::String
+  fundFamily::String
+  fundType::String
+  fundFrontLoad::String
+  fundBackLoad::String
+  fundBackLoadTimeInterval::String
+  fundManagementFee::String
+  fundClosed::Bool
+  fundClosedForNewInvestors::Bool
+  fundClosedForNewMoney::Bool
+  fundNotifyAmount::String
+  fundMinimumInitialPurchase::String
+  fundSubsequentMinimumPurchase::String
+  fundBlueSkyStates::String
+  fundBlueSkyTerritories::String
+  fundDistributionPolicyIndicator::String
+  fundAssetType::String
 end
 ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)...,
                                     nothing, nothing, fill(ns, 6)..., nothing, nothing,
                                     nothing, (;), fill(ns, 5)..., false, false,
-                                    nothing, false, ns, ns, ns, ns, false, ns)
+                                    nothing, false, ns, ns, ns, ns, false, ns,
+                                    fill(ns, 7)..., false, false, false, fill(ns, 7)...)
 
 
 struct Execution

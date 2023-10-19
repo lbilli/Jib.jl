@@ -10,3 +10,17 @@
 
 @enum ConditionType PRICE=1 TIME=3 MARGIN=4 EXECUTION=5 VOLUME=6 PERCENTCHANGE=7
 
+
+funddist(v) = v == "N" ? "Accumulation Fund" :
+              v == "Y" ? "Income Fund"       :
+                         "None"
+
+fundtype(v) = v == "000" ? "Others"       :
+              v == "001" ? "Money Market" :
+              v == "002" ? "Fixed Income" :
+              v == "003" ? "Multi-asset"  :
+              v == "004" ? "Equity"       :
+              v == "005" ? "Sector"       :
+              v == "006" ? "Guaranteed"   :
+              v == "007" ? "Alternative"  :
+                           "None"
