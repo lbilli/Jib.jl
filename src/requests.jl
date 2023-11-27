@@ -372,7 +372,7 @@ function reqHistoricalData(ib::Connection, tickerId::Int, contract::Contract, en
   sendmsg(ib, o)
 end
 
-function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exerciseAction::Int, exerciseQuantity::Int, account::String, override::Int)
+function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exerciseAction::Int, exerciseQuantity::Int, account::String, override::Int, manualOrderTime::String)
 
   o = enc()
 
@@ -383,6 +383,8 @@ function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exer
     exerciseQuantity,
     account,
     override)
+
+  ib.version ≥ Client.MANUAL_ORDER_TIME_EXERCISE_OPTIONS && o(manualOrderTime)
 
   sendmsg(ib, o)
 end
