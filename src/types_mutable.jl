@@ -16,6 +16,7 @@ mutable struct Contract
   secId::String
   description::String
   issuerId::String
+  lastTradeDate::String
   comboLegsDescrip::String
   comboLegs::Vector{ComboLeg}
   deltaNeutralContract::Union{DeltaNeutralContract,Nothing}
@@ -27,7 +28,7 @@ Contract(; conId=        0,
            currency=    ns,
            localSymbol= ns) = Contract(conId, symbol, secType, ns, 0.0, ns, ns,
                                        exchange, ns, currency, localSymbol, ns,
-                                       false, ns, ns, ns, ns, ns, [], nothing)
+                                       false, ns, ns, ns, ns, ns, ns, [], nothing)
 
 
 mutable struct Order

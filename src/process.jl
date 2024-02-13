@@ -301,7 +301,11 @@ const process = Dict(
 
           cd = ContractDetails()
 
-          slurp!(cd.contract, [2:6; 8; 10; 11], it)
+          slurp!(cd.contract, 2:4, it)
+
+          ver ≥ Client.LAST_TRADE_DATE && (cd.contract.lastTradeDate = pop(it))
+
+          slurp!(cd.contract, (5, 6, 8, 10, 11), it)
 
           cd.marketName,
           cd.contract.tradingClass,
