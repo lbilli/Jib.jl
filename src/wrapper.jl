@@ -230,7 +230,7 @@ function simple_wrap()
                  println("receiveFA: $faDataType")
                end,
 
-    historicalData= function(reqId::Int, bar::DataFrame)
+    historicalData= function(reqId::Int, bar)
                       d[:history] = bar
                       println("historicalData: $reqId $(size(bar))")
                     end,
@@ -314,7 +314,7 @@ function simple_wrap()
                      println("symbolSamples: $reqId")
                    end,
 
-    mktDepthExchanges= function(depthMktDataDescriptions::DataFrame)
+    mktDepthExchanges= function(depthMktDataDescriptions::Dict)
                         d[:mktdepthexchanges] = depthMktDataDescriptions
                         println("mktDepthExchanges")
                       end,
@@ -322,7 +322,7 @@ function simple_wrap()
     tickNews= (tickerId::Int, timeStamp::Int, providerCode::String, articleId::String, headline::String, extraData::String) ->
                 println("tickNews: $tickerId $timeStamp $providerCode $articleId $headline $extraData"),
 
-    smartComponents= function(reqId::Int, theMap::DataFrame)
+    smartComponents= function(reqId::Int, theMap::Dict)
                        d[:smartcomponents] = theMap
                        println("smartComponents: $reqId $(size(theMap))")
                      end,
@@ -332,7 +332,7 @@ function simple_wrap()
                              something(minTick, "NA"),
                              " $bboExchange $snapshotPermissions"),
 
-    newsProviders= function(newsProviders::DataFrame)
+    newsProviders= function(newsProviders::Dict)
                      d[:newsproviders] = newsProviders
                      println("newsProviders")
                    end,
@@ -350,7 +350,7 @@ function simple_wrap()
 
     headTimestamp= (reqId::Int, headTimestamp::String) -> println("headTimestamp: $reqId $headTimestamp"),
 
-    histogramData= function(reqId::Int, data::DataFrame)
+    histogramData= function(reqId::Int, data::Dict)
                     d[:histogram] = data
                     println("histogramData: $reqId")
                   end,
@@ -364,7 +364,7 @@ function simple_wrap()
     rerouteMktDepthReq= (reqId::Int, conid::Int, exchange::String) ->
                           println("rerouteMktDepthReq: $reqId $conid $exchange"),
 
-    marketRule= function(marketRuleId::Int, priceIncrements::DataFrame)
+    marketRule= function(marketRuleId::Int, priceIncrements::Dict)
                   d[:marketrule] = priceIncrements
                   println("marketRule: $marketRuleId")
                 end,
@@ -378,17 +378,17 @@ function simple_wrap()
                          something(realizedPnL, "NA"),   " ",
                          value),
 
-    historicalTicks= function(reqId::Int, ticks::DataFrame, done::Bool)
+    historicalTicks= function(reqId::Int, ticks::Dict, done::Bool)
                        d[:historyticks] = ticks
                        println("historicalTicks: $reqId $done")
                      end,
 
-    historicalTicksBidAsk= function(reqId::Int, ticks::DataFrame, done::Bool)
+    historicalTicksBidAsk= function(reqId::Int, ticks::Dict, done::Bool)
                              d[:historyticksbidask] = ticks
                              println("historicalTicksBidAsk: $reqId $done")
                            end,
 
-    historicalTicksLast= function(reqId::Int, ticks::DataFrame, done::Bool)
+    historicalTicksLast= function(reqId::Int, ticks::Dict, done::Bool)
                            d[:historytickslast] = ticks
                            println("historicalTicksLast: $reqId $done")
                          end,
@@ -420,7 +420,7 @@ function simple_wrap()
 
     wshEventData= (reqId::Int, dataJson::String) -> println("wshEventData: $reqId $dataJson"),
 
-    historicalSchedule= function(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::DataFrame)
+    historicalSchedule= function(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::Dict)
                           d[:schedule] = sessions
                           println("historicalSchedule: $reqId $startDateTime $endDateTime $timeZone")
                         end,

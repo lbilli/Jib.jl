@@ -6,7 +6,7 @@ include("ticktype.jl")
 # Make a shortcut
 const pop = popfirst!
 
-function decode(it, w, ver)
+function decode(it, w, ver, Tab=Dict)
 
   # The first field is the message ID
   id::Int = pop(it)
@@ -23,7 +23,7 @@ function decode(it, w, ver)
 
   else
     try
-      f(it, w, ver)
+      f(it, w, ver, Tab)
     catch e
       @error "decode(): exception caught" M=it.msg
       # Print stacktrace to stderr

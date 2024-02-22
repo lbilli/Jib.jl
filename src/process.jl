@@ -1,5 +1,3 @@
-using DataFrames
-
 import ...Bar,
        ...ComboLeg,
        ...CommissionReport,
@@ -59,18 +57,20 @@ function unmask(T::Type{NamedTuple{M,NTuple{N,Bool}}}, mask) where {M,N}
 end
 
 
-function fill_df(cols, n, it)
+function fill_table(cols, n::Int, it, Tab::Type{<:Dict}=Dict)
 
-  df = DataFrame([k => Vector{T}(undef, n) for (k, T) ∈ pairs(cols)];
-                 copycols=false)
+  dict = Tab{Symbol, Vector}()
 
-  nr, nc = size(df)
-
-  for r ∈ 1:nr, c ∈ 1:nc
-    df[r, c] = pop(it)
+  for (k, T) ∈ pairs(cols)
+    symb = Symbol(k)
+    dict[symb] = Vector{T}(undef, n)
+  end
+  
+  for r ∈ 1:n, c ∈ keys(dict)
+    dict[c][r] = pop(it)
   end
 
-  df
+  dict
 end
 
 
@@ -82,7 +82,7 @@ Collection of parsers indexed by message ID
 const process = Dict(
 
   # TICK_PRICE
-   1 => function(it, w, ver)
+   1 => function(it, w, ver, Tab=Dict)
 
           tickerId::Int,
           ticktype::Int,
@@ -94,7 +94,7 @@ const process = Dict(
         end,
 
   # TICK_SIZE
-   2 => function(it, w, ver)
+   2 => function(it, w, ver, Tab=Dict)
 
           tickerId::Int,
           ticktype::Int,
@@ -104,13 +104,13 @@ const process = Dict(
         end,
 
   # ORDER_STATUS
-   3 => (it, w, ver) -> w.orderStatus(slurp((Int,String,Float64,Float64,Float64,Int,Int,Float64,Int,String,Float64), it)...),
+   3 => (it, w, ver, Tab=Dict) -> w.orderStatus(slurp((Int,String,Float64,Float64,Float64,Int,Int,Float64,Int,String,Float64), it)...),
 
   # ERR_MSG
-   4 => (it, w, ver) -> w.error(slurp((Int,Int,String,String), it)...),
+   4 => (it, w, ver, Tab=Dict) -> w.error(slurp((Int,Int,String,String), it)...),
 
   # OPEN_ORDER
-   5 => function(it, w, ver)
+   5 => function(it, w, ver, Tab=Dict)
 
           o = Order()
           c = Contract()
@@ -276,10 +276,10 @@ const process = Dict(
         end,
 
   # ACCT_VALUE
-   6 => (it, w, ver) -> w.updateAccountValue(collect(String, take(it, 4))...),
+   6 => (it, w, ver, Tab=Dict) -> w.updateAccountValue(collect(String, take(it, 4))...),
 
   # PORTFOLIO_VALUE
-   7 => function(it, w, ver)
+   7 => function(it, w, ver, Tab=Dict)
 
           c = Contract()
 
@@ -289,13 +289,13 @@ const process = Dict(
         end,
 
   # ACCT_UPDATE_TIME
-   8 => (it, w, ver) -> w.updateAccountTime(slurp(String, it)),
+   8 => (it, w, ver, Tab=Dict) -> w.updateAccountTime(slurp(String, it)),
 
   # NEXT_VALID_ID
-   9 => (it, w, ver) -> w.nextValidId(slurp(Int, it)),
+   9 => (it, w, ver, Tab=Dict) -> w.nextValidId(slurp(Int, it)),
 
   # CONTRACT_DATA
-  10 => function(it, w, ver)
+  10 => function(it, w, ver, Tab=Dict)
 
           reqId::Int = pop(it)
 
@@ -342,7 +342,7 @@ const process = Dict(
         end,
 
   # EXECUTION_DATA
-  11 => function(it, w, ver)
+  11 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           orderId = it
@@ -360,22 +360,22 @@ const process = Dict(
         end,
 
   # MARKET_DEPTH
-  12 => (it, w, ver) -> w.updateMktDepth(slurp((Int,Int,Int,Int,Float64,Float64), it)...),
+  12 => (it, w, ver, Tab=Dict) -> w.updateMktDepth(slurp((Int,Int,Int,Int,Float64,Float64), it)...),
 
   # MARKET_DEPTH_L2
-  13 => (it, w, ver) -> w.updateMktDepthL2(slurp((Int,Int,String,Int,Int,Float64,Float64,Bool), it)...),
+  13 => (it, w, ver, Tab=Dict) -> w.updateMktDepthL2(slurp((Int,Int,String,Int,Int,Float64,Float64,Bool), it)...),
 
   # NEWS_BULLETINS
-  14 => (it, w, ver) -> w.updateNewsBulletin(slurp((Int,Int,String,String), it)...),
+  14 => (it, w, ver, Tab=Dict) -> w.updateNewsBulletin(slurp((Int,Int,String,String), it)...),
 
   # MANAGED_ACCTS
-  15 => (it, w, ver) -> w.managedAccounts(slurp(String, it)),
+  15 => (it, w, ver, Tab=Dict) -> w.managedAccounts(slurp(String, it)),
 
   # RECEIVE_FA
-  16 => (it, w, ver) -> w.receiveFA(slurp((FaDataType,String), it)...),
+  16 => (it, w, ver, Tab=Dict) -> w.receiveFA(slurp((FaDataType,String), it)...),
 
   # HISTORICAL_DATA
-  17 => function(it, w, ver)
+  17 => function(it, w, ver, Tab=Dict)
 
           reqId::Int = pop(it)
 
@@ -384,15 +384,15 @@ const process = Dict(
 
           n::Int = pop(it)
 
-          df = fill_df((time=String, open=Float64, high=Float64, low=Float64,
+          df = fill_table((time=String, open=Float64, high=Float64, low=Float64,
                         close=Float64, volume=Float64, wap=Float64, count=Int),
-                       n, it)
+                       n, it, Tab)
 
           w.historicalData(reqId, df)
         end,
 
   # BOND_CONTRACT_DATA
-  18 => function(it, w, ver)
+  18 => function(it, w, ver, Tab=Dict)
 
           reqId::Int = pop(it)
 
@@ -442,10 +442,10 @@ const process = Dict(
         end,
 
   # SCANNER_PARAMETERS
-  19 => (it, w, ver) -> w.scannerParameters(slurp(String, it)),
+  19 => (it, w, ver, Tab=Dict) -> w.scannerParameters(slurp(String, it)),
 
   # SCANNER_DATA
-  20 => function(it, w, ver)
+  20 => function(it, w, ver, Tab=Dict)
 
           tickerId::Int,
           n::Int = it
@@ -475,7 +475,7 @@ const process = Dict(
         end,
 
   # TICK_OPTION_COMPUTATION
-  21 => function(it, w, ver)
+  21 => function(it, w, ver, Tab=Dict)
 
           tickerId::Int,
           ticktype::Int,
@@ -493,7 +493,7 @@ const process = Dict(
         end,
 
   # TICK_GENERIC
-  45 => function(it, w, ver)
+  45 => function(it, w, ver, Tab=Dict)
 
           tickerId::Int,
           ticktype::Int,
@@ -503,7 +503,7 @@ const process = Dict(
         end,
 
   # TICK_STRING
-  46 => function(it, w, ver)
+  46 => function(it, w, ver, Tab=Dict)
 
           tickerId::Int,
           ticktype::Int,
@@ -513,7 +513,7 @@ const process = Dict(
         end,
 
   # TICK_EFP
-  47 => function(it, w, ver)
+  47 => function(it, w, ver, Tab=Dict)
 
           tickerId::Int,
           ticktype::Int = it
@@ -522,28 +522,28 @@ const process = Dict(
         end,
 
   # CURRENT_TIME
-  49 => (it, w, ver) -> w.currentTime(slurp(Int, it)),
+  49 => (it, w, ver, Tab=Dict) -> w.currentTime(slurp(Int, it)),
 
   # REAL_TIME_BARS
-  50 => (it, w, ver) -> w.realtimeBar(slurp((Int,Int,Float64,Float64,Float64,Float64,Float64,Float64,Int), it)...),
+  50 => (it, w, ver, Tab=Dict) -> w.realtimeBar(slurp((Int,Int,Float64,Float64,Float64,Float64,Float64,Float64,Int), it)...),
 
   # FUNDAMENTAL_DATA
-  51 => (it, w, ver) -> w.fundamentalData(slurp((Int,String), it)...),
+  51 => (it, w, ver, Tab=Dict) -> w.fundamentalData(slurp((Int,String), it)...),
 
   # CONTRACT_DATA_END
-  52 => (it, w, ver) -> w.contractDetailsEnd(slurp(Int, it)),
+  52 => (it, w, ver, Tab=Dict) -> w.contractDetailsEnd(slurp(Int, it)),
 
   # OPEN_ORDER_END
-  53 => (it, w, ver) -> w.openOrderEnd(),
+  53 => (it, w, ver, Tab=Dict) -> w.openOrderEnd(),
 
   # ACCT_DOWNLOAD_END
-  54 => (it, w, ver) -> w.accountDownloadEnd(slurp(String, it)),
+  54 => (it, w, ver, Tab=Dict) -> w.accountDownloadEnd(slurp(String, it)),
 
   # EXECUTION_DATA_END
-  55 => (it, w, ver) -> w.execDetailsEnd(slurp(Int, it)),
+  55 => (it, w, ver, Tab=Dict) -> w.execDetailsEnd(slurp(Int, it)),
 
   # DELTA_NEUTRAL_VALIDATION
-  56 => function(it, w, ver)
+  56 => function(it, w, ver, Tab=Dict)
 
           reqId::Int = pop(it)
 
@@ -551,16 +551,16 @@ const process = Dict(
         end,
 
   # TICK_SNAPSHOT_END
-  57 => (it, w, ver) -> w.tickSnapshotEnd(slurp(Int, it)),
+  57 => (it, w, ver, Tab=Dict) -> w.tickSnapshotEnd(slurp(Int, it)),
 
   # MARKET_DATA_TYPE
-  58 => (it, w, ver) -> w.marketDataType(slurp((Int,MarketDataType), it)...),
+  58 => (it, w, ver, Tab=Dict) -> w.marketDataType(slurp((Int,MarketDataType), it)...),
 
   # COMMISSION_REPORT
-  59 => (it, w, ver) -> w.commissionReport(slurp(CommissionReport, it)),
+  59 => (it, w, ver, Tab=Dict) -> w.commissionReport(slurp(CommissionReport, it)),
 
   # POSITION_DATA
-  61 => function(it, w, ver)
+  61 => function(it, w, ver, Tab=Dict)
 
           account::String = pop(it)
 
@@ -571,10 +571,10 @@ const process = Dict(
         end,
 
   # POSITION_END
-  62 => (it, w, ver) -> w.positionEnd(),
+  62 => (it, w, ver, Tab=Dict) -> w.positionEnd(),
 
   # ACCOUNT_SUMMARY
-  63 => function(it, w, ver)
+  63 => function(it, w, ver, Tab=Dict)
 
           reqId::Int = pop(it)
 
@@ -582,28 +582,28 @@ const process = Dict(
         end,
 
   # ACCOUNT_SUMMARY_END
-  64 => (it, w, ver) -> w.accountSummaryEnd(slurp(Int, it)),
+  64 => (it, w, ver, Tab=Dict) -> w.accountSummaryEnd(slurp(Int, it)),
 
   # VERIFY_MESSAGE_API
-  65 => (it, w, ver) -> w.verifyMessageAPI(slurp(String, it)),
+  65 => (it, w, ver, Tab=Dict) -> w.verifyMessageAPI(slurp(String, it)),
 
   # VERIFY_COMPLETED
-  66 => (it, w, ver) -> w.verifyCompleted(slurp((Bool,String), it)...),
+  66 => (it, w, ver, Tab=Dict) -> w.verifyCompleted(slurp((Bool,String), it)...),
 
   # DISPLAY_GROUP_LIST
-  67 => (it, w, ver) -> w.displayGroupList(slurp((Int,String), it)...),
+  67 => (it, w, ver, Tab=Dict) -> w.displayGroupList(slurp((Int,String), it)...),
 
   # DISPLAY_GROUP_UPDATED
-  68 => (it, w, ver) -> w.displayGroupUpdated(slurp((Int,String), it)...),
+  68 => (it, w, ver, Tab=Dict) -> w.displayGroupUpdated(slurp((Int,String), it)...),
 
   # VERIFY_AND_AUTH_MESSAGE_API
-  69 => (it, w, ver) -> w.verifyAndAuthMessageAPI(collect(String, take(it, 2))...),
+  69 => (it, w, ver, Tab=Dict) -> w.verifyAndAuthMessageAPI(collect(String, take(it, 2))...),
 
   # VERIFY_AND_AUTH_COMPLETED
-  70 => (it, w, ver) -> w.verifyAndAuthCompleted(slurp((Bool,String), it)...),
+  70 => (it, w, ver, Tab=Dict) -> w.verifyAndAuthCompleted(slurp((Bool,String), it)...),
 
   # POSITION_MULTI
-  71 => function(it, w, ver)
+  71 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           account::String = it
@@ -619,16 +619,16 @@ const process = Dict(
         end,
 
   # POSITION_MULTI_END
-  72 => (it, w, ver) -> w.positionMultiEnd(slurp(Int, it)),
+  72 => (it, w, ver, Tab=Dict) -> w.positionMultiEnd(slurp(Int, it)),
 
   # ACCOUNT_UPDATE_MULTI
-  73 => (it, w, ver) -> w.accountUpdateMulti(slurp(Int, it), collect(String, take(it, 5))...),
+  73 => (it, w, ver, Tab=Dict) -> w.accountUpdateMulti(slurp(Int, it), collect(String, take(it, 5))...),
 
   # ACCOUNT_UPDATE_MULTI_END
-  74 => (it, w, ver) -> w.accountUpdateMultiEnd(slurp(Int, it)),
+  74 => (it, w, ver, Tab=Dict) -> w.accountUpdateMultiEnd(slurp(Int, it)),
 
   # SECURITY_DEFINITION_OPTION_PARAMETER
-  75 => function(it, w, ver)
+  75 => function(it, w, ver, Tab=Dict)
 
           args = slurp((Int,String,Int,String,String), it)
 
@@ -642,10 +642,10 @@ const process = Dict(
         end,
 
   # SECURITY_DEFINITION_OPTION_PARAMETER_END
-  76 => (it, w, ver) -> w.securityDefinitionOptionalParameterEnd(slurp(Int, it)),
+  76 => (it, w, ver, Tab=Dict) -> w.securityDefinitionOptionalParameterEnd(slurp(Int, it)),
 
   # SOFT_DOLLAR_TIERS
-  77 => function(it, w, ver)
+  77 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           n::Int = it
@@ -654,7 +654,7 @@ const process = Dict(
         end,
 
   # FAMILY_CODES
-  78 => function(it, w, ver)
+  78 => function(it, w, ver, Tab=Dict)
 
           n::Int = pop(it)
 
@@ -662,7 +662,7 @@ const process = Dict(
         end,
 
   # SYMBOL_SAMPLES
-  79 => function(it, w, ver)
+  79 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           n::Int = it
@@ -691,36 +691,36 @@ const process = Dict(
         end,
 
   # MKT_DEPTH_EXCHANGES
-  80 => function(it, w, ver)
+  80 => function(it, w, ver, Tab=Dict)
 
           n::Int = pop(it)
 
-          df = fill_df((exchange=String, secType=String, listingExch=String,
+          df = fill_table((exchange=String, secType=String, listingExch=String,
                         serviceDataType=String, aggGroup=Union{Int,Nothing}),
-                       n, it)
+                       n, it, Tab)
 
           w.mktDepthExchanges(df)
         end,
 
   # TICK_REQ_PARAMS
-  81 => (it, w, ver) -> w.tickReqParams(slurp((Int,Float64,String,Int), it)...),
+  81 => (it, w, ver, Tab=Dict) -> w.tickReqParams(slurp((Int,Float64,String,Int), it)...),
 
   # SMART_COMPONENTS
-  82 => function(it, w, ver)
+  82 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           n::Int = it
 
-          df = fill_df((bit=Int, exchange=String, exchangeLetter=String), n, it)
+          df = fill_table((bit=Int, exchange=String, exchangeLetter=String), n, it, Tab)
 
           w.smartComponents(reqId, df)
         end,
 
   # NEWS_ARTICLE
-  83 => (it, w, ver) -> w.newsArticle(slurp((Int,Int,String), it)...),
+  83 => (it, w, ver, Tab=Dict) -> w.newsArticle(slurp((Int,Int,String), it)...),
 
   # TICK_NEWS
-  84 => function (it, w, ver)
+  84 => function (it, w, ver, Tab=Dict)
 
           args = slurp((Int,Int,String,String,String,String), it)
 
@@ -728,37 +728,37 @@ const process = Dict(
         end,
 
   # NEWS_PROVIDERS
-  85 => function(it, w, ver)
+  85 => function(it, w, ver, Tab=Dict)
 
           n::Int = pop(it)
 
-          df = fill_df((providerCode=String, providerName=String), n, it)
+          df = fill_table((providerCode=String, providerName=String), n, it)
 
           w.newsProviders(df)
         end,
 
   # HISTORICAL_NEWS
-  86 => (it, w, ver) -> w.historicalNews(slurp((Int,String,String,String,String), it)...),
+  86 => (it, w, ver, Tab=Dict) -> w.historicalNews(slurp((Int,String,String,String,String), it)...),
 
   # HISTORICAL_NEWS_END
-  87 => (it, w, ver) -> w.historicalNewsEnd(slurp((Int,Bool), it)...),
+  87 => (it, w, ver, Tab=Dict) -> w.historicalNewsEnd(slurp((Int,Bool), it)...),
 
   # HEAD_TIMESTAMP
-  88 => (it, w, ver) -> w.headTimestamp(slurp((Int,String), it)...),
+  88 => (it, w, ver, Tab=Dict) -> w.headTimestamp(slurp((Int,String), it)...),
 
   # HISTOGRAM_DATA
-  89 => function(it, w, ver)
+  89 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           n::Int = it
 
-          df = fill_df((price=Float64, size=Float64), n, it)
+          df = fill_table((price=Float64, size=Float64), n, it)
 
           w.histogramData(reqId, df)
         end,
 
   # HISTORICAL_DATA_UPDATE
-  90 => function(it, w, ver)
+  90 => function(it, w, ver, Tab=Dict)
 
           reqId::Int = pop(it)
 
@@ -766,24 +766,24 @@ const process = Dict(
         end,
 
   # REROUTE_MKT_DATA_REQ
-  91 => (it, w, ver) -> w.rerouteMktDataReq(slurp((Int,Int,String), it)...),
+  91 => (it, w, ver, Tab=Dict) -> w.rerouteMktDataReq(slurp((Int,Int,String), it)...),
 
   # REROUTE_MKT_DEPTH_REQ
-  92 => (it, w, ver) -> w.rerouteMktDepthReq(slurp((Int,Int,String), it)...),
+  92 => (it, w, ver, Tab=Dict) -> w.rerouteMktDepthReq(slurp((Int,Int,String), it)...),
 
   # MARKET_RULE
-  93 => function(it, w, ver)
+  93 => function(it, w, ver, Tab=Dict)
 
           marketRuleId::Int,
           n::Int = it
 
-          df = fill_df((lowEdge=Float64, increment=Float64), n, it)
+          df = fill_table((lowEdge=Float64, increment=Float64), n, it)
 
           w.marketRule(marketRuleId, df)
         end,
 
   # PNL
-  94 => function(it, w, ver)
+  94 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           dailyPnL::Float64,
@@ -794,7 +794,7 @@ const process = Dict(
         end,
 
   # PNL_SINGLE
-  95 => function(it, w, ver)
+  95 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           pos::Int,
@@ -808,12 +808,12 @@ const process = Dict(
         end,
 
   # HISTORICAL_TICKS
-  96 => function(it, w, ver)
+  96 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           n::Int = it
 
-          df = fill_df((time=Int, ignore=Int, price=Float64, size=Float64), n, it)
+          df = fill_table((time=Int, ignore=Int, price=Float64, size=Float64), n, it)
 
           select!(df, Not(:ignore))
 
@@ -823,12 +823,12 @@ const process = Dict(
         end,
 
   # HISTORICAL_TICKS_BID_ASK
-  97 => function(it, w, ver)
+  97 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           n::Int = it
 
-          df = fill_df((time=Int, mask=Int, priceBid=Float64, priceAsk=Float64,
+          df = fill_table((time=Int, mask=Int, priceBid=Float64, priceAsk=Float64,
                         sizeBid=Float64, sizeAsk=Float64),
                        n, it)
 
@@ -840,12 +840,12 @@ const process = Dict(
         end,
 
   # HISTORICAL_TICKS_LAST
-  98 => function(it, w, ver)
+  98 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           n::Int = it
 
-          df = fill_df((time=Int, mask=Int, price=Float64, size=Float64,
+          df = fill_table((time=Int, mask=Int, price=Float64, size=Float64,
                         exchange=String, specialConditions=String),
                        n, it)
 
@@ -857,7 +857,7 @@ const process = Dict(
         end,
 
   # TICK_BY_TICK
-  99 => function(it, w, ver)
+  99 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           ticktype::Int,
@@ -895,10 +895,10 @@ const process = Dict(
         end,
 
   # ORDER_BOUND
- 100 => (it, w, ver) -> w.orderBound(collect(Int, take(it, 3))...),
+ 100 => (it, w, ver, Tab=Dict) -> w.orderBound(collect(Int, take(it, 3))...),
 
   # COMPLETED_ORDER
- 101 => function(it, w, ver)
+ 101 => function(it, w, ver, Tab=Dict)
 
           o = Order()
           c = Contract()
@@ -1036,19 +1036,19 @@ const process = Dict(
          end,
 
   # COMPLETED_ORDERS_END
- 102 => (it, w, ver) -> w.completedOrdersEnd(),
+ 102 => (it, w, ver, Tab=Dict) -> w.completedOrdersEnd(),
 
   # REPLACE_FA_END
- 103 => (it, w, ver) -> w.replaceFAEnd(slurp((Int,String), it)...),
+ 103 => (it, w, ver, Tab=Dict) -> w.replaceFAEnd(slurp((Int,String), it)...),
 
  # WSH_META_DATA
- 104 => (it, w, ver) -> w.wshMetaData(slurp((Int,String), it)...),
+ 104 => (it, w, ver, Tab=Dict) -> w.wshMetaData(slurp((Int,String), it)...),
 
  # WSH_EVENT_DATA
- 105 => (it, w, ver) -> w.wshEventData(slurp((Int,String), it)...),
+ 105 => (it, w, ver, Tab=Dict) -> w.wshEventData(slurp((Int,String), it)...),
 
  # HISTORICAL_SCHEDULE
- 106 => function(it, w, ver)
+ 106 => function(it, w, ver, Tab=Dict)
 
           reqId::Int,
           startDateTime::String,
@@ -1056,11 +1056,11 @@ const process = Dict(
           timeZone::String,
           n::Int = it
 
-          df = fill_df((startDateTime=String, endDateTime=String, refDate=String), n, it)
+          df = fill_table((startDateTime=String, endDateTime=String, refDate=String), n, it)
 
           w.historicalSchedule(reqId, startDateTime, endDateTime, timeZone, df)
         end,
 
   # USER_INFO
-  107 => (it, w, ver) -> w.userInfo(slurp((Int,String), it)...)
+  107 => (it, w, ver, Tab=Dict) -> w.userInfo(slurp((Int,String), it)...)
 )

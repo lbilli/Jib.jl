@@ -1,7 +1,6 @@
 module Jib
 
-using DataFrames,
-      Sockets
+using Sockets
 
 include("client.jl")
 include("enums.jl")

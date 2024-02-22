@@ -46,7 +46,7 @@
 
   # slurp
   reset!(it)
-  @test Jib.Reader.slurp((Int, Float64, String), it) === (1, 0., "action")
+  @test Jib.Reader.slurp((Int, Float64, String), it) === (1, 0.0, "action")
 
   reset!(it)
   @test Jib.Reader.slurp(Jib.ComboLeg, it) == Jib.ComboLeg(conId=1, action="action")
@@ -69,13 +69,22 @@
   @test_logs (:error, "unmask(): wrong attribs") Jib.Reader.unmask(NamedTuple{(:a, :b),NTuple{2,Bool}}, 4)
 
   # tagvalue2nt()
-  v =  ["a", "1", "b", "2"]
+  v = ["a", "1", "b", "2"]
   it = makeit(v)
   @test Jib.Reader.tagvalue2nt(2, it) == (a="1", b="2")
 
-  # fill_df
+  # fill_table
   reset!(it)
-  @test Jib.Reader.fill_df((a=String, b=Int), 2, it) == DataFrame(:a => ["a", "b"], :b => [1, 2])
+  # Test default implementation
+  dict = Dict{Symbol,Vector}()
+  dict[:a] = ["a", "b"]
+  dict[:b] = [1, 2]
+  @test Jib.Reader.fill_table((a=String, b=Int), 2, it) == dict
+
+  # Test for DataFrames
+  reset!(it)
+  @test Jib.Reader.fill_table((a=String, b=Int), 2, it, DataFrame) == DataFrame(:a => ["a", "b"], :b => [1, 2])
+
 
   # process
   @test typeof(Jib.Reader.process) == Dict{Int,Function}

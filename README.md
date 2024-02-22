@@ -78,12 +78,16 @@ Jib.disconnect(ib)
 ##### Foreground vs. Background Processing
 It is possible to process the server responses either within the main process
 or in a separate background `Task`:
-- **foreground processing** is triggered by invoking `Jib.check_all(ib, wrap)`.
+- **foreground processing** is triggered by invoking `Jib.check_all(ib, wrap, Tab=Dict)`.
   It is the user's responsibility to call it on a **regular basis**,
   especially when data are streaming in.
-- **background processing** is started by `Jib.start_reader(ib, wrap)`.
+- **background processing** is started by `Jib.start_reader(ib, wrap, Tab=Dict)`.
   A separate `Task` is started in the background, which monitors the connection and processes
   the responses as they arrive.
+
+Tab is the sink format. that is used when applicable. The library supports an extension for 
+DataFrames (just pass `DataFrame` as a last parameter to the above functions), otherwise 
+you'll receive a Dict as a default format.
 
 To avoid undesired effects, the two approaches should not be mixed together
 on the same connection.
