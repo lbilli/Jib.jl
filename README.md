@@ -1,7 +1,7 @@
 # Jib
 
 [![Build Status](https://github.com/oliviermilla/Jib.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/oliviermilla/Jib.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/oliviermilla/Jib.jl/graph/badge.svg?token=7SAX9EXGHM)](https://codecov.io/gh/oliviermilla/Jib.jl)
+[![codecov](https://codecov.io/gh/oliviermilla/Jib.jl/graph/badge.svg?token=AFV1NV9CR9)](https://codecov.io/gh/oliviermilla/Jib.jl)
 
 **A Julia implementation of Interactive Brokers API**
 
