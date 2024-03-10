@@ -45,4 +45,4 @@ jobs:
           target: 10%
           file: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: oliviermilla/Jib.jl
+          slug: oliviermilla/InteractiveBrokers.jl

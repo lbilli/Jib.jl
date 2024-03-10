@@ -1,11 +1,11 @@
-# Jib
+# InteractiveBrokers
 
-[![Build Status](https://github.com/oliviermilla/Jib.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/oliviermilla/Jib.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/oliviermilla/Jib.jl/graph/badge.svg?token=AFV1NV9CR9)](https://codecov.io/gh/oliviermilla/Jib.jl)
+[![Build Status](https://github.com/oliviermilla/InteractiveBrokers.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/oliviermilla/InteractiveBrokers.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![codecov](https://codecov.io/gh/oliviermilla/InteractiveBrokers.jl/graph/badge.svg?token=AFV1NV9CR9)](https://codecov.io/gh/oliviermilla/InteractiveBrokers.jl)
 
 **A Julia implementation of Interactive Brokers API**
 
-`Jib` is a native [Julia](https://julialang.org/) client that implements
+`InteractiveBrokers` is a native [Julia](https://julialang.org/) client that implements
 [Interactive Brokers](https://www.interactivebrokers.com/) API to communicate
 with TWS or IBGateway.
 
@@ -19,7 +19,7 @@ which is based on an asynchronous communication model over TCP.
 ### Installation
 To install from GitHub:
 ```julia
-] add https://github.com/lbilli/Jib.jl
+] add https://github.com/oliviermilla/InteractiveBrokers.jl
 ```
 
 ### Usage
@@ -36,9 +36,9 @@ For this code to work, an instance of IB TWS or IBGateway needs to be running
 on the local machine and listening on port `4002`.
 **Note:** _demo_ or _paper_ account recommended!! :smirk:
 ```julia
-using Jib
+using InteractiveBrokers
 
-wrap = Jib.Wrapper(
+wrap = InteractiveBrokers.Wrapper(
          # Customized methods go here
          error= (id, errorCode, errorString, advancedOrderRejectJson) ->
                   println("Error: $(something(id, "NA")) $errorCode $errorString $advancedOrderRejectJson"),
@@ -51,19 +51,19 @@ wrap = Jib.Wrapper(
        );
 
 # Connect to the server with clientId = 1
-ib = Jib.connect(4002, 1);
+ib = InteractiveBrokers.connect(4002, 1);
 
 # Start a background Task to process the server responses
-Jib.start_reader(ib, wrap);
+InteractiveBrokers.start_reader(ib, wrap);
 
 # Define contract
-contract = Jib.Contract(symbol="GOOG",
+contract = InteractiveBrokers.Contract(symbol="GOOG",
                         secType="STK",
                         exchange="SMART",
                         currency="USD");
 
 # Define order
-order = Jib.Order();
+order = InteractiveBrokers.Order();
 order.action        = "BUY"
 order.totalQuantity = 10
 order.orderType     = "LMT"
@@ -72,19 +72,19 @@ order.lmtPrice      = 100
 orderId = 1    # Should match whatever is returned by the server
 
 # Send order
-Jib.placeOrder(ib, orderId, contract, order)
+InteractiveBrokers.placeOrder(ib, orderId, contract, order)
 
 # Disconnect
-Jib.disconnect(ib)
+InteractiveBrokers.disconnect(ib)
 ```
 
 ##### Foreground vs. Background Processing
 It is possible to process the server responses either within the main process
 or in a separate background `Task`:
-- **foreground processing** is triggered by invoking `Jib.check_all(ib, wrap, Tab=Dict)`.
+- **foreground processing** is triggered by invoking `InteractiveBrokers.check_all(ib, wrap, Tab=Dict)`.
   It is the user's responsibility to call it on a **regular basis**,
   especially when data are streaming in.
-- **background processing** is started by `Jib.start_reader(ib, wrap, Tab=Dict)`.
+- **background processing** is started by `InteractiveBrokers.start_reader(ib, wrap, Tab=Dict)`.
   A separate `Task` is started in the background, which monitors the connection and processes
   the responses as they arrive.
 
@@ -97,7 +97,7 @@ on the same connection.
 
 ### Implementation Details
 The package does not export any name, therefore any functions
-or types described here need to be prefixed by `Jib.*`.
+or types described here need to be prefixed by `InteractiveBrokers.*`.
 
 As Julia is not an object-oriented language, the functionality of the IB
 `EClient` class is provided here by regular functions. In particular:
@@ -122,11 +122,11 @@ the property of an existing instance.
 A more comprehensive example is provided by [`simple_wrap()`](src/wrapper.jl#L130),
 which is used like this:
 ```julia
-using Jib: Jib, Contract, reqContractDetails, simple_wrap, start_reader
+using InteractiveBrokers: InteractiveBrokers, Contract, reqContractDetails, simple_wrap, start_reader
 
 data, wrap = simple_wrap();
 
-ib = Jib.connect(4002, 1);
+ib = InteractiveBrokers.connect(4002, 1);
 start_reader(ib, wrap);
 
 reqContractDetails(ib, 99, Contract(conId=208813720, exchange="SMART"))

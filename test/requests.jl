@@ -1,8 +1,8 @@
 @testset "Requests" begin
 
-  o = Jib.Requests.Encoder(IOBuffer())
+  o = InteractiveBrokers.Requests.Encoder(IOBuffer())
 
-  o(nothing, true, 1, 1.1, Inf, Jib.PRICE, :a, "test", (a=1, b="2", c=3.2))
+  o(nothing, true, 1, 1.1, Inf, InteractiveBrokers.PRICE, :a, "test", (a=1, b="2", c=3.2))
 
   m = split(String(take!(o.buf)), '\0')
 
@@ -18,13 +18,13 @@
               ""]
 
   # Condition
-  o(Jib.ConditionTime("o", true, "yyyymmdd"))
+  o(InteractiveBrokers.ConditionTime("o", true, "yyyymmdd"))
   @test String(take!(o.buf)) == "3\0o\x001\0yyyymmdd\0"
 
   # splat
-  c = Jib.ComboLeg(conId=1, action="action")
-  o(Jib.Requests.splat(c, [1,3]),
-    Jib.Requests.splat(c))
+  c = InteractiveBrokers.ComboLeg(conId=1, action="action")
+  o(InteractiveBrokers.Requests.splat(c, [1,3]),
+    InteractiveBrokers.Requests.splat(c))
 
   m = split(String(take!(o.buf)), '\0')
   @test m == ["1", "action", "1", "0", "action", "", "0", "0", "", "-1", ""]

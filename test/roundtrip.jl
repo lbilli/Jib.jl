@@ -2,17 +2,17 @@
 
   i, f, finf, s, b = 10, 12.3, Inf, "a", false
 
-  cl = Jib.ComboLeg(ratio=1, exchange="ex")
-  cv = Jib.ConditionVolume("o", true, 1, 2, "ex")
+  cl = InteractiveBrokers.ComboLeg(ratio=1, exchange="ex")
+  cv = InteractiveBrokers.ConditionVolume("o", true, 1, 2, "ex")
 
 
-  o = Jib.Requests.Encoder(IOBuffer())
+  o = InteractiveBrokers.Requests.Encoder(IOBuffer())
 
-  o(i, f, finf, s, b, Jib.Requests.splat(cl)..., cv)
+  o(i, f, finf, s, b, InteractiveBrokers.Requests.splat(cl)..., cv)
 
   msg = take!(o.buf)
 
-  it = Jib.Reader.FieldIterator(String(msg))
+  it = InteractiveBrokers.Reader.FieldIterator(String(msg))
 
   j::Int,
   g::Float64,
@@ -20,9 +20,9 @@
   z::String,
   l::Bool = it
 
-  cc = Jib.Reader.slurp(Jib.ComboLeg, it)
+  cc = InteractiveBrokers.Reader.slurp(InteractiveBrokers.ComboLeg, it)
 
-  cw = Jib.Reader.slurp(Jib.condition_map[Jib.Reader.slurp(Jib.ConditionType, it)], it)
+  cw = InteractiveBrokers.Reader.slurp(InteractiveBrokers.condition_map[InteractiveBrokers.Reader.slurp(InteractiveBrokers.ConditionType, it)], it)
 
   @test i == j
   @test f == g
