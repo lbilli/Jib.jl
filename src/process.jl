@@ -272,6 +272,8 @@ const process = Dict(
                      :midOffsetAtWhole,
                      :midOffsetAtHalf), it)
 
+          ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = pop(it))
+
           w.openOrder(o.orderId, c, o, os)
         end,
 
@@ -1031,6 +1033,8 @@ const process = Dict(
                      :competeAgainstBestOffset,
                      :midOffsetAtWhole,
                      :midOffsetAtHalf), it)
+
+          ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = pop(it))
 
           w.completedOrder(c, o, os)
          end,
