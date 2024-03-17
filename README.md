@@ -17,6 +17,11 @@ The package design follows the official C++/Java
 which is based on an asynchronous communication model over TCP.
 
 ### Installation
+To install from Julia General Repository:
+```julia
+] add InteractiveBrokers.jl
+```
+
 To install from GitHub:
 ```julia
 ] add https://github.com/oliviermilla/InteractiveBrokers.jl
