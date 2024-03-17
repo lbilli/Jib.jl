@@ -167,6 +167,7 @@ mutable struct Order
   competeAgainstBestOffset::Union{Float64,Nothing}
   midOffsetAtWhole::Union{Float64,Nothing}
   midOffsetAtHalf::Union{Float64,Nothing}
+  customerAccount::String
 end
 Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0,
                 false, false, nothing, 0, false, false, ns, ns, ns, false, nothing, nothing,
@@ -178,7 +179,7 @@ Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, tru
                 fill(nothing, 4)..., 0, nothing, [], false, false, ns, SoftDollarTier(),
                 nothing, ns, ns, ns, ns, false, false, false, ns, nothing, nothing,
                 false, ns, false, false, fill(nothing, 4)..., ns, ns,
-                fill(nothing, 5)...)
+                fill(nothing, 5)..., ns)
 
 
 mutable struct ScannerSubscription

@@ -7,5 +7,6 @@
   MANUAL_ORDER_TIME_EXERCISE_OPTIONS = 180
   OPEN_ORDER_AD_STRATEGY             = 181
   LAST_TRADE_DATE                    = 182
+  CUSTOMER_ACCOUNT                   = 183
 
 end
