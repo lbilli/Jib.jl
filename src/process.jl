@@ -274,6 +274,8 @@ const process = Dict(
 
           ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = pop(it))
 
+          ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = pop(it))
+
           w.openOrder(o.orderId, c, o, os)
         end,
 
@@ -1035,6 +1037,8 @@ const process = Dict(
                      :midOffsetAtHalf), it)
 
           ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = pop(it))
+
+          ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = pop(it))
 
           w.completedOrder(c, o, os)
          end,

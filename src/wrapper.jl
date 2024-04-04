@@ -380,17 +380,17 @@ function simple_wrap()
 
     historicalTicks= function(reqId::Int, ticks::DataFrame, done::Bool)
                        d[:historyticks] = ticks
-                       println("historicalTicks: $reqId $done")
+                       println("historicalTicks: $reqId $done $(size(ticks))")
                      end,
 
     historicalTicksBidAsk= function(reqId::Int, ticks::DataFrame, done::Bool)
                              d[:historyticksbidask] = ticks
-                             println("historicalTicksBidAsk: $reqId $done")
+                             println("historicalTicksBidAsk: $reqId $done $(size(ticks))")
                            end,
 
     historicalTicksLast= function(reqId::Int, ticks::DataFrame, done::Bool)
                            d[:historytickslast] = ticks
-                           println("historicalTicksLast: $reqId $done")
+                           println("historicalTicksLast: $reqId $done $(size(ticks))")
                          end,
 
     tickByTickAllLast= (reqId::Int, tickType::Int, time::Int, price::Float64, size::Float64, attribs::TickAttribLast, exchange::String, specialConditions::String) ->

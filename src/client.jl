@@ -7,7 +7,7 @@ const HEADTYPE = UInt32    # sizeof(HEADTYPE) == 4 bytes
 const MAX_LEN =  0xffffff
 
 
-isascii(m, d) = all(<(0x80), Iterators.drop(m, d))
+isascii(m, d) = reduce(|, Iterators.drop(m, d)) < 0x80
 
 
 function write_one(socket, buf)
