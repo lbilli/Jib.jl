@@ -36,7 +36,7 @@ Connect to host `host` on port `port` and set client ID `clientId`.
 
 Return a [`Connection`](@ref).
 """
-function connect(host, port, clientId, connectOptions::String="", optionalCapabilities::String="")
+function connect(host=getalladdrinfo("localhost")[1], port=4002, clientId=1, connectOptions::String="", optionalCapabilities::String="")
 
   s = Sockets.connect(host, port)
 
