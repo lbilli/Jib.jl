@@ -251,6 +251,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.CUSTOMER_ACCOUNT && o(order.customerAccount)
 
+  ib.version ≥ Client.PROFESSIONAL_CUSTOMER && o(order.professionalCustomer)
+
   sendmsg(ib, o)
 end
 
@@ -374,7 +376,9 @@ function reqHistoricalData(ib::Connection, tickerId::Int, contract::Contract, en
   sendmsg(ib, o)
 end
 
-function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exerciseAction::Int, exerciseQuantity::Int, account::String, override::Int, manualOrderTime::String, customerAccount::String)
+function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exerciseAction::Int,
+                         exerciseQuantity::Int, account::String, override::Int, manualOrderTime::String,
+                         customerAccount::String, professionalCustomer::Bool)
 
   o = enc()
 
@@ -389,6 +393,8 @@ function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exer
   ib.version ≥ Client.MANUAL_ORDER_TIME_EXERCISE_OPTIONS && o(manualOrderTime)
 
   ib.version ≥ Client.CUSTOMER_ACCOUNT && o(customerAccount)
+
+  ib.version ≥ Client.PROFESSIONAL_CUSTOMER && o(professionalCustomer)
 
   sendmsg(ib, o)
 end
