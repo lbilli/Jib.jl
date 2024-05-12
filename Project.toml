@@ -1,7 +1,7 @@
 name = "InteractiveBrokers"
 uuid = "f310f2d2-a263-11e8-3998-47bd686f18f7"
 authors = ["Luca Billi <noreply.section+dev@gmail.com>", "Olivier Milla <olivier.milla@hey.com>"]
-version = "0.21.0"
+version = "0.22.0"
 
 [deps]
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
