@@ -16,6 +16,16 @@ The package design follows the official C++/Java
 [IB API](https://interactivebrokers.github.io/tws-api/),
 which is based on an asynchronous communication model over TCP.
 
+The package was firt developed by lbilli in [Jib.jl](https://github.com/lbilli/Jib.jl).
+lbilli still maintains his package and APIs and functionalities are integrated into InteractiveBrokers.jl.
+
+What are the differences with Jib.jl then?
+1. InteactiveBrokers.jl is published to Julia's General Repository.
+2. DataFrame integration is done through an extension, allowing to keep the same API as Jib.jl but with lighter dependencies if you don't need DataFrames per se.
+3. User-provided callbacks can have an optional object upon which to dispatch. (see example below)
+
+The developement of InteractiveBrokers.jl was first motivated to integrate InteractiveBrokers with [Lucky.jl](https://github.com/oliviermilla/Lucky.jl) trading framework.
+
 ### Installation
 To install from Julia General Repository:
 ```julia
@@ -56,7 +66,7 @@ wrap = InteractiveBrokers.Wrapper(
        );
 
 # Connect to the server with clientId = 1
-ib = InteractiveBrokers.connect(4002, 1);
+ib = InteractiveBrokers.connect(4001, 1);
 
 # Start a background Task to process the server responses
 InteractiveBrokers.start_reader(ib, wrap);
@@ -93,12 +103,11 @@ or in a separate background `Task`:
   A separate `Task` is started in the background, which monitors the connection and processes
   the responses as they arrive.
 
-Tab is the sink format. that is used when applicable. The library supports an extension for 
-DataFrames (just pass `DataFrame` as a last parameter to the above functions), otherwise 
-you'll receive a Dict as a default format.
+To avoid undesired effects, the two approaches should not be mixed together on the same connection.
 
-To avoid undesired effects, the two approaches should not be mixed together
-on the same connection.
+### Sink Format
+`Tab` parameter of above examples is the sink format used when applicable. The library supports an extension for 
+DataFrames (just pass `DataFrame` as a last parameter), otherwise `Dict` is the default format.
 
 ### Implementation Details
 The package does not export any name, therefore any functions
