@@ -1,96 +1,102 @@
 const callbacks = [:tickPrice,
-                   :tickSize,
-                   :tickOptionComputation,
-                   :tickGeneric,
-                   :tickString,
-                   :tickEFP,
-                   :orderStatus,
-                   :openOrder,
-                   :openOrderEnd,
-#                  :winError,
-#                  :connectionClosed,
-                   :updateAccountValue,
-                   :updatePortfolio,
-                   :updateAccountTime,
-                   :accountDownloadEnd,
-                   :nextValidId,
-                   :contractDetails,
-                   :bondContractDetails,
-                   :contractDetailsEnd,
-                   :execDetails,
-                   :execDetailsEnd,
-                   :error,
-                   :updateMktDepth,
-                   :updateMktDepthL2,
-                   :updateNewsBulletin,
-                   :managedAccounts,
-                   :receiveFA,
-                   :historicalData,
-                   :scannerParameters,
-                   :scannerData,
-                   :realtimeBar,
-                   :currentTime,
-                   :fundamentalData,
-                   :deltaNeutralValidation,
-                   :tickSnapshotEnd,
-                   :marketDataType,
-                   :commissionReport,
-                   :position,
-                   :positionEnd,
-                   :accountSummary,
-                   :accountSummaryEnd,
-                   :verifyMessageAPI,
-                   :verifyCompleted,
-                   :displayGroupList,
-                   :displayGroupUpdated,
-                   :verifyAndAuthMessageAPI,
-                   :verifyAndAuthCompleted,
-#                  :connectAck,
-                   :positionMulti,
-                   :positionMultiEnd,
-                   :accountUpdateMulti,
-                   :accountUpdateMultiEnd,
-                   :securityDefinitionOptionalParameter,
-                   :securityDefinitionOptionalParameterEnd,
-                   :softDollarTiers,
-                   :familyCodes,
-                   :symbolSamples,
-                   :mktDepthExchanges,
-                   :tickNews,
-                   :smartComponents,
-                   :tickReqParams,
-                   :newsProviders,
-                   :newsArticle,
-                   :historicalNews,
-                   :historicalNewsEnd,
-                   :headTimestamp,
-                   :histogramData,
-                   :historicalDataUpdate,
-                   :rerouteMktDataReq,
-                   :rerouteMktDepthReq,
-                   :marketRule,
-                   :pnl,
-                   :pnlSingle,
-                   :historicalTicks,
-                   :historicalTicksBidAsk,
-                   :historicalTicksLast,
-                   :tickByTickAllLast,
-                   :tickByTickBidAsk,
-                   :tickByTickMidPoint,
-                   :orderBound,
-                   :completedOrder,
-                   :completedOrdersEnd,
-                   :replaceFAEnd,
-                   :wshMetaData,
-                   :wshEventData,
-                   :historicalSchedule,
-                   :userInfo]
+  :tickSize,
+  :tickOptionComputation,
+  :tickGeneric,
+  :tickString,
+  :tickEFP,
+  :orderStatus,
+  :openOrder,
+  :openOrderEnd,
+  #                  :winError,
+  #                  :connectionClosed,
+  :updateAccountValue,
+  :updatePortfolio,
+  :updateAccountTime,
+  :accountDownloadEnd,
+  :nextValidId,
+  :contractDetails,
+  :bondContractDetails,
+  :contractDetailsEnd,
+  :execDetails,
+  :execDetailsEnd,
+  :error,
+  :updateMktDepth,
+  :updateMktDepthL2,
+  :updateNewsBulletin,
+  :managedAccounts,
+  :receiveFA,
+  :historicalData,
+  :scannerParameters,
+  :scannerData,
+  :realtimeBar,
+  :currentTime,
+  :fundamentalData,
+  :deltaNeutralValidation,
+  :tickSnapshotEnd,
+  :marketDataType,
+  :commissionReport,
+  :position,
+  :positionEnd,
+  :accountSummary,
+  :accountSummaryEnd,
+  :verifyMessageAPI,
+  :verifyCompleted,
+  :displayGroupList,
+  :displayGroupUpdated,
+  :verifyAndAuthMessageAPI,
+  :verifyAndAuthCompleted,
+  #                  :connectAck,
+  :positionMulti,
+  :positionMultiEnd,
+  :accountUpdateMulti,
+  :accountUpdateMultiEnd,
+  :securityDefinitionOptionalParameter,
+  :securityDefinitionOptionalParameterEnd,
+  :softDollarTiers,
+  :familyCodes,
+  :symbolSamples,
+  :mktDepthExchanges,
+  :tickNews,
+  :smartComponents,
+  :tickReqParams,
+  :newsProviders,
+  :newsArticle,
+  :historicalNews,
+  :historicalNewsEnd,
+  :headTimestamp,
+  :histogramData,
+  :historicalDataUpdate,
+  :rerouteMktDataReq,
+  :rerouteMktDepthReq,
+  :marketRule,
+  :pnl,
+  :pnlSingle,
+  :historicalTicks,
+  :historicalTicksBidAsk,
+  :historicalTicksLast,
+  :tickByTickAllLast,
+  :tickByTickBidAsk,
+  :tickByTickMidPoint,
+  :orderBound,
+  :completedOrder,
+  :completedOrdersEnd,
+  :replaceFAEnd,
+  :wshMetaData,
+  :wshEventData,
+  :historicalSchedule,
+  :userInfo]
 
+abstract type AbstractIBCallbackWrapper end
 
-struct Wrapper
+function forward(w::AbstractIBCallbackWrapper) end
+
+struct Wrapper <: AbstractIBCallbackWrapper
+
+  clientObject::Any
+
   cb::Dict{Symbol,Function}
 
-  function Wrapper(; kw...)
+  function Wrapper(clientObject; kw...)
 
     cb = Dict{Symbol,Function}(kw)
 
@@ -98,22 +104,30 @@ struct Wrapper
 
     isempty(x) || error("unknown callback $x")
 
-    new(cb)
+    new(clientObject, cb)
   end
 end
 
+Wrapper(; kw...) = Wrapper(nothing; kw...)
 
-Base.getproperty(w::Wrapper, name::Symbol) = get(getfield(w, :cb), name) do
+function forward(w::Wrapper, s::Symbol, data...)
+  co = getfield(w, :clientObject)
+  isnothing(co) && return getproperty(w, s)(data...)
+  getproperty(w, s)(co, data...)
+end
 
-                                                  if name ∈ callbacks
-                                                    @info "undefined callback" name
-                                                  else
-                                                    @error "unknown callback" name
-                                                  end
+Base.getproperty(w::Wrapper, name::Symbol) =
+  get(getfield(w, :cb), name) do
 
-                                                  # Noop
-                                                  (_...) -> nothing
-                                                end
+    if name ∈ callbacks
+      @info "undefined callback" name
+    else
+      @error "unknown callback" name
+    end
+
+    # Noop
+    (_...) -> nothing
+  end
 
 
 Base.propertynames(w::Wrapper) = getfield(w, :cb) |> keys |> collect
