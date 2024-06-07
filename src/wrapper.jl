@@ -218,12 +218,12 @@ function simple_wrap()
 
     execDetailsEnd= (reqId::Int) -> println("execDetailsEnd: $reqId"),
 
-    error= (id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String, advancedOrderRejectJson::String) ->
+    error= (err::IbkrErrorMessage) ->
                      println("error: ",
-                             something(id, "NA"), " ",
-                             something(errorCode, "NA"), " ",
-                             errorString, " ",
-                             advancedOrderRejectJson),
+                             something(err.id, "NA"), " ",
+                             something(err.errorCode, "NA"), " ",
+                             err.errorString, " ",
+                             err.advancedOrderRejectJson),
 
     updateMktDepth= (id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Float64) ->
                       println("mktDepth: $id $position $operation $side $price $size"),

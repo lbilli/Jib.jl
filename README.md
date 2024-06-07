@@ -55,8 +55,8 @@ using InteractiveBrokers
 
 wrap = InteractiveBrokers.Wrapper(
          # Customized methods go here
-         error= (id, errorCode, errorString, advancedOrderRejectJson) ->
-                  println("Error: $(something(id, "NA")) $errorCode $errorString $advancedOrderRejectJson"),
+         error= (err) ->
+                  println("Error: $(something($(err.id), "NA")) $(err.errorCode) $(err.errorString) $(err.advancedOrderRejectJson)"),
 
          nextValidId= (orderId) -> println("Next OrderId: $orderId"),
 

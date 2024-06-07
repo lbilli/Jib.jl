@@ -4,6 +4,7 @@ using Sockets
 
 include("client.jl")
 include("enums.jl")
+include("errors.jl")
 include("types.jl")
 include("types_condition.jl")
 include("types_mutable.jl")
