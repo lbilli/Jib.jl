@@ -1,7 +1,6 @@
 using Base.Iterators: take
 
 include("process.jl")
-include("ticktype.jl")
 
 # Make a shortcut
 const pop = popfirst!
