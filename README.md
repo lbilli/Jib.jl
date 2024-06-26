@@ -16,15 +16,15 @@ The package design follows the official C++/Java
 [IB API](https://interactivebrokers.github.io/tws-api/),
 which is based on an asynchronous communication model over TCP.
 
-The package was firt developed by lbilli in [Jib.jl](https://github.com/lbilli/Jib.jl).
+The package was first developed by lbilli in [Jib.jl](https://github.com/lbilli/Jib.jl).
 lbilli still maintains his package and APIs and functionalities are integrated into InteractiveBrokers.jl.
 
 What are the differences with Jib.jl then?
-1. InteactiveBrokers.jl is published to Julia's General Repository.
+1. InteractiveBrokers.jl is published to Julia's General Repository.
 2. DataFrame integration is done through an extension, allowing to keep the same API as Jib.jl but with lighter dependencies if you don't need DataFrames per se.
 3. User-provided callbacks can have an optional object upon which to dispatch. (see example below)
 
-The developement of InteractiveBrokers.jl was first motivated to integrate InteractiveBrokers with [Lucky.jl](https://github.com/oliviermilla/Lucky.jl) trading framework.
+The development of InteractiveBrokers.jl was first motivated to integrate InteractiveBrokers with [Lucky.jl](https://github.com/oliviermilla/Lucky.jl) trading framework.
 
 ### Installation
 To install from Julia General Repository:
