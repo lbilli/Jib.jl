@@ -49,6 +49,17 @@ end
 SoftDollarTier() = SoftDollarTier(ns, ns, ns)
 
 
+struct OrderCancel
+  manualOrderCancelTime::String
+  extOperator::String
+  externalUserId::String
+  manualOrderIndicator::Union{Int,Nothing}
+end
+OrderCancel(manualOrderCancelTime=ns) = OrderCancel(manualOrderCancelTime, ns, ns, nothing)
+OrderCancel(extOperator, externalUserId, manualOrderIndicator) =
+  OrderCancel(ns, extOperator, externalUserId, manualOrderIndicator)
+
+
 struct WshEventData
   conId::Union{Int,Nothing}
   filter::String

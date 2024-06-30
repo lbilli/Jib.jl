@@ -1,26 +1,26 @@
 import ...Bar,
-  ...ComboLeg,
-  ...CommissionReport,
-  ...ConditionType,
-  ...Contract,
-  ...ContractDescription,
-  ...ContractDetails,
-  ...DeltaNeutralContract,
-  ...Execution,
-  ...FamilyCode,
-  ...FaDataType,
-  ...MarketDataType,
-  ...Order,
-  ...OrderState,
-  ...SoftDollarTier,
-  ...TickAttrib,
-  ...TickAttribLast,
-  ...TickAttribBidAsk,
-  ...condition_map,
-  ...funddist,
-  ...fundtype,
-  ...ns,
-  ...IbkrErrorMessage
+       ...ComboLeg,
+       ...CommissionReport,
+       ...ConditionType,
+       ...Contract,
+       ...ContractDescription,
+       ...ContractDetails,
+       ...DeltaNeutralContract,
+       ...Execution,
+       ...FamilyCode,
+       ...FaDataType,
+       ...IneligibilityReason,
+       ...MarketDataType,
+       ...Order,
+       ...OrderState,
+       ...SoftDollarTier,
+       ...TickAttrib,
+       ...TickAttribLast,
+       ...TickAttribBidAsk,
+       ...condition_map,
+       ...funddist,
+       ...fundtype,
+       ...ns
 
 import InteractiveBrokers
 
@@ -280,7 +280,9 @@ const process = Dict(
 
     ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = pop(it))
 
-    ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = pop(it))
+          ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = pop(it))
+
+          ver ≥ Client.BOND_ACCRUED_INTEREST && (o.bondAccruedInterest = pop(it))
 
     InteractiveBrokers.forward(w, :openOrder, o.orderId, c, o, os)
   end,
@@ -344,9 +346,17 @@ const process = Dict(
 
       slurp!(cd, 44:58, it)
 
-      cd.fundDistributionPolicyIndicator = funddist(slurp(String, it))
-      cd.fundAssetType = fundtype(slurp(String, it))
-    end
+            cd.fundDistributionPolicyIndicator = funddist(slurp(String, it))
+            cd.fundAssetType = fundtype(slurp(String, it))
+          end
+
+          if ver ≥ Client.INELIGIBILITY_REASONS
+            n = pop(it)
+
+            for _ ∈ 1:n
+              push!(cd.ineligibilityReasonList, slurp(IneligibilityReason, it))
+            end
+          end
 
     InteractiveBrokers.forward(w, :contractDetails, reqId, cd)
   end,
