@@ -26,6 +26,12 @@ struct ContractDescription
 end
 
 
+struct IneligibilityReason
+  id::String
+  description::String
+end
+
+
 mutable struct ContractDetails
   contract::Contract
   marketName::String
@@ -87,12 +93,14 @@ mutable struct ContractDetails
   fundBlueSkyTerritories::String
   fundDistributionPolicyIndicator::String
   fundAssetType::String
+  ineligibilityReasonList::Vector{IneligibilityReason}
 end
 ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)...,
                                     nothing, nothing, fill(ns, 6)..., nothing, nothing,
                                     nothing, (;), fill(ns, 5)..., false, false,
                                     nothing, false, ns, ns, ns, ns, false, ns,
-                                    fill(ns, 7)..., false, false, false, fill(ns, 7)...)
+                                    fill(ns, 7)..., false, false, false, fill(ns, 7)...,
+                                    [])
 
 
 struct Execution

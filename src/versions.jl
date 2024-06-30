@@ -9,5 +9,8 @@
   LAST_TRADE_DATE                    = 182
   CUSTOMER_ACCOUNT                   = 183
   PROFESSIONAL_CUSTOMER              = 184
+  BOND_ACCRUED_INTEREST              = 185
+  INELIGIBILITY_REASONS              = 186
+  RFQ_FIELDS                         = 187
 
 end

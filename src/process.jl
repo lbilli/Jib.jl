@@ -11,6 +11,7 @@ import ...Bar,
        ...Execution,
        ...FamilyCode,
        ...FaDataType,
+       ...IneligibilityReason,
        ...MarketDataType,
        ...Order,
        ...OrderState,
@@ -276,6 +277,8 @@ const process = Dict(
 
           ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = pop(it))
 
+          ver ≥ Client.BOND_ACCRUED_INTEREST && (o.bondAccruedInterest = pop(it))
+
           w.openOrder(o.orderId, c, o, os)
         end,
 
@@ -340,6 +343,14 @@ const process = Dict(
 
             cd.fundDistributionPolicyIndicator = funddist(slurp(String, it))
             cd.fundAssetType = fundtype(slurp(String, it))
+          end
+
+          if ver ≥ Client.INELIGIBILITY_REASONS
+            n = pop(it)
+
+            for _ ∈ 1:n
+              push!(cd.ineligibilityReasonList, slurp(IneligibilityReason, it))
+            end
           end
 
           w.contractDetails(reqId, cd)

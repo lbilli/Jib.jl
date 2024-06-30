@@ -9,6 +9,7 @@ import ..AbstractCondition,
        ..FaDataType,
        ..MarketDataType,
        ..Order,
+       ..OrderCancel,
        ..ScannerSubscription,
        ..WshEventData
 
@@ -253,16 +254,21 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.PROFESSIONAL_CUSTOMER && o(order.professionalCustomer)
 
+  ib.version ≥ Client.RFQ_FIELDS && o(order.externalUserId,
+                                      order.manualOrderIndicator)
+
   sendmsg(ib, o)
 end
 
-function cancelOrder(ib::Connection, id::Int, manualOrderCancelTime::String)
+function cancelOrder(ib::Connection, id::Int, orderCancel::OrderCancel)
 
   o = enc()
 
   o(4, 1,  ### CANCEL_ORDER
     id,
-    manualOrderCancelTime)
+
+    ib.version ≥ Client.RFQ_FIELDS ? splat(orderCancel) :
+                                     orderCancel.manualOrderCancelTime)
 
   sendmsg(ib, o)
 end
