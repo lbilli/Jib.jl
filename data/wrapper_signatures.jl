@@ -36,7 +36,7 @@ execDetails(reqId::Int, contract::Contract, execution::Execution)
 
 execDetailsEnd(reqId::Int)
 
-error(err::IbkrErrorMessage)
+error(err::InteractiveBrokers.IbkrErrorMessage)
 #error(id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String, advancedOrderRejectJson::String)
 
 updateMktDepth(id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Float64)
