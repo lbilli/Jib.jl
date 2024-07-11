@@ -218,7 +218,7 @@ function simple_wrap()
 
     execDetailsEnd= (reqId::Int) -> println("execDetailsEnd: $reqId"),
 
-    error= (err::IbkrErrorMessage) ->
+    error= (err::InteractiveBrokers.IbkrErrorMessage) ->
                      println("error: ",
                              something(err.id, "NA"), " ",
                              something(err.errorCode, "NA"), " ",

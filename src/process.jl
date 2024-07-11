@@ -111,7 +111,7 @@ const process = Dict(
 
   # ERR_MSG
   4 => function (it, w::InteractiveBrokers.AbstractIBCallbackWrapper, ver, Tab=Dict)
-    err = IbkrErrorMessage(slurp((Int, Int, String, String), it)...)
+    err = InteractiveBrokers.IbkrErrorMessage(slurp((Int, Int, String, String), it)...)
     InteractiveBrokers.forward(w, :error, err)
   end,
 
