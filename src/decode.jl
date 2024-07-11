@@ -19,15 +19,14 @@ function decode(it, w, ver, Tab=Dict)
 
   if isnothing(f)
     @error "decode(): unknown message" id
-
   else
-    try
-      f(it, w, ver, Tab)
-    catch e
-      @error "decode(): exception caught" M=it.msg
-      # Print stacktrace to stderr
-      Base.display_error(Base.current_exceptions())
-    end
+    #try ---- COMMENTED FROM JIB
+    f(it, w, ver, Tab)
+    # catch e
+    #   @error "decode(): exception caught" M=it.msg
+    #   # Print stacktrace to stderr
+    #   Base.display_error(Base.current_exceptions())
+    # end
 
     isempty(it) || @error "decode(): message not fully parsed" M=it.msg ignored=collect(String, it)
   end
