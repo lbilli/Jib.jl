@@ -15,58 +15,110 @@ end
 
 Base.IteratorSize(::Type{FieldIterator}) = Base.SizeUnknown()
 Base.IteratorEltype(::Type{FieldIterator}) = Base.HasEltype()
-Base.eltype(::Type{FieldIterator}) = Field
+Base.eltype(::Type{FieldIterator}) = FieldIterator
 Base.isdone(it::FieldIterator) = it.c > ncodeunits(it.msg)
 
-function Base.iterate(it::FieldIterator, s=nothing)
+# Noop
+Base.iterate(it::FieldIterator, s=nothing) = it, nothing
+
+function pop(it::FieldIterator)
 
   idx = findnext(==('\0'), it.msg, it.c)
-  isnothing(idx) && return nothing
+  isnothing(idx) && throw(EOFError())
 
-  res = @inbounds Field(SubString(it.msg, it.c, prevind(it.msg, idx)))
+  res = @inbounds SubString(it.msg, it.c, prevind(it.msg, idx))
 
-  setfield!(it, :c, idx + 1)
+  it.c = idx + 1
 
-  res, nothing
+  res
 end
 
-function Base.popfirst!(it::FieldIterator)
+rest(it::FieldIterator) = Iterators.takewhile(!isempty, it)
 
-  x = iterate(it)
-
-  isnothing(x) ? throw(EOFError()) : x[1]
-end
-
-
-"""
-    Field()
-
-Wrap inbound fields and define conversions to
-`String`, `Int`, `Float64`, `Bool` and `Enums`.
-"""
-struct Field{T<:AbstractString}
-  value::T
-end
 
 # String and Symbol
-Base.convert(::Type{T}, x::Field) where T<:Union{String,Symbol} = T(x.value)
+Base.convert(::Type{T}, it::FieldIterator) where T<:Union{String,Symbol} = T(pop(it))
 
 # Int
-function Base.convert(::Type{Int}, x::Field)
+function Base.convert(::Type{Int}, it::FieldIterator)
 
-  x.value ∈ ("", "2147483647", "9223372036854775807") ? nothing :   # typemax(Int32) typemax(Int64)
-                                                        parse(Int, x.value)
+  x = pop(it)
+
+  x ∈ ("", "2147483647", "9223372036854775807") ? nothing :   # typemax(Int32) typemax(Int64)
+                                                  parse(Int, x)
 end
 
 # Float
-function Base.convert(::Type{Float64}, x::Field)
+function Base.convert(::Type{Float64}, it::FieldIterator)
 
-  x.value ∈ ("", "1.7976931348623157E308") ? nothing :  # prevfloat(Inf)
-                                             parse(Float64, x.value)
+  x = pop(it)
+
+  x ∈ ("", "1.7976931348623157E308") ? nothing :  # prevfloat(Inf)
+                                       parse(Float64, x)
 end
 
 # Bool: allowed values "1", "0", "true", "false"
-Base.convert(::Type{Bool}, x::Field) = parse(Bool, x.value)
+Base.convert(::Type{Bool}, it::FieldIterator) = parse(Bool, pop(it))
 
 # Enum
-Base.convert(::Type{T}, x::Field) where T<:Enum{Int32} = T(convert(Int, x))
+Base.convert(::Type{T}, it::FieldIterator) where T<:Enum{Int32} = T(convert(Int, it))
+
+# Mask
+function Base.convert(T::Type{NamedTuple{M,NTuple{N,Bool}}}, it) where {M,N}
+
+  x::Int = it
+
+  a = digits(Bool, x, base=2, pad=N)
+
+  length(a) == N || @error "convert(): failed unmasking" T x
+
+  T(a)
+end
+
+# Vector
+function Base.convert(::Type{Vector{T}}, it::FieldIterator) where T
+
+  n::Int = it
+
+  res = Vector{T}(undef, n)
+
+  for i ∈ 1:n
+    res[i] = it
+  end
+
+  res
+end
+
+# NamedTuple
+function Base.convert(::Type{NamedTuple}, it::FieldIterator)
+
+  n::Int = it
+
+  (; (convert(Symbol, it) => convert(String, it) for _ ∈ 1:n)...)
+end
+
+# Condition
+function Base.convert(::Type{AbstractCondition}, it::FieldIterator)
+
+  c::ConditionType = it
+
+  convert(condition_map(c), it)
+end
+
+# Struct
+Base.convert(::Type{T}, it::FieldIterator) where T<:Union{AbstractCondition,
+                                                          Bar,
+                                                          ComboLeg,
+                                                          CommissionReport,
+                                                          DeltaNeutralContract,
+                                                          FamilyCode,
+                                                          IneligibilityReason,
+                                                          SoftDollarTier} =
+                        T(slurp(fieldtypes(T), it)...)
+
+# slurp
+slurp(t, it) = convert.(t, Ref(it))
+
+slurp!(x::T, idx, it) where T = for i ∈ idx  # Equivalent to setproperty!(x, sym, it)
+                                  setfield!(x, i, convert(fieldtype(T, i), it))
+                                end

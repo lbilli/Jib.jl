@@ -12,5 +12,9 @@
   BOND_ACCRUED_INTEREST              = 185
   INELIGIBILITY_REASONS              = 186
   RFQ_FIELDS                         = 187
+  BOND_TRADING_HOURS                 = 188
+  INCLUDE_OVERNIGHT                  = 189
+  UNDO_RFQ_FIELDS                    = 190
+  PERM_ID_AS_LONG                    = 191
 
 end

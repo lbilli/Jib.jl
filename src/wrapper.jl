@@ -311,7 +311,7 @@ function simple_wrap()
 
     symbolSamples= function(reqId::Int, contractDescriptions::Vector{ContractDescription})
                      d[:symbolsamples] = contractDescriptions
-                     println("symbolSamples: $reqId")
+                     println("symbolSamples: $reqId $(length(contractDescriptions))")
                    end,
 
     mktDepthExchanges= function(depthMktDataDescriptions::DataFrame)
@@ -402,8 +402,8 @@ function simple_wrap()
     tickByTickMidPoint= (reqId::Int, time::Int, midPoint::Float64) ->
                           println("tickByTickMidPoint: $reqId $time $midPoint"),
 
-    orderBound= (orderId::Int, apiClientId::Int, apiOrderId::Int) ->
-                  println("orderBound: $orderId $apiClientId $apiOrderId"),
+    orderBound= (permId::Int, clientId::Int, orderId::Int) ->
+                  println("orderBound: $permId $clientId $orderId"),
 
     completedOrder= function(contract::Contract, order::Order, orderState::OrderState)
                       d[:completed_contract] = contract

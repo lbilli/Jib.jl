@@ -1,6 +1,8 @@
 using DataFrames
+using Base.Iterators: take
 
-import ...Bar,
+import ...AbstractCondition,
+       ...Bar,
        ...ComboLeg,
        ...CommissionReport,
        ...ConditionType,
@@ -25,42 +27,9 @@ import ...Bar,
        ...ns
 
 
-"""
-    slurp(::Type{T}, it)
+function fill_df(cols, it)
 
-Utility functions to read from an iterator `it` and convert to types `T`.
-"""
-slurp(::Type{T}, it) where T<:Union{Bool,Int,Enum{Int32},Float64,String,Symbol} = convert(T, pop(it))
-
-slurp(::Type{T}, it) where T = T(take(it, fieldcount(T))...)
-
-slurp(t, it) = slurp.(t, Ref(it))
-
-slurp!(x::T, idx, it) where T = for i ∈ idx
-                                  setfield!(x, i, convert(fieldtype(T, i), pop(it)))
-                                end
-
-"""
-    tagvalue2nt(n, it)
-
-Return a `NamedTuple` by popping `2n` elements from `it`:
-
-    ["tag1", "value1", "tag2", "value2", ...] -> (tag1="value1", tag2="value2", ...)
-"""
-tagvalue2nt(n, it) = (; (slurp(Symbol, it) => slurp(String, it) for _ ∈ 1:n)...)
-
-
-function unmask(T::Type{NamedTuple{M,NTuple{N,Bool}}}, mask) where {M,N}
-
-  a = digits(Bool, mask, base=2, pad=N)
-
-  length(a) == N || @error "unmask(): wrong attribs" T mask
-
-  T(a)
-end
-
-
-function fill_df(cols, n, it)
+  n::Int = it
 
   df = DataFrame([k => Vector{T}(undef, n) for (k, T) ∈ pairs(cols)];
                  copycols=false)
@@ -68,7 +37,7 @@ function fill_df(cols, n, it)
   nr, nc = size(df)
 
   for r ∈ 1:nr, c ∈ 1:nc
-    df[r, c] = pop(it)
+    df[r, c] = it
   end
 
   df
@@ -89,9 +58,9 @@ const process = Dict(
           ticktype::Int,
           price::Union{Float64,Nothing},
           size::Union{Float64,Nothing},
-          mask::Int = it
+          mask::TickAttrib = it
 
-          w.tickPrice(tickerId, tickname(ticktype), price, size, unmask(TickAttrib, mask))
+          w.tickPrice(tickerId, tickname(ticktype), price, size, mask)
         end,
 
   # TICK_SIZE
@@ -116,7 +85,7 @@ const process = Dict(
           o = Order()
           c = Contract()
 
-          o.orderId = pop(it)
+          o.orderId = it
 
           slurp!(c, [1:8; 10:12], it)
 
@@ -178,33 +147,21 @@ const process = Dict(
                      :basisPoints,
                      :basisPointsType), it)
 
-          c.comboLegsDescrip = pop(it)
+          c.comboLegsDescrip,
+          c.comboLegs = it
 
-          # ComboLegs
-          n::Int = pop(it)
-
-          for _ ∈ 1:n
-            push!(c.comboLegs, slurp(ComboLeg, it))
-          end
-
-          # OrderComboLeg
-          n = pop(it)
-          append!(o.orderComboLegs, take(it, n))
-
-          # SmartComboRouting
-          n = pop(it)
-          n > 0 && (o.smartComboRoutingParams = tagvalue2nt(n, it))
-
-          slurp!(o, (:scaleInitLevelSize,
+          slurp!(o, (:orderComboLegs,
+                     :smartComboRoutingParams,
+                     :scaleInitLevelSize,
                      :scaleSubsLevelSize,
                      :scalePriceIncrement), it)
 
           !isnothing(o.scalePriceIncrement) &&
           o.scalePriceIncrement > 0         && slurp!(o, 69:75, it) # :scalePriceAdjustValue -> :scaleRandomPercent
 
-          o.hedgeType = pop(it)
+          o.hedgeType = it
 
-          !isempty(o.hedgeType) && (o.hedgeParam = pop(it))
+          !isempty(o.hedgeType) && (o.hedgeParam = it)
 
           slurp!(o, (:optOutSmartRouting,
                      :clearingAccount,
@@ -212,15 +169,12 @@ const process = Dict(
                      :notHeld), it)
 
           # DeltaNeutralContract
-          slurp(Bool, it) && (c.deltaNeutralContract = slurp(DeltaNeutralContract, it))
+          convert(Bool, it) && (c.deltaNeutralContract = it)
 
           # AlgoStrategy
-          o.algoStrategy = pop(it)
+          o.algoStrategy = it
 
-          if !isempty(o.algoStrategy)
-            n = pop(it)
-            n > 0 && (o.algoParams = tagvalue2nt(n, it))
-          end
+          !isempty(o.algoStrategy) && (o.algoParams = it)
 
           o.solicited,
           o.whatIf = it
@@ -237,13 +191,9 @@ const process = Dict(
                                                    :referenceExchangeId), it)
 
           # Conditions
-          n = pop(it)
+          o.conditions = it
 
-          if n > 0
-            for _ ∈ 1:n
-              push!(o.conditions, slurp(condition_map[slurp(ConditionType, it)], it))
-            end
-
+          if !isempty(o.conditions)
             o.conditionsIgnoreRth,
             o.conditionsCancelOrder = it
           end
@@ -255,11 +205,9 @@ const process = Dict(
                      :adjustedStopPrice,
                      :adjustedStopLimitPrice,
                      :adjustedTrailingAmount,
-                     :adjustableTrailingUnit), it)
-
-          o.softDollarTier = slurp(SoftDollarTier, it)
-
-          slurp!(o, (:cashQty,
+                     :adjustableTrailingUnit,
+                     :softDollarTier,
+                     :cashQty,
                      :dontUseAutoPriceForHedge,
                      :isOmsContainer,
                      :discretionaryUpToLimitPrice,
@@ -273,11 +221,13 @@ const process = Dict(
                      :midOffsetAtWhole,
                      :midOffsetAtHalf), it)
 
-          ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = pop(it))
+          ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = it)
 
-          ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = pop(it))
+          ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = it)
 
-          ver ≥ Client.BOND_ACCRUED_INTEREST && (o.bondAccruedInterest = pop(it))
+          ver ≥ Client.BOND_ACCRUED_INTEREST && (o.bondAccruedInterest = it)
+
+          ver ≥ Client.INCLUDE_OVERNIGHT && (o.includeOvernight = it)
 
           w.openOrder(o.orderId, c, o, os)
         end,
@@ -292,25 +242,25 @@ const process = Dict(
 
           slurp!(c, [1:7; 9:12], it)
 
-          w.updatePortfolio(c, collect(Float64, take(it, 6))..., slurp(String, it))
+          w.updatePortfolio(c, collect(Float64, take(it, 6))..., convert(String, it))
         end,
 
   # ACCT_UPDATE_TIME
-   8 => (it, w, ver) -> w.updateAccountTime(slurp(String, it)),
+   8 => (it, w, ver) -> w.updateAccountTime(convert(String, it)),
 
   # NEXT_VALID_ID
-   9 => (it, w, ver) -> w.nextValidId(slurp(Int, it)),
+   9 => (it, w, ver) -> w.nextValidId(convert(Int, it)),
 
   # CONTRACT_DATA
   10 => function(it, w, ver)
 
-          reqId::Int = pop(it)
+          reqId::Int = it
 
           cd = ContractDetails()
 
           slurp!(cd.contract, 2:4, it)
 
-          ver ≥ Client.LAST_TRADE_DATE && (cd.contract.lastTradeDate = pop(it))
+          ver ≥ Client.LAST_TRADE_DATE && (cd.contract.lastTradeDate = it)
 
           slurp!(cd.contract, (5, 6, 8, 10, 11), it)
 
@@ -321,13 +271,11 @@ const process = Dict(
           cd.contract.multiplier = it
 
           slurp!(cd, 4:8, it)
-          cd.contract.primaryExchange = pop(it)
+          cd.contract.primaryExchange = it
           slurp!(cd, 9:17, it)
 
-          n::Int = pop(it)
-          n > 0 && (cd.secIdList = tagvalue2nt(n, it))
-
-          slurp!(cd, (:aggGroup,
+          slurp!(cd, (:secIdList,
+                      :aggGroup,
                       :underSymbol,
                       :underSecType,
                       :marketRuleIds,
@@ -341,17 +289,11 @@ const process = Dict(
 
             slurp!(cd, 44:58, it)
 
-            cd.fundDistributionPolicyIndicator = funddist(slurp(String, it))
-            cd.fundAssetType = fundtype(slurp(String, it))
+            cd.fundDistributionPolicyIndicator = funddist(convert(String, it))
+            cd.fundAssetType = fundtype(convert(String, it))
           end
 
-          if ver ≥ Client.INELIGIBILITY_REASONS
-            n = pop(it)
-
-            for _ ∈ 1:n
-              push!(cd.ineligibilityReasonList, slurp(IneligibilityReason, it))
-            end
-          end
+          ver ≥ Client.INELIGIBILITY_REASONS && (cd.ineligibilityReasonList = it)
 
           w.contractDetails(reqId, cd)
         end,
@@ -360,16 +302,14 @@ const process = Dict(
   11 => function(it, w, ver)
 
           reqId::Int,
-          orderId = it
+          orderId::Union{Int,Nothing} = it
 
           c = Contract()
           slurp!(c, [1:8; 10:12], it)
 
-          args = collect(take(it, 17))  # Must materialize
-
           e = Execution(orderId,
-                        args...,
-                        ver ≥ Client.PENDING_PRICE_REVISION ? pop(it) : false)
+                        take(it, 17)...,
+                        ver ≥ Client.PENDING_PRICE_REVISION ? it : false)
 
           w.execDetails(reqId, c, e)
         end,
@@ -384,7 +324,7 @@ const process = Dict(
   14 => (it, w, ver) -> w.updateNewsBulletin(slurp((Int,Int,String,String), it)...),
 
   # MANAGED_ACCTS
-  15 => (it, w, ver) -> w.managedAccounts(slurp(String, it)),
+  15 => (it, w, ver) -> w.managedAccounts(convert(String, it)),
 
   # RECEIVE_FA
   16 => (it, w, ver) -> w.receiveFA(slurp((FaDataType,String), it)...),
@@ -392,16 +332,14 @@ const process = Dict(
   # HISTORICAL_DATA
   17 => function(it, w, ver)
 
-          reqId::Int = pop(it)
+          reqId::Int = it
 
           pop(it) # Ignore startDate
           pop(it) # Ignore endDate
 
-          n::Int = pop(it)
-
           df = fill_df((time=String, open=Float64, high=Float64, low=Float64,
                         close=Float64, volume=Float64, wap=Float64, count=Int),
-                       n, it)
+                       it)
 
           w.historicalData(reqId, df)
         end,
@@ -409,7 +347,7 @@ const process = Dict(
   # BOND_CONTRACT_DATA
   18 => function(it, w, ver)
 
-          reqId::Int = pop(it)
+          reqId::Int = it
 
           cd = ContractDetails()
 
@@ -440,14 +378,14 @@ const process = Dict(
                       :nextOptionType,
                       :nextOptionPartial,
                       :notes,
-                      :longName,
-                      :evRule,
-                      :evMultiplier), it)
+                      :longName), it)
 
-          n::Int = pop(it)
-          n > 0 && (cd.secIdList = tagvalue2nt(n, it))
+          ver ≥ Client.BOND_TRADING_HOURS && slurp!(cd, 13:15, it) # :timeZoneId -> :liquidHours
 
-          slurp!(cd, (:aggGroup,
+          slurp!(cd, 16:17, it) # :evRule -> :evMultiplier
+
+          slurp!(cd, (:secIdList,
+                      :aggGroup,
                       :marketRuleIds,
                       :minSize,
                       :sizeIncrement,
@@ -457,7 +395,7 @@ const process = Dict(
         end,
 
   # SCANNER_PARAMETERS
-  19 => (it, w, ver) -> w.scannerParameters(slurp(String, it)),
+  19 => (it, w, ver) -> w.scannerParameters(convert(String, it)),
 
   # SCANNER_DATA
   20 => function(it, w, ver)
@@ -465,8 +403,8 @@ const process = Dict(
           tickerId::Int,
           n::Int = it
 
-          rank = Vector{Int}(undef, n)
-          cd = [ContractDetails() for _ ∈ 1:n]
+          rank =       Vector{Int}(undef, n)
+          cd =         [ ContractDetails() for _ ∈ 1:n ]
           distance =   Vector{String}(undef, n)
           benchmark =  Vector{String}(undef, n)
           projection = Vector{String}(undef, n)
@@ -474,7 +412,7 @@ const process = Dict(
 
           for i ∈ 1:n
 
-            rank[i] = pop(it)
+            rank[i] = it
 
             slurp!(cd[i].contract, [1:6; 8; 10; 11], it)
 
@@ -537,7 +475,7 @@ const process = Dict(
         end,
 
   # CURRENT_TIME
-  49 => (it, w, ver) -> w.currentTime(slurp(Int, it)),
+  49 => (it, w, ver) -> w.currentTime(convert(Int, it)),
 
   # REAL_TIME_BARS
   50 => (it, w, ver) -> w.realtimeBar(slurp((Int,Int,Float64,Float64,Float64,Float64,Float64,Float64,Int), it)...),
@@ -546,43 +484,38 @@ const process = Dict(
   51 => (it, w, ver) -> w.fundamentalData(slurp((Int,String), it)...),
 
   # CONTRACT_DATA_END
-  52 => (it, w, ver) -> w.contractDetailsEnd(slurp(Int, it)),
+  52 => (it, w, ver) -> w.contractDetailsEnd(convert(Int, it)),
 
   # OPEN_ORDER_END
   53 => (it, w, ver) -> w.openOrderEnd(),
 
   # ACCT_DOWNLOAD_END
-  54 => (it, w, ver) -> w.accountDownloadEnd(slurp(String, it)),
+  54 => (it, w, ver) -> w.accountDownloadEnd(convert(String, it)),
 
   # EXECUTION_DATA_END
-  55 => (it, w, ver) -> w.execDetailsEnd(slurp(Int, it)),
+  55 => (it, w, ver) -> w.execDetailsEnd(convert(Int, it)),
 
   # DELTA_NEUTRAL_VALIDATION
-  56 => function(it, w, ver)
-
-          reqId::Int = pop(it)
-
-          w.deltaNeutralValidation(reqId, slurp(DeltaNeutralContract, it))
-        end,
+  56 => (it, w, ver) -> w.deltaNeutralValidation(slurp((Int,DeltaNeutralContract), it)...),
 
   # TICK_SNAPSHOT_END
-  57 => (it, w, ver) -> w.tickSnapshotEnd(slurp(Int, it)),
+  57 => (it, w, ver) -> w.tickSnapshotEnd(convert(Int, it)),
 
   # MARKET_DATA_TYPE
   58 => (it, w, ver) -> w.marketDataType(slurp((Int,MarketDataType), it)...),
 
   # COMMISSION_REPORT
-  59 => (it, w, ver) -> w.commissionReport(slurp(CommissionReport, it)),
+  59 => (it, w, ver) -> w.commissionReport(convert(CommissionReport, it)),
 
   # POSITION_DATA
   61 => function(it, w, ver)
 
-          account::String = pop(it)
+          account::String = it
 
           c = Contract()
           slurp!(c, [1:8; 10:12], it)
 
-          w.position(account, c, collect(Float64, take(it, 2))...)
+          w.position(account, c, slurp((Float64,Float64), it)...)
         end,
 
   # POSITION_END
@@ -591,16 +524,16 @@ const process = Dict(
   # ACCOUNT_SUMMARY
   63 => function(it, w, ver)
 
-          reqId::Int = pop(it)
+          reqId::Int = it
 
           w.accountSummary(reqId, collect(String, take(it, 4))...)
         end,
 
   # ACCOUNT_SUMMARY_END
-  64 => (it, w, ver) -> w.accountSummaryEnd(slurp(Int, it)),
+  64 => (it, w, ver) -> w.accountSummaryEnd(convert(Int, it)),
 
   # VERIFY_MESSAGE_API
-  65 => (it, w, ver) -> w.verifyMessageAPI(slurp(String, it)),
+  65 => (it, w, ver) -> w.verifyMessageAPI(convert(String, it)),
 
   # VERIFY_COMPLETED
   66 => (it, w, ver) -> w.verifyCompleted(slurp((Bool,String), it)...),
@@ -612,7 +545,7 @@ const process = Dict(
   68 => (it, w, ver) -> w.displayGroupUpdated(slurp((Int,String), it)...),
 
   # VERIFY_AND_AUTH_MESSAGE_API
-  69 => (it, w, ver) -> w.verifyAndAuthMessageAPI(collect(String, take(it, 2))...),
+  69 => (it, w, ver) -> w.verifyAndAuthMessageAPI(slurp((String,String), it)...),
 
   # VERIFY_AND_AUTH_COMPLETED
   70 => (it, w, ver) -> w.verifyAndAuthCompleted(slurp((Bool,String), it)...),
@@ -634,46 +567,43 @@ const process = Dict(
         end,
 
   # POSITION_MULTI_END
-  72 => (it, w, ver) -> w.positionMultiEnd(slurp(Int, it)),
+  72 => (it, w, ver) -> w.positionMultiEnd(convert(Int, it)),
 
   # ACCOUNT_UPDATE_MULTI
-  73 => (it, w, ver) -> w.accountUpdateMulti(slurp(Int, it), collect(String, take(it, 5))...),
+  73 => (it, w, ver) -> w.accountUpdateMulti(convert(Int, it), collect(String, take(it, 5))...),
 
   # ACCOUNT_UPDATE_MULTI_END
-  74 => (it, w, ver) -> w.accountUpdateMultiEnd(slurp(Int, it)),
+  74 => (it, w, ver) -> w.accountUpdateMultiEnd(convert(Int, it)),
 
   # SECURITY_DEFINITION_OPTION_PARAMETER
   75 => function(it, w, ver)
 
           args = slurp((Int,String,Int,String,String), it)
 
-          ne::Int = pop(it)
-          expirations = collect(String, take(it, ne))
-
-          ns::Int = pop(it)
-          strikes = collect(Float64, take(it, ns))
+          expirations::Vector{String},
+          strikes::Vector{Float64} = it
 
           w.securityDefinitionOptionalParameter(args..., expirations, strikes)
         end,
 
   # SECURITY_DEFINITION_OPTION_PARAMETER_END
-  76 => (it, w, ver) -> w.securityDefinitionOptionalParameterEnd(slurp(Int, it)),
+  76 => (it, w, ver) -> w.securityDefinitionOptionalParameterEnd(convert(Int, it)),
 
   # SOFT_DOLLAR_TIERS
   77 => function(it, w, ver)
 
           reqId::Int,
-          n::Int = it
+          tiers::Vector{SoftDollarTier} = it
 
-          w.softDollarTiers(reqId, [slurp(SoftDollarTier, it) for _ ∈ 1:n])
+          w.softDollarTiers(reqId, tiers)
         end,
 
   # FAMILY_CODES
   78 => function(it, w, ver)
 
-          n::Int = pop(it)
+          familyCodes::Vector{FamilyCode} = it
 
-          w.familyCodes([slurp(FamilyCode, it) for _ ∈ 1:n])
+          w.familyCodes(familyCodes)
         end,
 
   # SYMBOL_SAMPLES
@@ -692,12 +622,12 @@ const process = Dict(
                              :primaryExchange,
                              :currency), it)
 
-                  nd::Int = pop(it)
+                  nd::Int = it
 
                   dst = collect(String, take(it, nd))
 
-                  slurp!(c, (:description,
-                             :issuerId), it)
+                  c.description,
+                  c.issuerId = it
 
                   ContractDescription(c, dst)
                 end
@@ -708,11 +638,9 @@ const process = Dict(
   # MKT_DEPTH_EXCHANGES
   80 => function(it, w, ver)
 
-          n::Int = pop(it)
-
           df = fill_df((exchange=String, secType=String, listingExch=String,
                         serviceDataType=String, aggGroup=Union{Int,Nothing}),
-                       n, it)
+                       it)
 
           w.mktDepthExchanges(df)
         end,
@@ -735,19 +663,12 @@ const process = Dict(
   83 => (it, w, ver) -> w.newsArticle(slurp((Int,Int,String), it)...),
 
   # TICK_NEWS
-  84 => function (it, w, ver)
-
-          args = slurp((Int,Int,String,String,String,String), it)
-
-          w.tickNews(args...)
-        end,
+  84 => (it, w, ver) -> w.tickNews(slurp((Int,Int,String,String,String,String), it)...),
 
   # NEWS_PROVIDERS
   85 => function(it, w, ver)
 
-          n::Int = pop(it)
-
-          df = fill_df((providerCode=String, providerName=String), n, it)
+          df = fill_df((providerCode=String, providerName=String), it)
 
           w.newsProviders(df)
         end,
@@ -764,21 +685,15 @@ const process = Dict(
   # HISTOGRAM_DATA
   89 => function(it, w, ver)
 
-          reqId::Int,
-          n::Int = it
+          reqId::Int = it
 
-          df = fill_df((price=Float64, size=Float64), n, it)
+          df = fill_df((price=Float64, size=Float64), it)
 
           w.histogramData(reqId, df)
         end,
 
   # HISTORICAL_DATA_UPDATE
-  90 => function(it, w, ver)
-
-          reqId::Int = pop(it)
-
-          w.historicalDataUpdate(reqId, slurp(Bar, it))
-        end,
+  90 => (it, w, ver) -> w.historicalDataUpdate(slurp((Int,Bar), it)...),
 
   # REROUTE_MKT_DATA_REQ
   91 => (it, w, ver) -> w.rerouteMktDataReq(slurp((Int,Int,String), it)...),
@@ -789,10 +704,9 @@ const process = Dict(
   # MARKET_RULE
   93 => function(it, w, ver)
 
-          marketRuleId::Int,
-          n::Int = it
+          marketRuleId::Int = it
 
-          df = fill_df((lowEdge=Float64, increment=Float64), n, it)
+          df = fill_df((lowEdge=Float64, increment=Float64), it)
 
           w.marketRule(marketRuleId, df)
         end,
@@ -825,14 +739,13 @@ const process = Dict(
   # HISTORICAL_TICKS
   96 => function(it, w, ver)
 
-          reqId::Int,
-          n::Int = it
+          reqId::Int = it
 
-          df = fill_df((time=Int, ignore=Int, price=Float64, size=Float64), n, it)
+          df = fill_df((time=Int, ignore=Int, price=Float64, size=Float64), it)
 
           select!(df, Not(:ignore))
 
-          done::Bool = pop(it)
+          done::Bool = it
 
           w.historicalTicks(reqId, df, done)
         end,
@@ -840,16 +753,15 @@ const process = Dict(
   # HISTORICAL_TICKS_BID_ASK
   97 => function(it, w, ver)
 
-          reqId::Int,
-          n::Int = it
+          reqId::Int = it
 
           df = fill_df((time=Int, mask=Int, priceBid=Float64, priceAsk=Float64,
                         sizeBid=Float64, sizeAsk=Float64),
-                       n, it)
+                       it)
 
           # TODO: Unmask df.mask
 
-          done::Bool = pop(it)
+          done::Bool = it
 
           w.historicalTicksBidAsk(reqId, df, done)
         end,
@@ -857,16 +769,15 @@ const process = Dict(
   # HISTORICAL_TICKS_LAST
   98 => function(it, w, ver)
 
-          reqId::Int,
-          n::Int = it
+          reqId::Int = it
 
           df = fill_df((time=Int, mask=Int, price=Float64, size=Float64,
                         exchange=String, specialConditions=String),
-                       n, it)
+                       it)
 
           # TODO: Unmask df.mask
 
-          done::Bool = pop(it)
+          done::Bool = it
 
           w.historicalTicksLast(reqId, df, done)
         end,
@@ -878,17 +789,15 @@ const process = Dict(
           ticktype::Int,
           time::Int = it
 
-          local mask::Int  # To avoid "multiple type declarations" error
-
           if ticktype ∈ (1, 2)
 
             price::Float64,
             size::Float64,
-            mask,
+            mask1::TickAttribLast
             exchange::String,
             specialConditions::String = it
 
-            w.tickByTickAllLast(reqId, ticktype, time, price, size, unmask(TickAttribLast, mask), exchange, specialConditions)
+            w.tickByTickAllLast(reqId, ticktype, time, price, size, mask1, exchange, specialConditions)
 
           elseif ticktype == 3
 
@@ -896,13 +805,13 @@ const process = Dict(
             askPrice::Float64,
             bidSize::Float64,
             askSize::Float64,
-            mask = it
+            mask2::TickAttribBidAsk = it
 
-            w.tickByTickBidAsk(reqId, time, bidPrice, askPrice, bidSize, askSize, unmask(TickAttribBidAsk, mask))
+            w.tickByTickBidAsk(reqId, time, bidPrice, askPrice, bidSize, askSize, mask2)
 
           elseif ticktype == 4
 
-            w.tickByTickMidPoint(reqId, time, slurp(Float64, it))
+            w.tickByTickMidPoint(reqId, time, convert(Float64, it))
 
           else
             @warn "TICK_BY_TICK: unknown ticktype" T=ticktype
@@ -965,48 +874,33 @@ const process = Dict(
                      :trailStopPrice,
                      :trailingPercent), it)
 
-          c.comboLegsDescrip = pop(it)
+          c.comboLegsDescrip,
+          c.comboLegs = it
 
-          # ComboLegs
-          n::Int = pop(it)
-
-          for _ ∈ 1:n
-            push!(c.comboLegs, slurp(ComboLeg, it))
-          end
-
-          # OrderComboLeg
-          n = pop(it)
-          append!(o.orderComboLegs, take(it, n))
-
-          # SmartComboRouting
-          n = pop(it)
-          n > 0 && (o.smartComboRoutingParams = tagvalue2nt(n, it))
-
-          slurp!(o, (:scaleInitLevelSize,
+          slurp!(o, (:orderComboLegs,
+                     :smartComboRoutingParams,
+                     :scaleInitLevelSize,
                      :scaleSubsLevelSize,
                      :scalePriceIncrement), it)
 
           !isnothing(o.scalePriceIncrement) &&
           o.scalePriceIncrement > 0         && slurp!(o, 69:75, it) # :scalePriceAdjustValue -> :scaleRandomPercent
 
-          o.hedgeType = pop(it)
+          o.hedgeType = it
 
-          !isempty(o.hedgeType) && (o.hedgeParam = pop(it))
+          !isempty(o.hedgeType) && (o.hedgeParam = it)
 
           slurp!(o, (:clearingAccount,
                      :clearingIntent,
                      :notHeld), it)
 
           # DeltaNeutralContract
-          slurp(Bool, it) && (c.deltaNeutralContract = slurp(DeltaNeutralContract, it))
+          convert(Bool, it) && (c.deltaNeutralContract = it)
 
           # AlgoStrategy
-          o.algoStrategy = pop(it)
+          o.algoStrategy = it
 
-          if !isempty(o.algoStrategy)
-            n = pop(it)
-            n > 0 && (o.algoParams = tagvalue2nt(n, it))
-          end
+          !isempty(o.algoStrategy) && (o.algoParams = it)
 
           o.solicited,
           ostatus::String,     # OrderState.status
@@ -1020,13 +914,9 @@ const process = Dict(
                                                    :referenceExchangeId), it)
 
           # Conditions
-          n = pop(it)
+          o.conditions = it
 
-          if n > 0
-            for _ ∈ 1:n
-              push!(o.conditions, slurp(condition_map[slurp(ConditionType, it)], it))
-            end
-
+          if !isempty(o.conditions)
             o.conditionsIgnoreRth,
             o.conditionsCancelOrder = it
           end
@@ -1047,9 +937,9 @@ const process = Dict(
                      :midOffsetAtWhole,
                      :midOffsetAtHalf), it)
 
-          ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = pop(it))
+          ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = it)
 
-          ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = pop(it))
+          ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = it)
 
           w.completedOrder(c, o, os)
          end,
@@ -1072,10 +962,9 @@ const process = Dict(
           reqId::Int,
           startDateTime::String,
           endDateTime::String,
-          timeZone::String,
-          n::Int = it
+          timeZone::String = it
 
-          df = fill_df((startDateTime=String, endDateTime=String, refDate=String), n, it)
+          df = fill_df((startDateTime=String, endDateTime=String, refDate=String), it)
 
           w.historicalSchedule(reqId, startDateTime, endDateTime, timeZone, df)
         end,

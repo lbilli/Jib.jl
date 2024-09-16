@@ -150,7 +150,7 @@ tickByTickBidAsk(reqId::Int, time::Int, bidPrice::Float64, askPrice::Float64, bi
 
 tickByTickMidPoint(reqId::Int, time::Int, midPoint::Float64)
 
-orderBound(orderId::Int, apiClientId::Int, apiOrderId::Int)
+orderBound(permId::Int, clientId::Int, orderId::Int)
 
 completedOrder(contract::Contract, order::Order, orderState::OrderState)
 

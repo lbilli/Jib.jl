@@ -45,9 +45,10 @@ struct ConditionPercentChange <: AbstractCondition{PERCENTCHANGE}
 end
 
 
-const condition_map = Dict(PRICE         => ConditionPrice,
-                           TIME          => ConditionTime,
-                           MARGIN        => ConditionMargin,
-                           EXECUTION     => ConditionExecution,
-                           VOLUME        => ConditionVolume,
-                           PERCENTCHANGE => ConditionPercentChange)
+condition_map(t) = t === PRICE         ? ConditionPrice         :
+                   t === TIME          ? ConditionTime          :
+                   t === MARGIN        ? ConditionMargin        :
+                   t === EXECUTION     ? ConditionExecution     :
+                   t === VOLUME        ? ConditionVolume        :
+                   t === PERCENTCHANGE ? ConditionPercentChange :
+                   error("unknown condition type $t")

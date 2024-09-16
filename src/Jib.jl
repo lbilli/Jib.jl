@@ -51,16 +51,15 @@ function connect(host, port, clientId, connectOptions::String="", optionalCapabi
   # Handshake
   Client.write_one(s, buf)
 
-  res = collect(String, Reader.read_msg(s))
+  msg = Reader.read_msg(s)
 
-  @assert length(res) == 2
+  v, t = Reader.decode_init(msg)
 
-  @info "connected" V=res[1] T=res[2]
+  @info "connected" v t
 
-  v = parse(Int, res[1])
   m ≤ v ≤ M || error("unsupported version")
 
-  ib = Connection(s, clientId, connectOptions, Client.Version(v), res[2])
+  ib = Connection(s, clientId, connectOptions, Client.Version(v), t)
 
   Requests.startApi(ib, clientId, optionalCapabilities)
 

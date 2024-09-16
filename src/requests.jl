@@ -22,6 +22,14 @@ enc() = Encoder(Client.buffer(false))
 # Splat fields
 splat(x, idx=1:fieldcount(typeof(x))) = (getfield(x, i) for i ∈ idx)
 
+# NamedTuple
+function splatnt(e::Encoder, nt::NamedTuple)
+
+  e(length(nt))
+
+  foreach(e, Iterators.flatten(pairs(nt)))
+end
+
 # Send messasge
 function sendmsg(ib, e)
 
@@ -97,11 +105,7 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
     o(length(order.orderComboLegs), order.orderComboLegs...)
 
     # Order.smartComboRoutingParams
-    o(length(order.smartComboRoutingParams))
-
-    for (n, v) ∈ pairs(order.smartComboRoutingParams)
-      o(n, v)
-    end
+    splatnt(o, order.smartComboRoutingParams)
   end
 
   o(nothing, # Deprecated sharesAllocation
@@ -174,14 +178,7 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
   # Algo
   o(order.algoStrategy)
 
-  if !isempty(order.algoStrategy)
-
-    o(length(order.algoParams))
-
-    for (n, v) ∈ pairs(order.algoParams)
-      o(n, v)
-    end
-  end
+  !isempty(order.algoStrategy) && splatnt(o, order.algoParams)
 
   o(splat(order, (:algoId,
                   :whatIf,
@@ -254,8 +251,9 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.PROFESSIONAL_CUSTOMER && o(order.professionalCustomer)
 
-  ib.version ≥ Client.RFQ_FIELDS && o(order.externalUserId,
-                                      order.manualOrderIndicator)
+  Client.RFQ_FIELDS ≤ ib.version < Client.UNDO_RFQ_FIELDS && o("", nothing)
+
+  ib.version ≥ Client.INCLUDE_OVERNIGHT && o(order.includeOvernight)
 
   sendmsg(ib, o)
 end
@@ -266,9 +264,9 @@ function cancelOrder(ib::Connection, id::Int, orderCancel::OrderCancel)
 
   o(4, 1,  ### CANCEL_ORDER
     id,
+    orderCancel.manualOrderCancelTime)
 
-    ib.version ≥ Client.RFQ_FIELDS ? splat(orderCancel) :
-                                     orderCancel.manualOrderCancelTime)
+  Client.RFQ_FIELDS ≤ ib.version < Client.UNDO_RFQ_FIELDS && o("", "", nothing)
 
   sendmsg(ib, o)
 end

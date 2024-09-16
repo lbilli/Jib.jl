@@ -100,7 +100,7 @@ ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)
                                     nothing, (;), fill(ns, 5)..., false, false,
                                     nothing, false, ns, ns, ns, ns, false, ns,
                                     fill(ns, 7)..., false, false, false, fill(ns, 7)...,
-                                    [])
+                                    IneligibilityReason[])
 
 
 struct Execution
