@@ -793,7 +793,7 @@ const process = Dict(
 
             price::Float64,
             size::Float64,
-            mask1::TickAttribLast
+            mask1::TickAttribLast,
             exchange::String,
             specialConditions::String = it
 
