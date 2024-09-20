@@ -89,6 +89,14 @@ function Base.convert(::Type{Vector{T}}, it::FieldIterator) where T
   res
 end
 
+# Vector{<:NamedTuple}
+function Base.convert(::Type{Vector{T}}, it::FieldIterator) where T<:NamedTuple
+
+  n::Int = it
+
+  T[ T(it) for _ ∈ 1:n ]
+end
+
 # NamedTuple
 function Base.convert(::Type{NamedTuple}, it::FieldIterator)
 
@@ -107,11 +115,9 @@ end
 
 # Struct
 Base.convert(::Type{T}, it::FieldIterator) where T<:Union{AbstractCondition,
-                                                          Bar,
                                                           ComboLeg,
                                                           CommissionReport,
                                                           DeltaNeutralContract,
-                                                          FamilyCode,
                                                           IneligibilityReason,
                                                           SoftDollarTier} =
                         T(slurp(fieldtypes(T), it)...)

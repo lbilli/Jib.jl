@@ -35,8 +35,16 @@
   @test convert(Jib.TickAttrib, it) === Jib.TickAttrib((0, 0, 1))
 
   # Vector
-  it = makeit(["3", "1", "2", "3"])
+  it = makeit(["3", "1", "2", "3", "0"])
   @test convert(Vector{Int}, it) == 1:3
+
+  @test typeof(convert(Vector{Int}, it)) === Vector{Int}
+
+  # Vector{<:NamedTuple}
+  it = makeit(["1", "2", "3", "0"])
+  @test convert(Jib.VHistogramEntry, it) == [(price = 2.0, size = 3.0)]
+
+  @test typeof(convert(Jib.VHistogramEntry, it)) === Jib.VHistogramEntry
 
   # NamedTuple
   it = makeit(["2", "a", "1", "b", "2"])
@@ -48,10 +56,13 @@
 
   @test convert(Jib.AbstractCondition, it) === c
 
-  it = makeit(["1", "4", "a", "true", "2"])
+  it = makeit(["1", "4", "a", "true", "2", "0"])
   vc::Vector{Jib.AbstractCondition} = it
   @test vc == [c]
   @test eltype(vc) === Jib.AbstractCondition
+
+  vc = it
+  @test typeof(vc) === Vector{Jib.AbstractCondition}
 
   # String
   v = ["1", "0", "action", "", "0", "0", "", "-1", ""]
@@ -89,10 +100,6 @@
   cd = Jib.ContractDetails()
   Jib.Reader.slurp!(cd, (:evRule, :evMultiplier), it)
   @test cd.evMultiplier == -1
-
-  # fill_df
-  it = makeit(["2", "a", "1", "b", "2"])
-  @test Jib.Reader.fill_df((a=String, b=Int), it) == DataFrame(:a => ["a", "b"], :b => [1, 2])
 
   # process
   @test typeof(Jib.Reader.process) == Dict{Int,Function}

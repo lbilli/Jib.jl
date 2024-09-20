@@ -144,7 +144,7 @@ However, there are few exceptions:
   which is meaningful only when `TickType ∈ {BID, ASK, LAST}`.
   In these cases, the official IB API fires an extra `tickSize()` event instead.
 - `historicalData()` is invoked only once per request,
-  presenting all the historical data as a single `DataFrame`,
+  presenting all the historical data as a single `Vector{Bar}`,
   whereas the official IB API invokes it row-by-row.
 - `scannerData()` is also invoked once per request and its arguments
   are in fact vectors rather than single values.
@@ -154,10 +154,6 @@ _one callback per server response_.
 
 Consequently, `historicalDataEnd()` and `scannerDataEnd()` are redundant and
 are **not** used in this package.
-
-`DataFrame` are passed to several other callbacks, such as:
-`mktDepthExchanges()`, `smartComponents()`, `newsProviders()`, `histogramData()`,
-`marketRule()` and the `historicalTicks*()` family.
 
 ##### Missing Values
 Occasionally, for numerical types, there is the need to represent

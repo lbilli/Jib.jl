@@ -48,7 +48,7 @@ managedAccounts(accountsList::String)
 
 receiveFA(faDataType::FaDataType, xml::String)
 
-historicalData(reqId::Int, bar::DataFrame)
+historicalData(reqId::Int, bars::VBar)
 
 scannerParameters(xml::String)
 
@@ -102,19 +102,19 @@ securityDefinitionOptionalParameterEnd(reqId::Int)
 
 softDollarTiers(reqId::Int, tiers::Vector{SoftDollarTier})
 
-familyCodes(familyCodes::Vector{FamilyCode})
+familyCodes(familyCodes::VFamilyCode)
 
 symbolSamples(reqId::Int, contractDescriptions::Vector{ContractDescription})
 
-mktDepthExchanges(depthMktDataDescriptions::DataFrame)
+mktDepthExchanges(depthMktDataDescriptions::VDepthMktDataDescription)
 
 tickNews(tickerId::Int, timeStamp::Int, providerCode::String, articleId::String, headline::String, extraData::String)
 
-smartComponents(reqId::Int, theMap::DataFrame)
+smartComponents(reqId::Int, theMap::VSmartComponent)
 
 tickReqParams(tickerId::Int, minTick::Union{Float64,Nothing}, bboExchange::String, snapshotPermissions::Int)
 
-newsProviders(newsProviders::DataFrame)
+newsProviders(newsProviders::VNewsProvider)
 
 newsArticle(requestId::Int, articleType::Int, articleText::String)
 
@@ -124,7 +124,7 @@ historicalNewsEnd(requestId::Int, hasMore::Bool)
 
 headTimestamp(reqId::Int, headTimestamp::String)
 
-histogramData(reqId::Int, data::DataFrame)
+histogramData(reqId::Int, data::VHistogramEntry)
 
 historicalDataUpdate(reqId::Int, bar::Bar)
 
@@ -132,17 +132,17 @@ rerouteMktDataReq(reqId::Int, conid::Int, exchange::String)
 
 rerouteMktDepthReq(reqId::Int, conid::Int, exchange::String)
 
-marketRule(marketRuleId::Int, priceIncrements::DataFrame)
+marketRule(marketRuleId::Int, priceIncrements::VPriceIncrement)
 
 pnl(reqId::Int, dailyPnL::Float64, unrealizedPnL::Float64, realizedPnL::Float64)
 
 pnlSingle(reqId::Int, pos::Int, dailyPnL::Float64, unrealizedPnL::Union{Float64,Nothing}, realizedPnL::Union{Float64,Nothing}, value::Float64)
 
-historicalTicks(reqId::Int, ticks::DataFrame, done::Bool)
+historicalTicks(reqId::Int, ticks::VHistoricalTick, done::Bool)
 
-historicalTicksBidAsk(reqId::Int, ticks::DataFrame, done::Bool)
+historicalTicksBidAsk(reqId::Int, ticks::VHistoricalTickBidAsk, done::Bool)
 
-historicalTicksLast(reqId::Int, ticks::DataFrame, done::Bool)
+historicalTicksLast(reqId::Int, ticks::VHistoricalTickLast, done::Bool)
 
 tickByTickAllLast(reqId::Int, tickType::Int, time::Int, price::Float64, size::Float64, attribs::TickAttribLast, exchange::String, specialConditions::String)
 
@@ -162,6 +162,6 @@ wshMetaData(reqId::Int, dataJson::String)
 
 wshEventData(reqId::Int, dataJson::String)
 
-historicalSchedule(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::DataFrame)
+historicalSchedule(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::VHistoricalSession)
 
 userInfo(reqId::Int, whiteBrandingId::String)

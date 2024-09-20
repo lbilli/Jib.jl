@@ -1,8 +1,6 @@
-using DataFrames
 using Base.Iterators: take
 
 import ...AbstractCondition,
-       ...Bar,
        ...ComboLeg,
        ...CommissionReport,
        ...ConditionType,
@@ -11,7 +9,6 @@ import ...AbstractCondition,
        ...ContractDetails,
        ...DeltaNeutralContract,
        ...Execution,
-       ...FamilyCode,
        ...FaDataType,
        ...IneligibilityReason,
        ...MarketDataType,
@@ -21,27 +18,21 @@ import ...AbstractCondition,
        ...TickAttrib,
        ...TickAttribLast,
        ...TickAttribBidAsk,
+       ...VBar,
+       ...VDepthMktDataDescription,
+       ...VFamilyCode,
+       ...VHistogramEntry,
+       ...VHistoricalSession,
+       ...HistoricalTick,
+       ...VHistoricalTickBidAsk,
+       ...VHistoricalTickLast,
+       ...VNewsProvider,
+       ...VPriceIncrement,
+       ...VSmartComponent,
        ...condition_map,
        ...funddist,
        ...fundtype,
        ...ns
-
-
-function fill_df(cols, it)
-
-  n::Int = it
-
-  df = DataFrame([k => Vector{T}(undef, n) for (k, T) ∈ pairs(cols)];
-                 copycols=false)
-
-  nr, nc = size(df)
-
-  for r ∈ 1:nr, c ∈ 1:nc
-    df[r, c] = it
-  end
-
-  df
-end
 
 
 """
@@ -337,11 +328,9 @@ const process = Dict(
           pop(it) # Ignore startDate
           pop(it) # Ignore endDate
 
-          df = fill_df((time=String, open=Float64, high=Float64, low=Float64,
-                        close=Float64, volume=Float64, wap=Float64, count=Int),
-                       it)
+          bars::VBar = it
 
-          w.historicalData(reqId, df)
+          w.historicalData(reqId, bars)
         end,
 
   # BOND_CONTRACT_DATA
@@ -590,21 +579,10 @@ const process = Dict(
   76 => (it, w, ver) -> w.securityDefinitionOptionalParameterEnd(convert(Int, it)),
 
   # SOFT_DOLLAR_TIERS
-  77 => function(it, w, ver)
-
-          reqId::Int,
-          tiers::Vector{SoftDollarTier} = it
-
-          w.softDollarTiers(reqId, tiers)
-        end,
+  77 => (it, w, ver) -> w.softDollarTiers(slurp((Int,Vector{SoftDollarTier}), it)...),
 
   # FAMILY_CODES
-  78 => function(it, w, ver)
-
-          familyCodes::Vector{FamilyCode} = it
-
-          w.familyCodes(familyCodes)
-        end,
+  78 => (it, w, ver) -> w.familyCodes(convert(VFamilyCode, it)),
 
   # SYMBOL_SAMPLES
   79 => function(it, w, ver)
@@ -636,28 +614,13 @@ const process = Dict(
         end,
 
   # MKT_DEPTH_EXCHANGES
-  80 => function(it, w, ver)
-
-          df = fill_df((exchange=String, secType=String, listingExch=String,
-                        serviceDataType=String, aggGroup=Union{Int,Nothing}),
-                       it)
-
-          w.mktDepthExchanges(df)
-        end,
+  80 => (it, w, ver) -> w.mktDepthExchanges(convert(VDepthMktDataDescription, it)),
 
   # TICK_REQ_PARAMS
   81 => (it, w, ver) -> w.tickReqParams(slurp((Int,Float64,String,Int), it)...),
 
   # SMART_COMPONENTS
-  82 => function(it, w, ver)
-
-          reqId::Int,
-          n::Int = it
-
-          df = fill_df((bit=Int, exchange=String, exchangeLetter=String), n, it)
-
-          w.smartComponents(reqId, df)
-        end,
+  82 => (it, w, ver) -> w.smartComponents(slurp((Int,VSmartComponent), it)...),
 
   # NEWS_ARTICLE
   83 => (it, w, ver) -> w.newsArticle(slurp((Int,Int,String), it)...),
@@ -666,12 +629,7 @@ const process = Dict(
   84 => (it, w, ver) -> w.tickNews(slurp((Int,Int,String,String,String,String), it)...),
 
   # NEWS_PROVIDERS
-  85 => function(it, w, ver)
-
-          df = fill_df((providerCode=String, providerName=String), it)
-
-          w.newsProviders(df)
-        end,
+  85 => (it, w, ver) -> w.newsProviders(convert(VNewsProvider, it)),
 
   # HISTORICAL_NEWS
   86 => (it, w, ver) -> w.historicalNews(slurp((Int,String,String,String,String), it)...),
@@ -683,17 +641,24 @@ const process = Dict(
   88 => (it, w, ver) -> w.headTimestamp(slurp((Int,String), it)...),
 
   # HISTOGRAM_DATA
-  89 => function(it, w, ver)
-
-          reqId::Int = it
-
-          df = fill_df((price=Float64, size=Float64), it)
-
-          w.histogramData(reqId, df)
-        end,
+  89 => (it, w, ver) -> w.histogramData(slurp((Int,VHistogramEntry), it)...),
 
   # HISTORICAL_DATA_UPDATE
-  90 => (it, w, ver) -> w.historicalDataUpdate(slurp((Int,Bar), it)...),
+  90 => function(it, w, ver)
+
+          reqId::Int,
+          count::Int,
+          time::String,
+          open::Float64,
+          close::Float64,
+          high::Float64,
+          low::Float64,
+          wap::Float64,
+          volume::Float64 = it
+
+          w.historicalDataUpdate(reqId, (; time, open, high, low, close,
+                                           volume, wap, count))
+        end,
 
   # REROUTE_MKT_DATA_REQ
   91 => (it, w, ver) -> w.rerouteMktDataReq(slurp((Int,Int,String), it)...),
@@ -702,14 +667,7 @@ const process = Dict(
   92 => (it, w, ver) -> w.rerouteMktDepthReq(slurp((Int,Int,String), it)...),
 
   # MARKET_RULE
-  93 => function(it, w, ver)
-
-          marketRuleId::Int = it
-
-          df = fill_df((lowEdge=Float64, increment=Float64), it)
-
-          w.marketRule(marketRuleId, df)
-        end,
+  93 => (it, w, ver) -> w.marketRule(slurp((Int,VPriceIncrement), it)...),
 
   # PNL
   94 => function(it, w, ver)
@@ -739,47 +697,32 @@ const process = Dict(
   # HISTORICAL_TICKS
   96 => function(it, w, ver)
 
-          reqId::Int = it
-
-          df = fill_df((time=Int, ignore=Int, price=Float64, size=Float64), it)
-
-          select!(df, Not(:ignore))
-
+          reqId::Int,
+          ticks::Vector{@NamedTuple{time::Int, ignore::Int, price::Float64, size::Float64}},
           done::Bool = it
 
-          w.historicalTicks(reqId, df, done)
+
+          w.historicalTicks(reqId, HistoricalTick.(ticks), done)
         end,
 
   # HISTORICAL_TICKS_BID_ASK
   97 => function(it, w, ver)
 
-          reqId::Int = it
-
-          df = fill_df((time=Int, mask=Int, priceBid=Float64, priceAsk=Float64,
-                        sizeBid=Float64, sizeAsk=Float64),
-                       it)
-
-          # TODO: Unmask df.mask
-
+          reqId::Int,
+          ticks::VHistoricalTickBidAsk,
           done::Bool = it
 
-          w.historicalTicksBidAsk(reqId, df, done)
+          w.historicalTicksBidAsk(reqId, ticks, done)
         end,
 
   # HISTORICAL_TICKS_LAST
   98 => function(it, w, ver)
 
-          reqId::Int = it
-
-          df = fill_df((time=Int, mask=Int, price=Float64, size=Float64,
-                        exchange=String, specialConditions=String),
-                       it)
-
-          # TODO: Unmask df.mask
-
+          reqId::Int,
+          ticks::VHistoricalTickLast,
           done::Bool = it
 
-          w.historicalTicksLast(reqId, df, done)
+          w.historicalTicksLast(reqId, ticks, done)
         end,
 
   # TICK_BY_TICK
@@ -962,11 +905,10 @@ const process = Dict(
           reqId::Int,
           startDateTime::String,
           endDateTime::String,
-          timeZone::String = it
+          timeZone::String,
+          sessions::VHistoricalSession = it
 
-          df = fill_df((startDateTime=String, endDateTime=String, refDate=String), it)
-
-          w.historicalSchedule(reqId, startDateTime, endDateTime, timeZone, df)
+          w.historicalSchedule(reqId, startDateTime, endDateTime, timeZone, sessions)
         end,
 
   # USER_INFO

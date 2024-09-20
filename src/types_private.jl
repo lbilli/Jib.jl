@@ -1,15 +1,3 @@
-struct Bar
-  count::Int        # Fields reordered for convenience when constructing
-  time::String
-  open::Float64
-  close::Float64
-  high::Float64
-  low::Float64
-  wap::Float64
-  volume::Float64
-end
-
-
 struct CommissionReport
   execId::String
   commission::Float64
@@ -126,12 +114,6 @@ struct Execution
 end
 
 
-struct FamilyCode
-  accountID::String
-  familyCodeStr::String
-end
-
-
 struct OrderState
   status::String
   initMarginBefore::String
@@ -156,3 +138,32 @@ end
 TickAttrib =       NamedTuple{(:canAutoExecute, :pastLimit, :preOpen),NTuple{3,Bool}}
 TickAttribLast =   NamedTuple{(:pastLimit, :unreported),NTuple{2,Bool}}
 TickAttribBidAsk = NamedTuple{(:bidPastLow, :askPastHigh),NTuple{2,Bool}}
+
+
+Bar = @NamedTuple{time::String, open::Float64, high::Float64, low::Float64, close::Float64,
+                  volume::Float64, wap::Float64, count::Int}
+
+VBar = Vector{Bar}
+
+VDepthMktDataDescription = Vector{@NamedTuple{exchange::String, secType::String,
+                                              listingExch::String, serviceDataType::String,
+                                              aggGroup::Union{Int,Nothing}}}
+
+VFamilyCode =        Vector{@NamedTuple{accountID::String, familyCodeStr::String}}
+VHistogramEntry =    Vector{@NamedTuple{price::Float64, size::Float64}}
+VHistoricalSession = Vector{@NamedTuple{startDateTime::String, endDateTime::String, refDate::String}}
+
+HistoricalTick =     @NamedTuple{time::Int, price::Float64, size::Float64}
+VHistoricalTick =    Vector{HistoricalTick}
+
+VHistoricalTickBidAsk = Vector{@NamedTuple{time::Int, mask::TickAttribBidAsk,
+                                           priceBid::Float64, priceAsk::Float64,
+                                           sizeBid::Float64, sizeAsk::Float64}}
+
+VHistoricalTickLast = Vector{@NamedTuple{time::Int, mask::TickAttribLast,
+                                         price::Float64, size::Float64,
+                                         exchange::String, specialConditions::String}}
+
+VPriceIncrement = Vector{@NamedTuple{lowEdge::Float64, increment::Float64}}
+VNewsProvider =   Vector{@NamedTuple{providerCode::String, providerName::String}}
+VSmartComponent = Vector{@NamedTuple{bit::Int, exchange::String, exchangeLetter::String}}
