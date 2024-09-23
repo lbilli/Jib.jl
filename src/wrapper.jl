@@ -117,7 +117,7 @@ Base.getproperty(w::Wrapper, name::Symbol) = get(getfield(w, :cb), name) do
 
 
 Base.propertynames(w::Wrapper) = getfield(w, :cb) |> keys |> collect
-
+Base.merge(nt::NamedTuple, w::Wrapper) = let pns=propertynames(w);  merge(nt, NamedTuple{(pns...,)}(getproperty.(Ref(w), pns)))  end
 
 function Base.setproperty!(w::Wrapper, name::Symbol, f)
 
