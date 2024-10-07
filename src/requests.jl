@@ -255,6 +255,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.INCLUDE_OVERNIGHT && o(order.includeOvernight)
 
+  ib.version ≥ Client.CME_TAGGING_FIELDS && o(order.manualOrderIndicator)
+
   sendmsg(ib, o)
 end
 
@@ -262,11 +264,17 @@ function cancelOrder(ib::Connection, id::Int, orderCancel::OrderCancel)
 
   o = enc()
 
-  o(4, 1,  ### CANCEL_ORDER
-    id,
+  o(4) ### CANCEL_ORDER
+
+  ib.version < Client.CME_TAGGING_FIELDS && o(1)
+
+  o(id,
     orderCancel.manualOrderCancelTime)
 
   Client.RFQ_FIELDS ≤ ib.version < Client.UNDO_RFQ_FIELDS && o("", "", nothing)
+
+  ib.version ≥ Client.CME_TAGGING_FIELDS && o(orderCancel.extOperator,
+                                              orderCancel.manualOrderIndicator)
 
   sendmsg(ib, o)
 end
@@ -293,7 +301,7 @@ function reqContractDetails(ib::Connection, reqId::Int, contract::Contract)
 
   o = enc()
 
-  o(9, 8,   ### REQ_CONTRACT_DATA
+  o(9, 8, ### REQ_CONTRACT_DATA
     reqId,
     splat(contract, [1:15; 17]))
 
@@ -304,7 +312,7 @@ function reqMktDepth(ib::Connection, tickerId::Int, contract::Contract, numRows:
 
   o = enc()
 
-  o(10, 5,      ### REQ_MKT_DEPTH
+  o(10, 5, ### REQ_MKT_DEPTH
     tickerId,
     splat(contract, 1:12),
     numRows,
@@ -318,7 +326,7 @@ function cancelMktDepth(ib::Connection, tickerId::Int, isSmartDepth::Bool)
 
   o = enc()
 
-  o(11, 1,   ### CANCEL_MKT_DEPTH
+  o(11, 1, ### CANCEL_MKT_DEPTH
     tickerId,
     isSmartDepth)
 
@@ -343,7 +351,7 @@ function replaceFA(ib::Connection, reqId::Int, faDataType::FaDataType, xml::Stri
 
   o = enc()
 
-  o(19, 1,    ### REPLACE_FA
+  o(19, 1, ### REPLACE_FA
     faDataType,
     xml,
     reqId)
@@ -355,7 +363,7 @@ function reqHistoricalData(ib::Connection, tickerId::Int, contract::Contract, en
 
   o = enc()
 
-  o(20,   ### REQ_HISTORICAL_DATA
+  o(20, ### REQ_HISTORICAL_DATA
     tickerId,
     splat(contract, 1:13),
     endDateTime,
@@ -386,7 +394,7 @@ function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exer
 
   o = enc()
 
-  o(21, 2,    ### EXERCISE_OPTIONS
+  o(21, 2, ### EXERCISE_OPTIONS
     tickerId,
     splat(contract, [1:8; 10:12]),
     exerciseAction,
@@ -407,7 +415,7 @@ function reqScannerSubscription(ib::Connection, tickerId::Int, subscription::Sca
 
   o = enc()
 
-  o(22,    ### REQ_SCANNER_SUBSCRIPTION
+  o(22, ### REQ_SCANNER_SUBSCRIPTION
     tickerId,
     splat(subscription),
     scannerSubscriptionFilterOptions,
@@ -428,7 +436,7 @@ function reqRealTimeBars(ib::Connection, tickerId::Int, contract::Contract, barS
 
   o = enc()
 
-  o(50, 3,      ### REQ_REAL_TIME_BARS
+  o(50, 3, ### REQ_REAL_TIME_BARS
     tickerId,
     splat(contract, 1:12),
     barSize,
@@ -445,7 +453,7 @@ function reqFundamentalData(ib::Connection, reqId::Int, contract::Contract, repo
 
   o = enc()
 
-  o(52, 2,     ### REQ_FUNDAMENTAL_DATA
+  o(52, 2, ### REQ_FUNDAMENTAL_DATA
     reqId,
     splat(contract, [1:3; 8:11]),
     reportType,
@@ -460,7 +468,7 @@ function calculateImpliedVolatility(ib::Connection, reqId::Int, contract::Contra
 
   o = enc()
 
-  o(54, 2,     ### REQ_CALC_IMPLIED_VOLAT
+  o(54, 2, ### REQ_CALC_IMPLIED_VOLAT
     reqId,
     splat(contract, 1:12),
     optionPrice,
@@ -474,7 +482,7 @@ function calculateOptionPrice(ib::Connection, reqId::Int, contract::Contract, vo
 
   o = enc()
 
-  o(55, 2,     ### REQ_CALC_OPTION_PRICE
+  o(55, 2, ### REQ_CALC_OPTION_PRICE
     reqId,
     splat(contract, 1:12),
     volatility,
@@ -488,7 +496,18 @@ cancelCalculateImpliedVolatility(ib::Connection, reqId::Int) = req_simple(ib, 56
 
 cancelCalculateOptionPrice(ib::Connection, reqId::Int) = req_simple(ib, 57, 1, reqId) ### CANCEL_CALC_OPTION_PRICE
 
-reqGlobalCancel(ib::Connection) = req_simple(ib, 58, 1) ### REQ_GLOBAL_CANCEL
+function reqGlobalCancel(ib::Connection, orderCancel::OrderCancel)
+
+  o = enc()
+
+  o(58) ### REQ_GLOBAL_CANCEL
+
+  ib.version < Client.CME_TAGGING_FIELDS ? o(1) :
+                                           o(orderCancel.extOperator,
+                                             orderCancel.manualOrderIndicator)
+
+  sendmsg(ib, o)
+end
 
 reqMarketDataType(ib::Connection, marketDataType::MarketDataType) = req_simple(ib, 59, 1, marketDataType) ### REQ_MARKET_DATA_TYPE
 
@@ -542,7 +561,7 @@ function reqNewsArticle(ib::Connection, requestId::Int, providerCode::String, ar
 
   o = enc()
 
-  o(84,    ### REQ_NEWS_ARTICLE
+  o(84, ### REQ_NEWS_ARTICLE
     requestId,
     providerCode,
     articleId,
@@ -557,7 +576,7 @@ function reqHistoricalNews(ib::Connection, requestId::Int, conId::Int, providerC
 
   o = enc()
 
-  o(86,      ### REQ_HISTORICAL_NEWS
+  o(86, ### REQ_HISTORICAL_NEWS
     requestId,
     conId,
     providerCodes,
@@ -573,7 +592,7 @@ function reqHeadTimestamp(ib::Connection, tickerId::Int, contract::Contract, wha
 
   o = enc()
 
-  o(87,     ### REQ_HEAD_TIMESTAMP
+  o(87, ### REQ_HEAD_TIMESTAMP
     tickerId,
     splat(contract, 1:13),
     useRTH,
@@ -587,7 +606,7 @@ function reqHistogramData(ib::Connection, reqId::Int, contract::Contract, useRTH
 
   o = enc()
 
-  o(88,    ### REQ_HISTOGRAM_DATA
+  o(88, ### REQ_HISTOGRAM_DATA
     reqId,
     splat(contract, 1:13),
     useRTH,
@@ -614,7 +633,7 @@ function reqHistoricalTicks(ib::Connection, reqId::Int, contract::Contract, star
 
   o = enc()
 
-  o(96,      ### REQ_HISTORICAL_TICKS
+  o(96, ### REQ_HISTORICAL_TICKS
     reqId,
     splat(contract, 1:13),
     startDateTime,
@@ -632,7 +651,7 @@ function reqTickByTickData(ib::Connection, reqId::Int, contract::Contract, tickT
 
   o = enc()
 
-  o(97,      ### REQ_TICK_BY_TICK_DATA
+  o(97, ### REQ_TICK_BY_TICK_DATA
     reqId,
     splat(contract, 1:12),
     tickType,
@@ -654,7 +673,7 @@ function reqWshEventData(ib::Connection, reqId::Int, wshEventData::WshEventData)
 
   o = enc()
 
-  o(102,     ### REQ_WSH_EVENT_DATA
+  o(102, ### REQ_WSH_EVENT_DATA
     reqId,
     splat(wshEventData))
 
