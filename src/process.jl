@@ -220,6 +220,9 @@ const process = Dict(
 
           ver ≥ Client.INCLUDE_OVERNIGHT && (o.includeOvernight = it)
 
+          ver ≥ Client.CME_TAGGING_FIELDS_IN_OPEN_ORDER && slurp!(o, (:extOperator,
+                                                                      :manualOrderIndicator), it)
+
           w.openOrder(o.orderId, c, o, os)
         end,
 

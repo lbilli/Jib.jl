@@ -17,5 +17,6 @@
   UNDO_RFQ_FIELDS                    = 190
   PERM_ID_AS_LONG                    = 191
   CME_TAGGING_FIELDS                 = 192
+  CME_TAGGING_FIELDS_IN_OPEN_ORDER   = 193
 
 end
