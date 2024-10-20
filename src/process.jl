@@ -94,13 +94,13 @@ const process = Dict(
                      :discretionaryAmt,
                      :goodAfterTime), it)
 
-          ver < Client.FA_PROFILE_DESUPPORT && pop(it) # Deprecated sharesAllocation
+          pop(it) # Deprecated sharesAllocation
 
           slurp!(o, (:faGroup,
                      :faMethod,
                      :faPercentage), it)
 
-          pop(it) # Deprecated faProfile
+          ver < Client.FA_PROFILE_DESUPPORT && pop(it) # Deprecated faProfile
 
           slurp!(o, (:modelCode,
                      :goodTillDate,
