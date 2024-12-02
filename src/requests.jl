@@ -115,11 +115,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                   :goodTillDate,
                   :faGroup,
                   :faMethod,
-                  :faPercentage)))
-
-  ib.version < Client.FA_PROFILE_DESUPPORT && o(nothing) # Deprecated faProfile
-
-  o(splat(order, (:modelCode,
+                  :faPercentage,
+                  :modelCode,
                   :shortSaleSlot,
                   :designatedLocation,
                   :exemptCode,
@@ -247,11 +244,10 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
       order.midOffsetAtHalf)
   end
 
-  ib.version ≥ Client.CUSTOMER_ACCOUNT && o(order.customerAccount)
+  o(order.customerAccount,
+    order.professionalCustomer)
 
-  ib.version ≥ Client.PROFESSIONAL_CUSTOMER && o(order.professionalCustomer)
-
-  Client.RFQ_FIELDS ≤ ib.version < Client.UNDO_RFQ_FIELDS && o("", nothing)
+  ib.version < Client.UNDO_RFQ_FIELDS && o("", nothing)
 
   ib.version ≥ Client.INCLUDE_OVERNIGHT && o(order.includeOvernight)
 
@@ -271,7 +267,7 @@ function cancelOrder(ib::Connection, id::Int, orderCancel::OrderCancel)
   o(id,
     orderCancel.manualOrderCancelTime)
 
-  Client.RFQ_FIELDS ≤ ib.version < Client.UNDO_RFQ_FIELDS && o("", "", nothing)
+  ib.version < Client.UNDO_RFQ_FIELDS && o("", "", nothing)
 
   ib.version ≥ Client.CME_TAGGING_FIELDS && o(orderCancel.extOperator,
                                               orderCancel.manualOrderIndicator)
@@ -400,13 +396,10 @@ function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exer
     exerciseAction,
     exerciseQuantity,
     account,
-    override)
-
-  ib.version ≥ Client.MANUAL_ORDER_TIME_EXERCISE_OPTIONS && o(manualOrderTime)
-
-  ib.version ≥ Client.CUSTOMER_ACCOUNT && o(customerAccount)
-
-  ib.version ≥ Client.PROFESSIONAL_CUSTOMER && o(professionalCustomer)
+    override,
+    manualOrderTime,
+    customerAccount,
+    professionalCustomer)
 
   sendmsg(ib, o)
 end

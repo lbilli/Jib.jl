@@ -23,11 +23,16 @@ include("roundtrip.jl")
 
   @test fieldname(Jib.Contract, 15) === :secId
   @test fieldname(Jib.Contract, 17) === :issuerId
+  @test fieldname(Jib.Contract, 18) === :lastTradeDate
 
   @test fieldname(Jib.ContractDetails, 44) === :fundName
   @test fieldname(Jib.ContractDetails, 58) === :fundBlueSkyTerritories
 
   @test fieldname(Jib.Order, 79) === :account
   @test fieldname(Jib.Order, 125) === :parentPermId
+
+  @test fieldname(Jib.OrderState, 14) === :commissionCurrency
+  @test fieldname(Jib.OrderState, 15) === :marginCurrency
+  @test fieldname(Jib.OrderState, 27) === :orderAllocations
 
 end

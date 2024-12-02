@@ -204,9 +204,10 @@ function simple_wrap()
 
     execDetailsEnd= (reqId::Int) -> println("execDetailsEnd: $reqId"),
 
-    error= (id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String, advancedOrderRejectJson::String) ->
+    error= (id::Union{Int,Nothing}, errorTime::Int, errorCode::Union{Int,Nothing}, errorString::String, advancedOrderRejectJson::String) ->
              println("error: ",
                      something(id, "NA"), " ",
+                     errorTime, " ",
                      something(errorCode, "NA"), " ",
                      errorString, " ",
                      advancedOrderRejectJson),

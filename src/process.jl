@@ -13,6 +13,7 @@ import ...AbstractCondition,
        ...IneligibilityReason,
        ...MarketDataType,
        ...Order,
+       ...OrderAllocation,
        ...OrderState,
        ...SoftDollarTier,
        ...TickAttrib,
@@ -68,13 +69,24 @@ const process = Dict(
    3 => (it, w, ver) -> w.orderStatus(slurp((Int,String,Float64,Float64,Float64,Int,Int,Float64,Int,String,Float64), it)...),
 
   # ERR_MSG
-   4 => (it, w, ver) -> w.error(slurp((Int,Int,String,String), it)...),
+   4 => function(it, w, ver)
+
+          id::Union{Int,Nothing},
+          errorCode::Union{Int,Nothing},
+          errorMsg::String,
+          adv::String = it
+
+          errorTime::Int = ver ≥ Client.ERROR_TIME ? it : 0
+
+          w.error(id, errorTime, errorCode, errorMsg, adv)
+        end,
 
   # OPEN_ORDER
    5 => function(it, w, ver)
 
-          o = Order()
           c = Contract()
+          o = Order()
+          os = OrderState()
 
           o.orderId = it
 
@@ -98,11 +110,8 @@ const process = Dict(
 
           slurp!(o, (:faGroup,
                      :faMethod,
-                     :faPercentage), it)
-
-          ver < Client.FA_PROFILE_DESUPPORT && pop(it) # Deprecated faProfile
-
-          slurp!(o, (:modelCode,
+                     :faPercentage,
+                     :modelCode,
                      :goodTillDate,
                      :rule80A,
                      :percentOffset,
@@ -170,8 +179,12 @@ const process = Dict(
           o.solicited,
           o.whatIf = it
 
-          os = OrderState(take(it, 15)..., ns, ns)
+          slurp!(os, 1:14, it) # :status -> :commissionCurrency
 
+          ver ≥ Client.FULL_ORDER_PREVIEW_FIELDS &&
+            slurp!(os, 15:27, it) # :marginCurrency -> :orderAllocations
+
+          os.warningText,
           o.randomizeSize,
           o.randomizePrice = it
 
@@ -210,13 +223,10 @@ const process = Dict(
                      :minCompeteSize,
                      :competeAgainstBestOffset,
                      :midOffsetAtWhole,
-                     :midOffsetAtHalf), it)
-
-          ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = it)
-
-          ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = it)
-
-          ver ≥ Client.BOND_ACCRUED_INTEREST && (o.bondAccruedInterest = it)
+                     :midOffsetAtHalf,
+                     :customerAccount,
+                     :professionalCustomer,
+                     :bondAccruedInterest), it)
 
           ver ≥ Client.INCLUDE_OVERNIGHT && (o.includeOvernight = it)
 
@@ -252,11 +262,7 @@ const process = Dict(
 
           cd = ContractDetails()
 
-          slurp!(cd.contract, 2:4, it)
-
-          ver ≥ Client.LAST_TRADE_DATE && (cd.contract.lastTradeDate = it)
-
-          slurp!(cd.contract, (5, 6, 8, 10, 11), it)
+          slurp!(cd.contract, (2, 3, 4, 18, 5, 6, 8, 10, 11), it)
 
           cd.marketName,
           cd.contract.tradingClass,
@@ -279,7 +285,7 @@ const process = Dict(
                       :sizeIncrement,
                       :suggestedSizeIncrement), it)
 
-          if ver ≥ Client.FUND_DATA_FIELDS && cd.contract.secType == "FUND"
+          if cd.contract.secType == "FUND"
 
             slurp!(cd, 44:58, it)
 
@@ -287,7 +293,7 @@ const process = Dict(
             cd.fundAssetType = fundtype(convert(String, it))
           end
 
-          ver ≥ Client.INELIGIBILITY_REASONS && (cd.ineligibilityReasonList = it)
+          cd.ineligibilityReasonList = it
 
           w.contractDetails(reqId, cd)
         end,
@@ -301,9 +307,7 @@ const process = Dict(
           c = Contract()
           slurp!(c, [1:8; 10:12], it)
 
-          e = Execution(orderId,
-                        take(it, 17)...,
-                        ver ≥ Client.PENDING_PRICE_REVISION ? it : false)
+          e = Execution(orderId, take(it, 18)...)
 
           w.execDetails(reqId, c, e)
         end,
@@ -770,8 +774,10 @@ const process = Dict(
   # COMPLETED_ORDER
  101 => function(it, w, ver)
 
-          o = Order()
           c = Contract()
+          o = Order()
+          os = OrderState()
+
 
           slurp!(c, [1:8; 10:12], it)
 
@@ -789,11 +795,8 @@ const process = Dict(
                      :goodAfterTime,
                      :faGroup,
                      :faMethod,
-                     :faPercentage), it)
-
-          ver < Client.FA_PROFILE_DESUPPORT && pop(it) # Deprecated faProfile
-
-          slurp!(o, (:modelCode,
+                     :faPercentage,
+                     :modelCode,
                      :goodTillDate,
                      :rule80A,
                      :percentOffset,
@@ -849,7 +852,7 @@ const process = Dict(
           !isempty(o.algoStrategy) && (o.algoParams = it)
 
           o.solicited,
-          ostatus::String,     # OrderState.status
+          os.status,
           o.randomizeSize,
           o.randomizePrice = it
 
@@ -875,17 +878,16 @@ const process = Dict(
 
           slurp!(o, 118:125, it) # :autoCancelDate -> :parentPermId
 
-          os = OrderState(ostatus, fill(ns, 9)..., fill(nothing, 3)..., ns, ns, take(it, 2)...)
+          os.completedTime,
+          os.completedStatus = it
 
           slurp!(o, (:minTradeQty,
                      :minCompeteSize,
                      :competeAgainstBestOffset,
                      :midOffsetAtWhole,
-                     :midOffsetAtHalf), it)
-
-          ver ≥ Client.CUSTOMER_ACCOUNT && (o.customerAccount = it)
-
-          ver ≥ Client.PROFESSIONAL_CUSTOMER && (o.professionalCustomer = it)
+                     :midOffsetAtHalf,
+                     :customerAccount,
+                     :professionalCustomer), it)
 
           w.completedOrder(c, o, os)
          end,

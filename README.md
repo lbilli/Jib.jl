@@ -1,25 +1,25 @@
 # Jib
 
-**A Julia implementation of Interactive Brokers API**
+*A Julia implementation of Interactive Brokers API*
 
 `Jib` is a native [Julia](https://julialang.org/) client that implements
 [Interactive Brokers](https://www.interactivebrokers.com/) API to communicate
 with TWS or IBGateway.
 
 It aims to be feature complete, however it does not support legacy versions.
-Currently, only API versions `v176+` are supported.
+Currently, only API versions `v187+` are supported.
 
 The package design follows the official C++/Java
 [IB API](https://interactivebrokers.github.io/tws-api/),
 which is based on an asynchronous communication model over TCP.
 
-### Installation
+## Installation
 To install from GitHub:
 ```julia
 ] add https://github.com/lbilli/Jib.jl
 ```
 
-### Usage
+## Usage
 The user interacts mainly with these two objects:
 - `Connection`: a handle holding a connection to the server
 - `Wrapper`: a container for the callbacks that are invoked
@@ -37,8 +37,8 @@ using Jib
 
 wrap = Jib.Wrapper(
          # Customized methods go here
-         error= (id, errorCode, errorString, advancedOrderRejectJson) ->
-                  println("Error: $(something(id, "NA")) $errorCode $errorString $advancedOrderRejectJson"),
+         error= (id, errorTime, errorCode, errorString, advancedOrderRejectJson) ->
+                  println("Error: $(something(id, "NA")) $errorTime $errorCode $errorString $advancedOrderRejectJson"),
 
          nextValidId= (orderId) -> println("Next OrderId: $orderId"),
 
@@ -75,7 +75,7 @@ Jib.placeOrder(ib, orderId, contract, order)
 Jib.disconnect(ib)
 ```
 
-##### Foreground vs. Background Processing
+#### Foreground vs. Background Processing
 It is possible to process the server responses either within the main process
 or in a separate background `Task`:
 - **foreground processing** is triggered by invoking `Jib.check_all(ib, wrap)`.
@@ -88,7 +88,7 @@ or in a separate background `Task`:
 To avoid undesired effects, the two approaches should not be mixed together
 on the same connection.
 
-### Implementation Details
+## Implementation Details
 The package does not export any name, therefore any functions
 or types described here need to be prefixed by `Jib.*`.
 
@@ -105,7 +105,7 @@ As Julia is not an object-oriented language, the functionality of the IB
   The only caveat is to remember to pass a `Connection` as first argument: _e.g._
   `reqContractDetails(ib::Connection, reqId:Int, contract::Contract)`
 
-##### [`Wrapper`](src/wrapper.jl)
+#### [`Wrapper`](src/wrapper.jl)
 Like the official IB `EWrapper` class, this `struct` holds the callbacks
 that are dispatched when responses are processed.
 The user provides the callback definitions as keyword arguments
@@ -136,7 +136,7 @@ refer to the official IB `EWrapper` class documentation.
 As reference, the exact signatures used in this package
 are found [here](data/wrapper_signatures.jl).
 
-### Notes
+## Notes
 Callbacks are generally invoked with arguments and types matching the signatures
 as described in the official documentation.
 However, there are few exceptions:
@@ -155,7 +155,7 @@ _one callback per server response_.
 Consequently, `historicalDataEnd()` and `scannerDataEnd()` are redundant and
 are **not** used in this package.
 
-##### Missing Values
+#### Missing Values
 Occasionally, for numerical types, there is the need to represent
 the lack of a value.
 
@@ -169,7 +169,7 @@ for 64-bit floating point.
 This package makes an effort to use Julia built-in `Nothing`
 in all circumstances.
 
-##### Data Structures
+#### Data Structures
 Other classes that mainly hold data are also replicated.
 They are implemented as Julia `struct` or `mutable struct` with names,
 types and default values matching the IB API counterparts: _e.g._

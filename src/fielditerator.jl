@@ -119,6 +119,7 @@ Base.convert(::Type{T}, it::FieldIterator) where T<:Union{AbstractCondition,
                                                           CommissionReport,
                                                           DeltaNeutralContract,
                                                           IneligibilityReason,
+                                                          OrderAllocation,
                                                           SoftDollarTier} =
                         T(slurp(fieldtypes(T), it)...)
 

@@ -114,7 +114,18 @@ struct Execution
 end
 
 
-struct OrderState
+struct OrderAllocation
+  account::String
+  position::Float64
+  positionDesired::Float64
+  positionAfter::Float64
+  desiredAllocQty::Float64
+  allowedAllocQty::Float64
+  isMonetary::Bool
+end
+
+
+mutable struct OrderState
   status::String
   initMarginBefore::String
   maintMarginBefore::String
@@ -129,10 +140,26 @@ struct OrderState
   minCommission::Union{Float64,Nothing}
   maxCommission::Union{Float64,Nothing}
   commissionCurrency::String
+  marginCurrency::String
+  initMarginBeforeOutsideRTH::Union{Float64,Nothing}
+  maintMarginBeforeOutsideRTH::Union{Float64,Nothing}
+  equityWithLoanBeforeOutsideRTH::Union{Float64,Nothing}
+  initMarginChangeOutsideRTH::Union{Float64,Nothing}
+  maintMarginChangeOutsideRTH::Union{Float64,Nothing}
+  equityWithLoanChangeOutsideRTH::Union{Float64,Nothing}
+  initMarginAfterOutsideRTH::Union{Float64,Nothing}
+  maintMarginAfterOutsideRTH::Union{Float64,Nothing}
+  equityWithLoanAfterOutsideRTH::Union{Float64,Nothing}
+  suggestedSize::Union{Float64,Nothing}
+  rejectReason::String
+  orderAllocations::Vector{OrderAllocation}
   warningText::String
   completedTime::String
   completedStatus::String
 end
+OrderState() = OrderState(fill(ns, 10)..., fill(nothing, 3)..., ns, ns,
+                          fill(nothing, 10)..., ns, OrderAllocation[],
+                          ns, ns, ns)
 
 
 TickAttrib =       NamedTuple{(:canAutoExecute, :pastLimit, :preOpen),NTuple{3,Bool}}

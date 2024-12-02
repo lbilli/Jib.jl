@@ -23,8 +23,9 @@ function decode(msg, w, ver)
   # The first field is the message ID
   id::Int = it
 
-  # The second field (version) is ignored for id < 75 and != 3, 5, 10, 11, 17, 18, 21
-  if id  < 75 && id ∉ (3, 5, 10, 11, 17, 18, 21)
+  # The second field (version) is ignored for id < 75 and != 3, 4, 5, 10, 11, 17, 18, 21
+  if id < 75 && id ∉ (3, 4, 5, 10, 11, 17, 18, 21) ||
+     id == 4 && ver < Client.ERROR_TIME
     pop(it)
   end
 
