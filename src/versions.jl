@@ -9,5 +9,6 @@
   CME_TAGGING_FIELDS_IN_OPEN_ORDER   = 193
   ERROR_TIME                         = 194
   FULL_ORDER_PREVIEW_FIELDS          = 195
+  HISTORICAL_DATA_END                = 196
 
 end

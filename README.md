@@ -152,8 +152,9 @@ However, there are few exceptions:
 These modifications make it possible to establish the rule:
 _one callback per server response_.
 
-Consequently, `historicalDataEnd()` and `scannerDataEnd()` are redundant and
-are **not** used in this package.
+Consequently, ~~`historicalDataEnd()`~~
+(starting from `v196` it's sent in a separate message)
+and `scannerDataEnd()` are redundant and are **not** used in this package.
 
 #### Missing Values
 Occasionally, for numerical types, there is the need to represent

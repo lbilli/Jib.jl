@@ -84,7 +84,8 @@ const callbacks = [:tickPrice,
                    :wshMetaData,
                    :wshEventData,
                    :historicalSchedule,
-                   :userInfo]
+                   :userInfo,
+                   :historicalDataEnd]
 
 
 struct Wrapper
@@ -426,7 +427,10 @@ function simple_wrap()
                           println("historicalSchedule: $reqId $startDateTime $endDateTime $timeZone")
                         end,
 
-    userInfo= (reqId::Int, whiteBrandingId::String) -> println("userInfo: $reqId $whiteBrandingId")
+    userInfo= (reqId::Int, whiteBrandingId::String) -> println("userInfo: $reqId $whiteBrandingId"),
+
+    historicalDataEnd= (reqId::Int, startDateStr::String, endDateStr::String) ->
+                         println("historicalDataEnd: $reqId $startDateStr $endDateStr")
   )
 
   d, w

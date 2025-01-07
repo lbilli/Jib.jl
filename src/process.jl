@@ -332,8 +332,10 @@ const process = Dict(
 
           reqId::Int = it
 
-          pop(it) # Ignore startDate
-          pop(it) # Ignore endDate
+          if ver < Client.HISTORICAL_DATA_END
+            pop(it) # Ignore startDate
+            pop(it) # Ignore endDate
+          end
 
           bars::VBar = it
 
@@ -917,5 +919,8 @@ const process = Dict(
         end,
 
   # USER_INFO
-  107 => (it, w, ver) -> w.userInfo(slurp((Int,String), it)...)
+  107 => (it, w, ver) -> w.userInfo(slurp((Int,String), it)...),
+
+  # HISTORICAL_DATA_END
+  108 => (it, w, ver) -> w.historicalDataEnd(slurp((Int,String,String), it)...)
 )
