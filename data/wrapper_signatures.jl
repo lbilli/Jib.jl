@@ -49,7 +49,7 @@ managedAccounts(accountsList::String)
 
 receiveFA(faDataType::FaDataType, xml::String)
 
-historicalData(reqId::Int, bar::Dict)
+historicalData(reqId::Int, bars::VBar)
 
 scannerParameters(xml::String)
 
@@ -103,19 +103,19 @@ securityDefinitionOptionalParameterEnd(reqId::Int)
 
 softDollarTiers(reqId::Int, tiers::Vector{SoftDollarTier})
 
-familyCodes(familyCodes::Vector{FamilyCode})
+familyCodes(familyCodes::VFamilyCode)
 
 symbolSamples(reqId::Int, contractDescriptions::Vector{ContractDescription})
 
-mktDepthExchanges(depthMktDataDescriptions::Dict)
+mktDepthExchanges(depthMktDataDescriptions::VDepthMktDataDescription)
 
 tickNews(tickerId::Int, timeStamp::Int, providerCode::String, articleId::String, headline::String, extraData::String)
 
-smartComponents(reqId::Int, theMap::Dict)
+smartComponents(reqId::Int, theMap::VSmartComponent)
 
 tickReqParams(tickerId::Int, minTick::Union{Float64,Nothing}, bboExchange::String, snapshotPermissions::Int)
 
-newsProviders(newsProviders::Dict)
+newsProviders(newsProviders::VNewsProvider)
 
 newsArticle(requestId::Int, articleType::Int, articleText::String)
 
@@ -125,7 +125,7 @@ historicalNewsEnd(requestId::Int, hasMore::Bool)
 
 headTimestamp(reqId::Int, headTimestamp::String)
 
-histogramData(reqId::Int, data::Dict)
+histogramData(reqId::Int, data::VHistogramEntry)
 
 historicalDataUpdate(reqId::Int, bar::Bar)
 
@@ -133,17 +133,17 @@ rerouteMktDataReq(reqId::Int, conid::Int, exchange::String)
 
 rerouteMktDepthReq(reqId::Int, conid::Int, exchange::String)
 
-marketRule(marketRuleId::Int, priceIncrements::Dict)
+marketRule(marketRuleId::Int, priceIncrements::VPriceIncrement)
 
 pnl(reqId::Int, dailyPnL::Float64, unrealizedPnL::Float64, realizedPnL::Float64)
 
 pnlSingle(reqId::Int, pos::Int, dailyPnL::Float64, unrealizedPnL::Union{Float64,Nothing}, realizedPnL::Union{Float64,Nothing}, value::Float64)
 
-historicalTicks(reqId::Int, ticks::Dict, done::Bool)
+historicalTicks(reqId::Int, ticks::VHistoricalTick, done::Bool)
 
-historicalTicksBidAsk(reqId::Int, ticks::Dict, done::Bool)
+historicalTicksBidAsk(reqId::Int, ticks::VHistoricalTickBidAsk, done::Bool)
 
-historicalTicksLast(reqId::Int, ticks::Dict, done::Bool)
+historicalTicksLast(reqId::Int, ticks::VHistoricalTickLast, done::Bool)
 
 tickByTickAllLast(reqId::Int, tickType::Int, time::Int, price::Float64, size::Float64, attribs::TickAttribLast, exchange::String, specialConditions::String)
 
@@ -151,7 +151,7 @@ tickByTickBidAsk(reqId::Int, time::Int, bidPrice::Float64, askPrice::Float64, bi
 
 tickByTickMidPoint(reqId::Int, time::Int, midPoint::Float64)
 
-orderBound(orderId::Int, apiClientId::Int, apiOrderId::Int)
+orderBound(permId::Int, clientId::Int, orderId::Int)
 
 completedOrder(contract::Contract, order::Order, orderState::OrderState)
 
@@ -163,6 +163,6 @@ wshMetaData(reqId::Int, dataJson::String)
 
 wshEventData(reqId::Int, dataJson::String)
 
-historicalSchedule(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::Dict)
+historicalSchedule(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::VHistoricalSession)
 
 userInfo(reqId::Int, whiteBrandingId::String)

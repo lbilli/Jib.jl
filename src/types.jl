@@ -40,7 +40,6 @@ ExecutionFilter(; clientId=  0,
                   exchange= ns,
                   side=     ns) = ExecutionFilter(clientId, acctCode, time, symbol, secType, exchange, side)
 
-
 struct SoftDollarTier
   name::String
   val::String
@@ -48,17 +47,12 @@ struct SoftDollarTier
 end
 SoftDollarTier() = SoftDollarTier(ns, ns, ns)
 
-
 struct OrderCancel
   manualOrderCancelTime::String
   extOperator::String
-  externalUserId::String
   manualOrderIndicator::Union{Int,Nothing}
 end
-OrderCancel(manualOrderCancelTime=ns) = OrderCancel(manualOrderCancelTime, ns, ns, nothing)
-OrderCancel(extOperator, externalUserId, manualOrderIndicator) =
-  OrderCancel(ns, extOperator, externalUserId, manualOrderIndicator)
-
+OrderCancel(manualOrderCancelTime="") = OrderCancel(manualOrderCancelTime, "", nothing)
 
 struct WshEventData
   conId::Union{Int,Nothing}

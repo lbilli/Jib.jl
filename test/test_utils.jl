@@ -1,20 +1,29 @@
 @testset "Utils" begin
 
-  @test InteractiveBrokers.TickTypes.tickname(0) == "BID_SIZE"
-  @test InteractiveBrokers.TickTypes.tickname(90) == "DELAYED_HALTED"
-  @test InteractiveBrokers.TickTypes.tickname(102) == "FINAL_IPO_LAST"
+  @test Jib.Reader.tickname( 0) == "BID_SIZE"
 
-  @test InteractiveBrokers.funddist("Y") == "Income Fund"
-  @test InteractiveBrokers.fundtype("003") == "Multi-asset"
-  @test InteractiveBrokers.funddist("") == InteractiveBrokers.fundtype("") == "None"
+  @test Jib.Reader.tickname(90) == "DELAYED_HALTED"
 
-  @test fieldname(InteractiveBrokers.Contract, 15) === :secId
-  @test fieldname(InteractiveBrokers.Contract, 17) === :issuerId
+  @test Jib.Reader.tickname(102) == "FINAL_IPO_LAST"
 
-  @test fieldname(InteractiveBrokers.ContractDetails, 44) === :fundName
-  @test fieldname(InteractiveBrokers.ContractDetails, 58) === :fundBlueSkyTerritories
+  @test (@test_logs (:error, "tickname(): unknown ticktype") Jib.Reader.tickname(-1)) == "UNKNOWN"
 
-  @test fieldname(InteractiveBrokers.Order, 79) === :account
-  @test fieldname(InteractiveBrokers.Order, 125) === :parentPermId
+  @test Jib.funddist("Y") == "Income Fund"
+  @test Jib.fundtype("003") == "Multi-asset"
+  @test Jib.funddist("") == Jib.fundtype("") == "None"
+
+  @test fieldname(Jib.Contract, 15) === :secId
+  @test fieldname(Jib.Contract, 17) === :issuerId
+  @test fieldname(Jib.Contract, 18) === :lastTradeDate
+
+  @test fieldname(Jib.ContractDetails, 44) === :fundName
+  @test fieldname(Jib.ContractDetails, 58) === :fundBlueSkyTerritories
+
+  @test fieldname(Jib.Order, 79) === :account
+  @test fieldname(Jib.Order, 125) === :parentPermId
+
+  @test fieldname(Jib.OrderState, 14) === :commissionCurrency
+  @test fieldname(Jib.OrderState, 15) === :marginCurrency
+  @test fieldname(Jib.OrderState, 27) === :orderAllocations
 
 end

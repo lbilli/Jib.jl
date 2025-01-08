@@ -1,90 +1,91 @@
 const callbacks = [:tickPrice,
-  :tickSize,
-  :tickOptionComputation,
-  :tickGeneric,
-  :tickString,
-  :tickEFP,
-  :orderStatus,
-  :openOrder,
-  :openOrderEnd,
-  #                  :winError,
-  #                  :connectionClosed,
-  :updateAccountValue,
-  :updatePortfolio,
-  :updateAccountTime,
-  :accountDownloadEnd,
-  :nextValidId,
-  :contractDetails,
-  :bondContractDetails,
-  :contractDetailsEnd,
-  :execDetails,
-  :execDetailsEnd,
-  :error,
-  :updateMktDepth,
-  :updateMktDepthL2,
-  :updateNewsBulletin,
-  :managedAccounts,
-  :receiveFA,
-  :historicalData,
-  :scannerParameters,
-  :scannerData,
-  :realtimeBar,
-  :currentTime,
-  :fundamentalData,
-  :deltaNeutralValidation,
-  :tickSnapshotEnd,
-  :marketDataType,
-  :commissionReport,
-  :position,
-  :positionEnd,
-  :accountSummary,
-  :accountSummaryEnd,
-  :verifyMessageAPI,
-  :verifyCompleted,
-  :displayGroupList,
-  :displayGroupUpdated,
-  :verifyAndAuthMessageAPI,
-  :verifyAndAuthCompleted,
-  #                  :connectAck,
-  :positionMulti,
-  :positionMultiEnd,
-  :accountUpdateMulti,
-  :accountUpdateMultiEnd,
-  :securityDefinitionOptionalParameter,
-  :securityDefinitionOptionalParameterEnd,
-  :softDollarTiers,
-  :familyCodes,
-  :symbolSamples,
-  :mktDepthExchanges,
-  :tickNews,
-  :smartComponents,
-  :tickReqParams,
-  :newsProviders,
-  :newsArticle,
-  :historicalNews,
-  :historicalNewsEnd,
-  :headTimestamp,
-  :histogramData,
-  :historicalDataUpdate,
-  :rerouteMktDataReq,
-  :rerouteMktDepthReq,
-  :marketRule,
-  :pnl,
-  :pnlSingle,
-  :historicalTicks,
-  :historicalTicksBidAsk,
-  :historicalTicksLast,
-  :tickByTickAllLast,
-  :tickByTickBidAsk,
-  :tickByTickMidPoint,
-  :orderBound,
-  :completedOrder,
-  :completedOrdersEnd,
-  :replaceFAEnd,
-  :wshMetaData,
-  :wshEventData,
-  :historicalSchedule,
-  :userInfo]
+                   :tickSize,
+                   :tickOptionComputation,
+                   :tickGeneric,
+                   :tickString,
+                   :tickEFP,
+                   :orderStatus,
+                   :openOrder,
+                   :openOrderEnd,
+#                  :winError,
+#                  :connectionClosed,
+                   :updateAccountValue,
+                   :updatePortfolio,
+                   :updateAccountTime,
+                   :accountDownloadEnd,
+                   :nextValidId,
+                   :contractDetails,
+                   :bondContractDetails,
+                   :contractDetailsEnd,
+                   :execDetails,
+                   :execDetailsEnd,
+                   :error,
+                   :updateMktDepth,
+                   :updateMktDepthL2,
+                   :updateNewsBulletin,
+                   :managedAccounts,
+                   :receiveFA,
+                   :historicalData,
+                   :scannerParameters,
+                   :scannerData,
+                   :realtimeBar,
+                   :currentTime,
+                   :fundamentalData,
+                   :deltaNeutralValidation,
+                   :tickSnapshotEnd,
+                   :marketDataType,
+                   :commissionReport,
+                   :position,
+                   :positionEnd,
+                   :accountSummary,
+                   :accountSummaryEnd,
+                   :verifyMessageAPI,
+                   :verifyCompleted,
+                   :displayGroupList,
+                   :displayGroupUpdated,
+                   :verifyAndAuthMessageAPI,
+                   :verifyAndAuthCompleted,
+#                  :connectAck,
+                   :positionMulti,
+                   :positionMultiEnd,
+                   :accountUpdateMulti,
+                   :accountUpdateMultiEnd,
+                   :securityDefinitionOptionalParameter,
+                   :securityDefinitionOptionalParameterEnd,
+                   :softDollarTiers,
+                   :familyCodes,
+                   :symbolSamples,
+                   :mktDepthExchanges,
+                   :tickNews,
+                   :smartComponents,
+                   :tickReqParams,
+                   :newsProviders,
+                   :newsArticle,
+                   :historicalNews,
+                   :historicalNewsEnd,
+                   :headTimestamp,
+                   :histogramData,
+                   :historicalDataUpdate,
+                   :rerouteMktDataReq,
+                   :rerouteMktDepthReq,
+                   :marketRule,
+                   :pnl,
+                   :pnlSingle,
+                   :historicalTicks,
+                   :historicalTicksBidAsk,
+                   :historicalTicksLast,
+                   :tickByTickAllLast,
+                   :tickByTickBidAsk,
+                   :tickByTickMidPoint,
+                   :orderBound,
+                   :completedOrder,
+                   :completedOrdersEnd,
+                   :replaceFAEnd,
+                   :wshMetaData,
+                   :wshEventData,
+                   :historicalSchedule,
+                   :userInfo,
+                   :historicalDataEnd]
 
 abstract type AbstractIBCallbackWrapper end
 
@@ -204,26 +205,27 @@ function simple_wrap()
                       end,
 
     bondContractDetails = function(reqId::Int, contractDetails::ContractDetails)
-                        d[:cdbond] = contractDetails
-                        println("bondContractDetails: $reqId $(contractDetails.contract.conId) $(contractDetails.contract.exchange) $(contractDetails.descAppend)")
-                      end,
+                            d[:cdbond] = contractDetails
+                            println("bondContractDetails: $reqId $(contractDetails.contract.conId) $(contractDetails.contract.exchange) $(contractDetails.descAppend)")
+                          end,
 
     contractDetailsEnd= (reqId::Int) -> println("contractDetailsEnd: $reqId"),
 
     execDetails= function(reqId::Int, contract::Contract, execution::Execution)
-                    d[:ex_con] = contract
-                    d[:execution] = execution
-                    println("execDetails: $reqId")
+                   d[:ex_con] = contract
+                   d[:execution] = execution
+                   println("execDetails: $reqId")
                  end,
 
     execDetailsEnd= (reqId::Int) -> println("execDetailsEnd: $reqId"),
 
-    error= (err::InteractiveBrokers.IbkrErrorMessage) ->
+    error= (id::Union{Int,Nothing}, errorCode::Union{Int,Nothing}, errorString::String, advancedOrderRejectJson::String) ->
                      println("error: ",
-                             something(err.id, "NA"), " ",
-                             something(err.errorCode, "NA"), " ",
-                             err.errorString, " ",
-                             err.advancedOrderRejectJson),
+                             something(id, "NA"), " ",
+                             errorTime, " ",
+                             something(errorCode, "NA"), " ",
+                             errorString, " ",
+                             advancedOrderRejectJson),
 
     updateMktDepth= (id::Int, position::Int, operation::Int, side::Int, price::Float64, size::Float64) ->
                       println("mktDepth: $id $position $operation $side $price $size"),
@@ -244,14 +246,14 @@ function simple_wrap()
                  println("receiveFA: $faDataType")
                end,
 
-    historicalData= function(reqId::Int, bar)
-                      d[:history] = bar
-                      println("historicalData: $reqId $(size(bar))")
+    historicalData= function(reqId::Int, bars::VBar)
+                      d[:history] = bars
+                      println("historicalData: $reqId $(length(bars))")
                     end,
 
     scannerParameters= function(xml::String)
-                        d[:scannerparam] = xml
-                        println("scannerParameters")
+                         d[:scannerparam] = xml
+                         println("scannerParameters")
                        end,
 
     scannerData= function(reqId::Int, rank::Vector{Int}, contractDetails::Vector{ContractDetails}, distance::Vector{String}, benchmark::Vector{String}, projection::Vector{String}, legsStr::Vector{String})
@@ -318,27 +320,27 @@ function simple_wrap()
                        println("softDollarTiers: $reqId $(length(tiers))")
                      end,
 
-    familyCodes= function(familyCodes::Vector{FamilyCode})
+    familyCodes= function(familyCodes::VFamilyCode)
                    d[:familycodes] = familyCodes
                    println("familyCodes: $(length(familyCodes))")
                  end,
 
     symbolSamples= function(reqId::Int, contractDescriptions::Vector{ContractDescription})
                      d[:symbolsamples] = contractDescriptions
-                     println("symbolSamples: $reqId")
+                     println("symbolSamples: $reqId $(length(contractDescriptions))")
                    end,
 
-    mktDepthExchanges= function(depthMktDataDescriptions::Dict)
-                        d[:mktdepthexchanges] = depthMktDataDescriptions
-                        println("mktDepthExchanges")
-                      end,
+    mktDepthExchanges= function(depthMktDataDescriptions::VDepthMktDataDescription)
+                         d[:mktdepthexchanges] = depthMktDataDescriptions
+                         println("mktDepthExchanges: $(length(depthMktDataDescriptions))")
+                       end,
 
     tickNews= (tickerId::Int, timeStamp::Int, providerCode::String, articleId::String, headline::String, extraData::String) ->
                 println("tickNews: $tickerId $timeStamp $providerCode $articleId $headline $extraData"),
 
-    smartComponents= function(reqId::Int, theMap::Dict)
+    smartComponents= function(reqId::Int, theMap::VSmartComponent)
                        d[:smartcomponents] = theMap
-                       println("smartComponents: $reqId $(size(theMap))")
+                       println("smartComponents: $reqId $(length(theMap))")
                      end,
 
     tickReqParams= (tickerId::Int, minTick::Union{Float64,Nothing}, bboExchange::String, snapshotPermissions::Int) ->
@@ -346,9 +348,9 @@ function simple_wrap()
                              something(minTick, "NA"),
                              " $bboExchange $snapshotPermissions"),
 
-    newsProviders= function(newsProviders::Dict)
+    newsProviders= function(newsProviders::VNewsProvider)
                      d[:newsproviders] = newsProviders
-                     println("newsProviders")
+                     println("newsProviders: $(length(newsProviders))")
                    end,
 
     newsArticle= function(requestId::Int, articleType::Int, articleText::String)
@@ -364,10 +366,10 @@ function simple_wrap()
 
     headTimestamp= (reqId::Int, headTimestamp::String) -> println("headTimestamp: $reqId $headTimestamp"),
 
-    histogramData= function(reqId::Int, data::Dict)
-                    d[:histogram] = data
-                    println("histogramData: $reqId")
-                  end,
+    histogramData= function(reqId::Int, data::VHistogramEntry)
+                     d[:histogram] = data
+                     println("histogramData: $reqId $(length(data))")
+                   end,
 
     historicalDataUpdate= (reqId::Int, bar::Bar) ->
                             println("historicalDataUpdate: $reqId $bar"),
@@ -378,9 +380,9 @@ function simple_wrap()
     rerouteMktDepthReq= (reqId::Int, conid::Int, exchange::String) ->
                           println("rerouteMktDepthReq: $reqId $conid $exchange"),
 
-    marketRule= function(marketRuleId::Int, priceIncrements::Dict)
+    marketRule= function(marketRuleId::Int, priceIncrements::VPriceIncrement)
                   d[:marketrule] = priceIncrements
-                  println("marketRule: $marketRuleId")
+                  println("marketRule: $marketRuleId $(length(priceIncrements))")
                 end,
 
     pnl= (reqId::Int, dailyPnL::Float64, unrealizedPnL::Float64, realizedPnL::Float64) ->
@@ -392,19 +394,19 @@ function simple_wrap()
                          something(realizedPnL, "NA"),   " ",
                          value),
 
-    historicalTicks= function(reqId::Int, ticks::Dict, done::Bool)
+    historicalTicks= function(reqId::Int, ticks::VHistoricalTick, done::Bool)
                        d[:historyticks] = ticks
-                       println("historicalTicks: $reqId $done $(size(ticks))")
+                       println("historicalTicks: $reqId $done $(length(ticks))")
                      end,
 
-    historicalTicksBidAsk= function(reqId::Int, ticks::Dict, done::Bool)
+    historicalTicksBidAsk= function(reqId::Int, ticks::VHistoricalTickBidAsk, done::Bool)
                              d[:historyticksbidask] = ticks
-                             println("historicalTicksBidAsk: $reqId $done $(size(ticks))")
+                             println("historicalTicksBidAsk: $reqId $done $(length(ticks))")
                            end,
 
-    historicalTicksLast= function(reqId::Int, ticks::Dict, done::Bool)
+    historicalTicksLast= function(reqId::Int, ticks::VHistoricalTickLast, done::Bool)
                            d[:historytickslast] = ticks
-                           println("historicalTicksLast: $reqId $done $(size(ticks))")
+                           println("historicalTicksLast: $reqId $done $(length(ticks))")
                          end,
 
     tickByTickAllLast= (reqId::Int, tickType::Int, time::Int, price::Float64, size::Float64, attribs::TickAttribLast, exchange::String, specialConditions::String) ->
@@ -416,8 +418,8 @@ function simple_wrap()
     tickByTickMidPoint= (reqId::Int, time::Int, midPoint::Float64) ->
                           println("tickByTickMidPoint: $reqId $time $midPoint"),
 
-    orderBound= (orderId::Int, apiClientId::Int, apiOrderId::Int) ->
-                  println("orderBound: $orderId $apiClientId $apiOrderId"),
+    orderBound= (permId::Int, clientId::Int, orderId::Int) ->
+                  println("orderBound: $permId $clientId $orderId"),
 
     completedOrder= function(contract::Contract, order::Order, orderState::OrderState)
                       d[:completed_contract] = contract
@@ -434,12 +436,15 @@ function simple_wrap()
 
     wshEventData= (reqId::Int, dataJson::String) -> println("wshEventData: $reqId $dataJson"),
 
-    historicalSchedule= function(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::Dict)
+    historicalSchedule= function(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::VHistoricalSession)
                           d[:schedule] = sessions
                           println("historicalSchedule: $reqId $startDateTime $endDateTime $timeZone")
                         end,
 
-    userInfo= (reqId::Int, whiteBrandingId::String) -> println("userInfo: $reqId $whiteBrandingId")
+    userInfo= (reqId::Int, whiteBrandingId::String) -> println("userInfo: $reqId $whiteBrandingId"),
+
+    historicalDataEnd= (reqId::Int, startDateStr::String, endDateStr::String) ->
+                         println("historicalDataEnd: $reqId $startDateStr $endDateStr")
   )
 
   d, w

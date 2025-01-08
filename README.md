@@ -3,14 +3,14 @@
 [![Build Status](https://github.com/oliviermilla/InteractiveBrokers.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/oliviermilla/InteractiveBrokers.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![codecov](https://codecov.io/gh/oliviermilla/InteractiveBrokers.jl/graph/badge.svg?token=AFV1NV9CR9)](https://codecov.io/gh/oliviermilla/InteractiveBrokers.jl)
 
-**A Julia implementation of Interactive Brokers API**
+*A Julia implementation of Interactive Brokers API*
 
 `InteractiveBrokers` is a native [Julia](https://julialang.org/) client that implements
 [Interactive Brokers](https://www.interactivebrokers.com/) API to communicate
 with TWS or IBGateway.
 
 It aims to be feature complete, however it does not support legacy versions.
-Currently, only API versions `v176+` are supported.
+Currently, only API versions `v187+` are supported.
 
 The package design follows the official C++/Java
 [IB API](https://interactivebrokers.github.io/tws-api/),
@@ -37,7 +37,7 @@ To install from GitHub:
 ] add https://github.com/oliviermilla/InteractiveBrokers.jl
 ```
 
-### Usage
+## Usage
 The user interacts mainly with these two objects:
 - `Connection`: a handle holding a connection to the server
 - `Wrapper`: a container for the callbacks that are invoked
@@ -55,8 +55,8 @@ using InteractiveBrokers
 
 wrap = InteractiveBrokers.Wrapper(
          # Customized methods go here
-         error= (err) ->
-                  println("Error: $(something($(err.id), "NA")) $(err.errorCode) $(err.errorString) $(err.advancedOrderRejectJson)"),
+         error= (id, errorTime, errorCode, errorString, advancedOrderRejectJson) ->
+                  println("Error: $(something(id, "NA")) $errorTime $errorCode $errorString $advancedOrderRejectJson"),
 
          nextValidId= (orderId) -> println("Next OrderId: $orderId"),
 
@@ -93,7 +93,7 @@ InteractiveBrokers.placeOrder(ib, orderId, contract, order)
 InteractiveBrokers.disconnect(ib)
 ```
 
-##### Foreground vs. Background Processing
+#### Foreground vs. Background Processing
 It is possible to process the server responses either within the main process
 or in a separate background `Task`:
 - **foreground processing** is triggered by invoking `InteractiveBrokers.check_all(ib, wrap, Tab=Dict)`.
@@ -109,7 +109,7 @@ To avoid undesired effects, the two approaches should not be mixed together on t
 `Tab` parameter of above examples is the sink format used when applicable. The library supports an extension for 
 DataFrames (just pass `DataFrame` as a last parameter), otherwise `Dict` is the default format.
 
-### Implementation Details
+## Implementation Details
 The package does not export any name, therefore any functions
 or types described here need to be prefixed by `InteractiveBrokers.*`.
 
@@ -126,7 +126,7 @@ As Julia is not an object-oriented language, the functionality of the IB
   The only caveat is to remember to pass a `Connection` as first argument: _e.g._
   `reqContractDetails(ib::Connection, reqId:Int, contract::Contract)`
 
-##### [`Wrapper`](src/wrapper.jl)
+#### [`Wrapper`](src/wrapper.jl)
 Like the official IB `EWrapper` class, this `struct` holds the callbacks
 that are dispatched when responses are processed.
 The user provides the callback definitions as keyword arguments
@@ -157,7 +157,7 @@ refer to the official IB `EWrapper` class documentation.
 As reference, the exact signatures used in this package
 are found [here](data/wrapper_signatures.jl).
 
-### Notes
+## Notes
 Callbacks are generally invoked with arguments and types matching the signatures
 as described in the official documentation.
 However, there are few exceptions:
@@ -165,7 +165,7 @@ However, there are few exceptions:
   which is meaningful only when `TickType ∈ {BID, ASK, LAST}`.
   In these cases, the official IB API fires an extra `tickSize()` event instead.
 - `historicalData()` is invoked only once per request,
-  presenting all the historical data as a single `DataFrame`,
+  presenting all the historical data as a single `Vector{Bar}`,
   whereas the official IB API invokes it row-by-row.
 - `scannerData()` is also invoked once per request and its arguments
   are in fact vectors rather than single values.
@@ -173,14 +173,11 @@ However, there are few exceptions:
 These modifications make it possible to establish the rule:
 _one callback per server response_.
 
-Consequently, `historicalDataEnd()` and `scannerDataEnd()` are redundant and
-are **not** used in this package.
+Consequently, ~~`historicalDataEnd()`~~
+(starting from `v196` it's sent in a separate message)
+and `scannerDataEnd()` are redundant and are **not** used in this package.
 
-`DataFrame` are passed to several other callbacks, such as:
-`mktDepthExchanges()`, `smartComponents()`, `newsProviders()`, `histogramData()`,
-`marketRule()` and the `historicalTicks*()` family.
-
-##### Missing Values
+#### Missing Values
 Occasionally, for numerical types, there is the need to represent
 the lack of a value.
 
@@ -194,7 +191,7 @@ for 64-bit floating point.
 This package makes an effort to use Julia built-in `Nothing`
 in all circumstances.
 
-##### Data Structures
+#### Data Structures
 Other classes that mainly hold data are also replicated.
 They are implemented as Julia `struct` or `mutable struct` with names,
 types and default values matching the IB API counterparts: _e.g._

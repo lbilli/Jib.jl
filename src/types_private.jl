@@ -1,15 +1,3 @@
-struct Bar
-  count::Int        # Fields reordered for convenience when constructing
-  time::String
-  open::Float64
-  close::Float64
-  high::Float64
-  low::Float64
-  wap::Float64
-  volume::Float64
-end
-
-
 struct CommissionReport
   execId::String
   commission::Float64
@@ -100,7 +88,7 @@ ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)
                                     nothing, (;), fill(ns, 5)..., false, false,
                                     nothing, false, ns, ns, ns, ns, false, ns,
                                     fill(ns, 7)..., false, false, false, fill(ns, 7)...,
-                                    [])
+                                    IneligibilityReason[])
 
 
 struct Execution
@@ -126,13 +114,18 @@ struct Execution
 end
 
 
-struct FamilyCode
-  accountID::String
-  familyCodeStr::String
+struct OrderAllocation
+  account::String
+  position::Float64
+  positionDesired::Float64
+  positionAfter::Float64
+  desiredAllocQty::Float64
+  allowedAllocQty::Float64
+  isMonetary::Bool
 end
 
 
-struct OrderState
+mutable struct OrderState
   status::String
   initMarginBefore::String
   maintMarginBefore::String
@@ -147,12 +140,57 @@ struct OrderState
   minCommission::Union{Float64,Nothing}
   maxCommission::Union{Float64,Nothing}
   commissionCurrency::String
+  marginCurrency::String
+  initMarginBeforeOutsideRTH::Union{Float64,Nothing}
+  maintMarginBeforeOutsideRTH::Union{Float64,Nothing}
+  equityWithLoanBeforeOutsideRTH::Union{Float64,Nothing}
+  initMarginChangeOutsideRTH::Union{Float64,Nothing}
+  maintMarginChangeOutsideRTH::Union{Float64,Nothing}
+  equityWithLoanChangeOutsideRTH::Union{Float64,Nothing}
+  initMarginAfterOutsideRTH::Union{Float64,Nothing}
+  maintMarginAfterOutsideRTH::Union{Float64,Nothing}
+  equityWithLoanAfterOutsideRTH::Union{Float64,Nothing}
+  suggestedSize::Union{Float64,Nothing}
+  rejectReason::String
+  orderAllocations::Vector{OrderAllocation}
   warningText::String
   completedTime::String
   completedStatus::String
 end
+OrderState() = OrderState(fill(ns, 10)..., fill(nothing, 3)..., ns, ns,
+                          fill(nothing, 10)..., ns, OrderAllocation[],
+                          ns, ns, ns)
 
 
 TickAttrib =       NamedTuple{(:canAutoExecute, :pastLimit, :preOpen),NTuple{3,Bool}}
 TickAttribLast =   NamedTuple{(:pastLimit, :unreported),NTuple{2,Bool}}
 TickAttribBidAsk = NamedTuple{(:bidPastLow, :askPastHigh),NTuple{2,Bool}}
+
+
+Bar = @NamedTuple{time::String, open::Float64, high::Float64, low::Float64, close::Float64,
+                  volume::Float64, wap::Float64, count::Int}
+
+VBar = Vector{Bar}
+
+VDepthMktDataDescription = Vector{@NamedTuple{exchange::String, secType::String,
+                                              listingExch::String, serviceDataType::String,
+                                              aggGroup::Union{Int,Nothing}}}
+
+VFamilyCode =        Vector{@NamedTuple{accountID::String, familyCodeStr::String}}
+VHistogramEntry =    Vector{@NamedTuple{price::Float64, size::Float64}}
+VHistoricalSession = Vector{@NamedTuple{startDateTime::String, endDateTime::String, refDate::String}}
+
+HistoricalTick =     @NamedTuple{time::Int, price::Float64, size::Float64}
+VHistoricalTick =    Vector{HistoricalTick}
+
+VHistoricalTickBidAsk = Vector{@NamedTuple{time::Int, mask::TickAttribBidAsk,
+                                           priceBid::Float64, priceAsk::Float64,
+                                           sizeBid::Float64, sizeAsk::Float64}}
+
+VHistoricalTickLast = Vector{@NamedTuple{time::Int, mask::TickAttribLast,
+                                         price::Float64, size::Float64,
+                                         exchange::String, specialConditions::String}}
+
+VPriceIncrement = Vector{@NamedTuple{lowEdge::Float64, increment::Float64}}
+VNewsProvider =   Vector{@NamedTuple{providerCode::String, providerName::String}}
+VSmartComponent = Vector{@NamedTuple{bit::Int, exchange::String, exchangeLetter::String}}

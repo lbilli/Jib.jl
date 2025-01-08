@@ -3,14 +3,13 @@ module Reader
 using ..Client: Client, read_one
 
 include("decode.jl")
-include("field.jl")
 
 
 function read_msg(socket)
 
   msg = read_one(socket)
 
-  FieldIterator(String(msg))
+  String(msg)
 end
 
 
@@ -21,9 +20,9 @@ Process one message and dispatch the appropriate callback. **Blocking**.
 """
 function check_msg(ib, w, Tab=Dict)
 
-  it = read_msg(ib.socket)
+  msg = read_msg(ib.socket)
 
-  decode(it, w, ib.version, Tab)
+  decode(msg, w, ib.version)
 end
 
 
@@ -40,9 +39,9 @@ function check_all(ib, w, flush=false, Tab=Dict)
   count = 0
   while bytesavailable(ib.socket) > 0 || ib.socket.status == Base.StatusOpen # =3
 
-    it = read_msg(ib.socket)
+    msg = read_msg(ib.socket)
 
-    flush || decode(it, w, ib.version, Tab)
+    flush || decode(msg, w, ib.version)
 
     count += 1
   end

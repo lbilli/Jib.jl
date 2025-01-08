@@ -46,8 +46,4 @@ end
 (e::Encoder)(x::Base.Generator) = foreach(e, x)
 
 # Multiple arguments
-function (e::Encoder)(x, y...)
-  e(x)
-  foreach(e, y)
-end
-
+(e::Encoder)(x...) = foreach(e, x)
