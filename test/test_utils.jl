@@ -1,29 +1,29 @@
 @testset "Utils" begin
 
-  @test Jib.Reader.tickname( 0) == "BID_SIZE"
+  @test InteractiveBrokers.Reader.tickname( 0) == "BID_SIZE"
 
-  @test Jib.Reader.tickname(90) == "DELAYED_HALTED"
+  @test InteractiveBrokers.Reader.tickname(90) == "DELAYED_HALTED"
 
-  @test Jib.Reader.tickname(102) == "FINAL_IPO_LAST"
+  @test InteractiveBrokers.Reader.tickname(102) == "FINAL_IPO_LAST"
 
-  @test (@test_logs (:error, "tickname(): unknown ticktype") Jib.Reader.tickname(-1)) == "UNKNOWN"
+  @test (@test_logs (:error, "tickname(): unknown ticktype") InteractiveBrokers.Reader.tickname(-1)) == "UNKNOWN"
 
-  @test Jib.funddist("Y") == "Income Fund"
-  @test Jib.fundtype("003") == "Multi-asset"
-  @test Jib.funddist("") == Jib.fundtype("") == "None"
+  @test InteractiveBrokers.funddist("Y") == "Income Fund"
+  @test InteractiveBrokers.fundtype("003") == "Multi-asset"
+  @test InteractiveBrokers.funddist("") == InteractiveBrokers.fundtype("") == "None"
 
-  @test fieldname(Jib.Contract, 15) === :secId
-  @test fieldname(Jib.Contract, 17) === :issuerId
-  @test fieldname(Jib.Contract, 18) === :lastTradeDate
+  @test fieldname(InteractiveBrokers.Contract, 15) === :secId
+  @test fieldname(InteractiveBrokers.Contract, 17) === :issuerId
+  @test fieldname(InteractiveBrokers.Contract, 18) === :lastTradeDate
 
-  @test fieldname(Jib.ContractDetails, 44) === :fundName
-  @test fieldname(Jib.ContractDetails, 58) === :fundBlueSkyTerritories
+  @test fieldname(InteractiveBrokers.ContractDetails, 44) === :fundName
+  @test fieldname(InteractiveBrokers.ContractDetails, 58) === :fundBlueSkyTerritories
 
-  @test fieldname(Jib.Order, 79) === :account
-  @test fieldname(Jib.Order, 125) === :parentPermId
+  @test fieldname(InteractiveBrokers.Order, 79) === :account
+  @test fieldname(InteractiveBrokers.Order, 125) === :parentPermId
 
-  @test fieldname(Jib.OrderState, 14) === :commissionCurrency
-  @test fieldname(Jib.OrderState, 15) === :marginCurrency
-  @test fieldname(Jib.OrderState, 27) === :orderAllocations
+  @test fieldname(InteractiveBrokers.OrderState, 14) === :commissionCurrency
+  @test fieldname(InteractiveBrokers.OrderState, 15) === :marginCurrency
+  @test fieldname(InteractiveBrokers.OrderState, 27) === :orderAllocations
 
 end

@@ -1,6 +1,6 @@
 @testset "Roundtrip" begin
 
-  i, f, finf, s, b, e, nt, v = 10, 12.3, Inf, "a", false, Jib.FIRM, (a=1, b="c"), [1, 2]
+  i, f, finf, s, b, e, nt, v = 10, 12.3, Inf, "a", false, InteractiveBrokers.FIRM, (a=1, b="c"), [1, 2]
 
   cl = InteractiveBrokers.ComboLeg(ratio=1, exchange="ex")
   cv = [InteractiveBrokers.ConditionPrice("a", false, 1.5, 5, "A", 2),
@@ -22,10 +22,10 @@
   ginf::Float64,
   z::String,
   l::Bool,
-  en::Jib.Origin,
+  en::InteractiveBrokers.Origin,
   mt::NamedTuple,
   w::Vector{Int},
-  cc::Jib.ComboLeg,
+  cc::InteractiveBrokers.ComboLeg,
   cw::Vector{InteractiveBrokers.AbstractCondition} = it
 
   @test i == j
