@@ -1,13 +1,11 @@
 @testset "Decode" begin
 
-  makeit(v) = Jib.Reader.FieldIterator(join([v; ""], '\0'))
+  makeit(v) = InteractiveBrokers.Reader.FieldIterator(join([v; ""], '\0'))
   reset!(it) = it.c = 1
 
   take = Iterators.take
 
   # Bool
-  v = InteractiveBrokers.Reader.Field.(["0", "1", "false", "true", ""])
-  @test collect(Bool, v[1:4]) == [false, true, false, true]
   it = makeit(["0", "1", "false", "true", ""])
   @test collect(Bool, take(it, 4)) == [false, true, false, true]
 
@@ -27,14 +25,14 @@
 
   # Enum
   it = makeit(["1", "2", "a"])
-  @test convert(Jib.ConditionType, it) == Jib.PRICE
+  @test convert(InteractiveBrokers.ConditionType, it) == InteractiveBrokers.PRICE
 
-  @test_throws ArgumentError convert(Jib.ConditionType, it)
-  @test_throws ArgumentError convert(Jib.ConditionType, it)
+  @test_throws ArgumentError convert(InteractiveBrokers.ConditionType, it)
+  @test_throws ArgumentError convert(InteractiveBrokers.ConditionType, it)
 
   # Mask
   it = makeit(["4"])
-  @test convert(Jib.TickAttrib, it) === Jib.TickAttrib((0, 0, 1))
+  @test convert(InteractiveBrokers.TickAttrib, it) === InteractiveBrokers.TickAttrib((0, 0, 1))
 
   # Vector
   it = makeit(["3", "1", "2", "3", "0"])
@@ -44,9 +42,9 @@
 
   # Vector{<:NamedTuple}
   it = makeit(["1", "2", "3", "0"])
-  @test convert(Jib.VHistogramEntry, it) == [(price = 2.0, size = 3.0)]
+  @test convert(InteractiveBrokers.VHistogramEntry, it) == [(price=2.0, size=3.0)]
 
-  @test typeof(convert(Jib.VHistogramEntry, it)) === Jib.VHistogramEntry
+  @test typeof(convert(InteractiveBrokers.VHistogramEntry, it)) === InteractiveBrokers.VHistogramEntry
 
   # NamedTuple
   it = makeit(["2", "a", "1", "b", "2"])
@@ -54,17 +52,17 @@
 
   # Condition
   it = makeit(["4", "a", "true", "2"])
-  c = Jib.ConditionMargin("a", true, 2)
+  c = InteractiveBrokers.ConditionMargin("a", true, 2)
 
-  @test convert(Jib.AbstractCondition, it) === c
+  @test convert(InteractiveBrokers.AbstractCondition, it) === c
 
   it = makeit(["1", "4", "a", "true", "2", "0"])
-  vc::Vector{Jib.AbstractCondition} = it
+  vc::Vector{InteractiveBrokers.AbstractCondition} = it
   @test vc == [c]
-  @test eltype(vc) === Jib.AbstractCondition
+  @test eltype(vc) === InteractiveBrokers.AbstractCondition
 
   vc = it
-  @test typeof(vc) === Vector{Jib.AbstractCondition}
+  @test typeof(vc) === Vector{InteractiveBrokers.AbstractCondition}
 
   # String
   v = ["1", "0", "action", "", "0", "0", "", "-1", ""]
@@ -76,19 +74,19 @@
   @test convert(Symbol, it) === :action
 
   # rest
-  @test collect(String, Jib.Reader.rest(it)) == v[4:end]
+  @test collect(String, InteractiveBrokers.Reader.rest(it)) == v[4:end]
 
   # EOF
   @test isempty(it)
-  @test_throws EOFError Jib.Reader.pop(it)
+  @test_throws EOFError InteractiveBrokers.Reader.pop(it)
 
   # Structs
   reset!(it)
-  @test convert(Jib.ComboLeg, it) === Jib.ComboLeg(conId=1, action="action")
+  @test convert(InteractiveBrokers.ComboLeg, it) === InteractiveBrokers.ComboLeg(conId=1, action="action")
 
   # slurp
   reset!(it)
-  @test Jib.Reader.slurp((Int, Float64, String), it) === (1, 0., "action")
+  @test InteractiveBrokers.Reader.slurp((Int, Float64, String), it) === (1, 0.0, "action")
 
   reset!(it)
   c = InteractiveBrokers.Contract()

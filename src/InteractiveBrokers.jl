@@ -14,7 +14,7 @@ include("types_private.jl")
 include("wrapper.jl")
 include("reader.jl")          ; using .Reader: check_all, start_reader
 include("utils.jl")
-include("TickTypes.jl")
+include("TickTypes.jl")    ; using .TickTypes: tickname
 
 """
     Connection()

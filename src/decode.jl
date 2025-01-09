@@ -1,6 +1,6 @@
 include("process.jl")
 include("fielditerator.jl")
-include("ticktype.jl")
+include("TickTypes.jl")
 
 
 function decode_init(msg)
