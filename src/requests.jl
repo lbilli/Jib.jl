@@ -677,6 +677,8 @@ cancelWshEventData(ib::Connection, reqId::Int) = req_simple(ib, 103, reqId) ### 
 
 reqUserInfo(ib::Connection, reqId::Int) = req_simple(ib, 104, reqId) ### REQ_USER_INFO
 
+reqCurrentTimeInMillis(ib::Connection) = req_simple(ib, 105) ### REQ_CURRENT_TIME_IN_MILLIS
+
 # Exports
 export reqMktData,
        cancelMktData,
@@ -757,5 +759,6 @@ export reqMktData,
        cancelWshMetaData,
        reqWshEventData,
        cancelWshEventData,
-       reqUserInfo
+       reqUserInfo,
+       reqCurrentTimeInMillis
 end

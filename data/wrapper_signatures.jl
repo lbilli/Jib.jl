@@ -166,3 +166,7 @@ wshEventData(reqId::Int, dataJson::String)
 historicalSchedule(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::VHistoricalSession)
 
 userInfo(reqId::Int, whiteBrandingId::String)
+
+historicalDataEnd(reqId::Int, startDateStr::String, endDateStr::String)
+
+currentTimeInMillis(timeInMillis::Int)

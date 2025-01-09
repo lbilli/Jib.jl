@@ -936,5 +936,8 @@ const process = Dict(
   107 => (it, w::InteractiveBrokers.AbstractIBCallbackWrapper, ver, Tab=Dict) -> InteractiveBrokers.forward(w, :userInfo, slurp((Int, String), it)...),
 
   # HISTORICAL_DATA_END
-  108 => (it, w::InteractiveBrokers.AbstractIBCallbackWrapper, ver, Tab=Dict) -> InteractiveBrokers.forward(w, :historicalDataEnd, slurp((Int, String, String), it)...)
+  108 => (it, w::InteractiveBrokers.AbstractIBCallbackWrapper, ver, Tab=Dict) -> InteractiveBrokers.forward(w, :historicalDataEnd, slurp((Int, String, String), it)...),
+
+  # CURRENT_TIME_IN_MILLIS
+  109 => (it, w, ver) -> InteractiveBrokers.forward(w, :currentTimeInMillis, convert(Int, it))
 )
