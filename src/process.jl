@@ -922,5 +922,8 @@ const process = Dict(
   107 => (it, w, ver) -> w.userInfo(slurp((Int,String), it)...),
 
   # HISTORICAL_DATA_END
-  108 => (it, w, ver) -> w.historicalDataEnd(slurp((Int,String,String), it)...)
+  108 => (it, w, ver) -> w.historicalDataEnd(slurp((Int,String,String), it)...),
+
+  # CURRENT_TIME_IN_MILLIS
+  109 => (it, w, ver) -> w.currentTimeInMillis(convert(Int, it))
 )
