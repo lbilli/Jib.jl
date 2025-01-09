@@ -1,5 +1,5 @@
 name = "InteractiveBrokers"
-uuid = "f310f2d2-a263-11e8-3998-47bd686f18f7"
+uuid = "c9eee01f-432d-414e-83d3-5217cf8b3b71"
 authors = ["Luca Billi <noreply.section+dev@gmail.com>", "Olivier Milla <olivier.milla@hey.com>"]
 version = "0.28"
 
