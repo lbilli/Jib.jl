@@ -111,6 +111,7 @@ struct Execution
   modelCode::String
   lastLiquidity::Union{Int,Nothing}
   pendingPriceRevision::Bool
+  submitter::String
 end
 
 

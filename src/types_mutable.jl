@@ -172,6 +172,7 @@ mutable struct Order
   bondAccruedInterest::String
   includeOvernight::Bool
   manualOrderIndicator::Union{Int,Nothing}
+  submitter::String
 end
 Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0,
                 false, false, nothing, 0, false, false, ns, ns, ns, false, nothing, nothing,
@@ -183,7 +184,7 @@ Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, tru
                 fill(nothing, 4)..., 0, nothing, AbstractCondition[], false, false, ns,
                 SoftDollarTier(), nothing, ns, ns, ns, ns, false, false, false, ns, nothing,
                 nothing, false, ns, false, false, fill(nothing, 4)..., ns, ns,
-                fill(nothing, 5)..., ns, false, ns, false, nothing)
+                fill(nothing, 5)..., ns, false, ns, false, nothing, ns)
 
 
 mutable struct ScannerSubscription

@@ -233,6 +233,8 @@ const process = Dict(
           ver ≥ Client.CME_TAGGING_FIELDS_IN_OPEN_ORDER && slurp!(o, (:extOperator,
                                                                       :manualOrderIndicator), it)
 
+          ver ≥ Client.SUBMITTER && (o.submitter = it)
+
           w.openOrder(o.orderId, c, o, os)
         end,
 
@@ -307,7 +309,7 @@ const process = Dict(
           c = Contract()
           slurp!(c, [1:8; 10:12], it)
 
-          e = Execution(orderId, take(it, 18)...)
+          e = Execution(orderId, take(it, 18)..., ver ≥ Client.SUBMITTER ? it : ns)
 
           w.execDetails(reqId, c, e)
         end,
@@ -890,6 +892,8 @@ const process = Dict(
                      :midOffsetAtHalf,
                      :customerAccount,
                      :professionalCustomer), it)
+
+          ver ≥ Client.SUBMITTER && (o.submitter = it)
 
           w.completedOrder(c, o, os)
          end,
