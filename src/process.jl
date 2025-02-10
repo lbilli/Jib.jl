@@ -235,6 +235,8 @@ const process = Dict(
 
           ver ≥ Client.SUBMITTER && (o.submitter = it)
 
+          ver ≥ Client.IMBALANCE_ONLY && (o.imbalanceOnly = it)
+
           w.openOrder(o.orderId, c, o, os)
         end,
 

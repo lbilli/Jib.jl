@@ -253,6 +253,8 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
   ib.version ≥ Client.CME_TAGGING_FIELDS && o(order.manualOrderIndicator)
 
+  ib.version ≥ Client.IMBALANCE_ONLY && o(order.imbalanceOnly)
+
   sendmsg(ib, o)
 end
 
