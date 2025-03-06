@@ -670,7 +670,8 @@ function reqWshEventData(ib::Connection, reqId::Int, wshEventData::WshEventData)
 
   o(102, ### REQ_WSH_EVENT_DATA
     reqId,
-    splat(wshEventData))
+    isnothing(wshEventData.conId) && !isempty(wshEventData.filter) ? 2147483647 : wshEventData.conId,
+    splat(wshEventData, 2:8))
 
   sendmsg(ib, o)
 end

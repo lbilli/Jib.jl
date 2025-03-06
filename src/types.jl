@@ -67,5 +67,12 @@ struct WshEventData
   endDate::String
   totalLimit::Union{Int,Nothing}
 end
-WshEventData(conId::Int, args...) = WshEventData(conId, "", args...)
-WshEventData(filter::String, args...) = WshEventData(nothing, filter, args...)
+WshEventData(; conId=           nothing,
+               filter=          "",
+               fillWatchlist=   false,
+               fillPortfolio=   false,
+               fillCompetitors= false,
+               startDate=       "",
+               endDate=         "",
+               totalLimit=      nothing) = WshEventData(conId, filter, fillWatchlist, fillPortfolio,
+                                                        fillCompetitors, startDate, endDate, totalLimit)

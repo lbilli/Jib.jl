@@ -419,9 +419,15 @@ function simple_wrap()
 
     replaceFAEnd= (reqId::Int, text::String) -> println("replaceFAEnd: $reqId $text"),
 
-    wshMetaData= (reqId::Int, dataJson::String) -> println("wshMetaData: $reqId $dataJson"),
+    wshMetaData= function(reqId::Int, dataJson::String)
+                   d[:wshmeta] = dataJson
+                   println("wshMetaData: $reqId")
+                 end,
 
-    wshEventData= (reqId::Int, dataJson::String) -> println("wshEventData: $reqId $dataJson"),
+    wshEventData= function(reqId::Int, dataJson::String)
+                    d[:wshevents] = dataJson
+                    println("wshEventData: $reqId")
+                  end,
 
     historicalSchedule= function(reqId::Int, startDateTime::String, endDateTime::String, timeZone::String, sessions::VHistoricalSession)
                           d[:schedule] = sessions
