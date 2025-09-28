@@ -82,17 +82,20 @@ mutable struct ContractDetails
   fundDistributionPolicyIndicator::String
   fundAssetType::String
   ineligibilityReasonList::Vector{IneligibilityReason}
+  eventContract1::String
+  eventContractDescription1::String
+  eventContractDescription2::String
 end
 ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)...,
                                     nothing, nothing, fill(ns, 6)..., nothing, nothing,
                                     nothing, (;), fill(ns, 5)..., false, false,
                                     nothing, false, ns, ns, ns, ns, false, ns,
                                     fill(ns, 7)..., false, false, false, fill(ns, 7)...,
-                                    IneligibilityReason[])
+                                    IneligibilityReason[], ns, ns, ns)
 
 
 struct Execution
-  orderId::Union{Int,Nothing}     # Moved up from position 10 for convenience when constructing
+  orderId::Union{Int,Nothing}
   execId::String
   time::String
   acctNumber::String
@@ -102,7 +105,7 @@ struct Execution
   price::Float64
   permId::Int
   clientId::Int
-  liquidation::Int
+  liquidation::Bool
   cumQty::Float64
   avgPrice::Float64
   orderRef::String
@@ -112,6 +115,7 @@ struct Execution
   lastLiquidity::Union{Int,Nothing}
   pendingPriceRevision::Bool
   submitter::String
+  optExerciseOrLapseType::String
 end
 
 
@@ -128,15 +132,15 @@ end
 
 mutable struct OrderState
   status::String
-  initMarginBefore::String
-  maintMarginBefore::String
-  equityWithLoanBefore::String
-  initMarginChange::String
-  maintMarginChange::String
-  equityWithLoanChange::String
-  initMarginAfter::String
-  maintMarginAfter::String
-  equityWithLoanAfter::String
+  initMarginBefore::Union{Float64,Nothing}
+  maintMarginBefore::Union{Float64,Nothing}
+  equityWithLoanBefore::Union{Float64,Nothing}
+  initMarginChange::Union{Float64,Nothing}
+  maintMarginChange::Union{Float64,Nothing}
+  equityWithLoanChange::Union{Float64,Nothing}
+  initMarginAfter::Union{Float64,Nothing}
+  maintMarginAfter::Union{Float64,Nothing}
+  equityWithLoanAfter::Union{Float64,Nothing}
   commission::Union{Float64,Nothing}
   minCommission::Union{Float64,Nothing}
   maxCommission::Union{Float64,Nothing}
@@ -158,7 +162,7 @@ mutable struct OrderState
   completedTime::String
   completedStatus::String
 end
-OrderState() = OrderState(fill(ns, 10)..., fill(nothing, 3)..., ns, ns,
+OrderState() = OrderState(ns, fill(nothing, 12)..., ns, ns,
                           fill(nothing, 10)..., ns, OrderAllocation[],
                           ns, ns, ns)
 
@@ -173,25 +177,35 @@ Bar = @NamedTuple{time::String, open::Float64, high::Float64, low::Float64, clos
 
 VBar = Vector{Bar}
 
-VDepthMktDataDescription = Vector{@NamedTuple{exchange::String, secType::String,
-                                              listingExch::String, serviceDataType::String,
-                                              aggGroup::Union{Int,Nothing}}}
+DepthMktDataDescription = @NamedTuple{exchange::String, secType::String,
+                                      listingExch::String, serviceDataType::String,
+                                      aggGroup::Union{Int,Nothing}}
 
-VFamilyCode =        Vector{@NamedTuple{accountID::String, familyCodeStr::String}}
-VHistogramEntry =    Vector{@NamedTuple{price::Float64, size::Float64}}
+VDepthMktDataDescription = Vector{DepthMktDataDescription}
+
+FamilyCode =         @NamedTuple{accountID::String, familyCodeStr::String}
+VFamilyCode =        Vector{FamilyCode}
+HistogramEntry =     @NamedTuple{price::Float64, size::Float64}
+VHistogramEntry =    Vector{HistogramEntry}
 VHistoricalSession = Vector{@NamedTuple{startDateTime::String, endDateTime::String, refDate::String}}
 
-HistoricalTick =     @NamedTuple{time::Int, price::Float64, size::Float64}
-VHistoricalTick =    Vector{HistoricalTick}
+Tick =     @NamedTuple{time::Int, price::Float64, size::Float64}
+VTick =    Vector{Tick}
 
-VHistoricalTickBidAsk = Vector{@NamedTuple{time::Int, mask::TickAttribBidAsk,
-                                           priceBid::Float64, priceAsk::Float64,
-                                           sizeBid::Float64, sizeAsk::Float64}}
+TickBidAsk = @NamedTuple{time::Int, attribs::TickAttribBidAsk,
+                         bidPrice::Float64, askPrice::Float64,
+                         bidSize::Float64, askSize::Float64}
+VTickBidAsk = Vector{TickBidAsk}
 
-VHistoricalTickLast = Vector{@NamedTuple{time::Int, mask::TickAttribLast,
-                                         price::Float64, size::Float64,
-                                         exchange::String, specialConditions::String}}
+TickLast = @NamedTuple{time::Int, attribs::TickAttribLast,
+                       price::Float64, size::Float64,
+                       exchange::String, specialConditions::String}
+VTickLast = Vector{TickLast}
 
 VPriceIncrement = Vector{@NamedTuple{lowEdge::Float64, increment::Float64}}
 VNewsProvider =   Vector{@NamedTuple{providerCode::String, providerName::String}}
 VSmartComponent = Vector{@NamedTuple{bit::Int, exchange::String, exchangeLetter::String}}
+
+ScannerDataElement = @NamedTuple{rank::Int, contract::Contract, marketName::String, distance::String,
+                                 benchmark::String, projection::String, comboKey::String}
+VScannerDataElement = Vector{ScannerDataElement}

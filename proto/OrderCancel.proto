@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package IBProto;
+
+message OrderCancel {
+    optional string manualOrderCancelTime = 1;
+    optional string extOperator = 2;
+    optional int32 manualOrderIndicator = 3;
+}
+
+message CancelOrderRequest {
+    optional int32 orderId = 1;
+    optional OrderCancel orderCancel = 2;
+}
+
+message GlobalCancelRequest {
+    optional OrderCancel orderCancel = 1;
+}

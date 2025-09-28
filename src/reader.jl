@@ -5,11 +5,13 @@ using ..Client: Client, read_one
 include("decode.jl")
 
 
-function read_msg(socket)
+function read_msg(ib)
 
-  msg = read_one(socket)
+  msgid::Int, msg = read_one(ib.socket)
 
-  String(msg)
+  @assert msgid > Client.PROTOBUF_MSG_ID
+
+  msgid, msg
 end
 
 
@@ -20,7 +22,7 @@ Process one message and dispatch the appropriate callback. **Blocking**.
 """
 function check_msg(ib, w)
 
-  msg = read_msg(ib.socket)
+  msg = read_msg(ib)
 
   decode(msg, w, ib.version)
 end
@@ -39,7 +41,7 @@ function check_all(ib, w, flush=false)
   count = 0
   while bytesavailable(ib.socket) > 0 || ib.socket.status == Base.StatusOpen # =3
 
-    msg = read_msg(ib.socket)
+    msg = read_msg(ib)
 
     flush || decode(msg, w, ib.version)
 

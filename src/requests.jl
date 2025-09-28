@@ -11,650 +11,396 @@ import ..AbstractCondition,
        ..Order,
        ..OrderCancel,
        ..ScannerSubscription,
-       ..WshEventData
+       ..WshEventData,
+       ..PB,
+       ..maptopb
 
-include("encoder.jl")
 
+function sendmsg(ib, msgid::Int, msg::Union{PB.Message,Nothing}=nothing)
 
-# Initialize an Encoder()
-enc() = Encoder(Client.buffer(false))
+  buf = Client.buffer(false)
 
-# Splat fields
-splat(x, idx=1:fieldcount(typeof(x))) = (getfield(x, i) for i ∈ idx)
+  write(buf, hton(Client.RAWIDTYPE(msgid + Client.PROTOBUF_MSG_ID)))
 
-# NamedTuple
-function splatnt(e::Encoder, nt::NamedTuple)
+  isnothing(msg) || PB.serialize(buf, msg)
 
-  e(length(nt))
-
-  foreach(e, Iterators.flatten(pairs(nt)))
-end
-
-# Send messasge
-function sendmsg(ib, e)
-
-  Client.write_one(ib.socket, e.buf)
+  Client.write_one(ib.socket, buf)
 
   nothing
 end
 
 # Handle requests that don't require special processing
-function req_simple(ib, args...)
+req_simple(ib, msgid, value::Int) = sendmsg(ib, msgid, PB.Message(:SingleInt32; value))
 
-  o = enc()
+req_simple(ib, msgid, value::Bool) = sendmsg(ib, msgid, maptopb(:SingleBool; value))
 
-  o(args...)
-
-  sendmsg(ib, o)
-end
+req_simple(ib, msgid, reqId::Int, data::String) = sendmsg(ib, msgid, maptopb(:StringData; reqId, data))
 
 #
 # Requests
 #
-function reqMktData(ib::Connection, tickerId::Int, contract::Contract, genericTicks::String, snapshot::Bool, regulatorySnaphsot::Bool=false, mktDataOptions::NamedTuple=(;))
+reqMktData(ib::Connection, reqId::Int, contract::Contract, genericTicks::String, snapshot::Bool,
+           regulatorySnapshot::Bool=false, mktDataOptions::NamedTuple=(;)) =
+  sendmsg(ib, 1, ### REQ_MKT_DATA
+          maptopb(:MarketDataRequest; reqId,
+                                      contract,
+                                      genericTicks,
+                                      snapshot,
+                                      regulatorySnapshot,
+                                      mktDataOptions))
 
-  o = enc()
-
-  o(1, 11, ### REQ_MKT_DATA
-    tickerId,
-    splat(contract, 1:12))
-
-  if contract.secType == "BAG"
-
-    o(length(contract.comboLegs))
-
-    for leg ∈ contract.comboLegs
-      o(splat(leg, 1:4))
-    end
-  end
-
-  isnothing(contract.deltaNeutralContract) ? o(false) :
-                                             o(true, splat(contract.deltaNeutralContract))
-
-  o(genericTicks,
-    snapshot,
-    regulatorySnaphsot,
-    mktDataOptions)
-
-  sendmsg(ib, o)
-end
-
-cancelMktData(ib::Connection, tickerId::Int) = req_simple(ib, 2, 2, tickerId) ### CANCEL_MKT_DATA
+cancelMktData(ib::Connection, reqId::Int) = req_simple(ib, 2, reqId) ### CANCEL_MKT_DATA
 
 function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
 
-  o = enc()
+  msgid = 3 ### PLACE_ORDER
 
-  o(3, ### PLACE_ORDER
-    id,
-    splat(contract, [1:12; 14; 15]),
-    splat(order, [4:9; 12; 79; 35; 36; 14:22])) # :action -> :tif
-                                                # :ocaGroup :account :openClose :origin
-                                                # :orderRef -> :hidden
+  c = maptopb(contract, (:lastTradeDate,))
 
-  if contract.secType == "BAG"
+  n = length(order.orderComboLegs)
 
-    # Contract.comboLegs
-    o(length(contract.comboLegs))
+  @assert n ∈ (0, length(contract.comboLegs))
 
-    for leg ∈ contract.comboLegs
-      o(splat(leg))
-    end
-
-    # Order.orderComboLegs
-    o(length(order.orderComboLegs), order.orderComboLegs...)
-
-    # Order.smartComboRoutingParams
-    splatnt(o, order.smartComboRoutingParams)
-  end
-
-  o(nothing, # Deprecated sharesAllocation
-
-    splat(order, (:discretionaryAmt,
-                  :goodAfterTime,
-                  :goodTillDate,
-                  :faGroup,
-                  :faMethod,
-                  :faPercentage,
-                  :modelCode,
-                  :shortSaleSlot,
-                  :designatedLocation,
-                  :exemptCode,
-                  :ocaType,
-                  :rule80A,
-                  :settlingFirm,
-                  :allOrNone,
-                  :minQty,
-                  :percentOffset)),
-
-    false,   # Deprecated eTradeOnly
-    false,   # Deprecated firmQuoteOnly
-    nothing, # Deprecated nbboPriceCap
-
-    splat(order, (:auctionStrategy,
-                  :startingPrice,
-                  :stockRefPrice,
-                  :delta,
-                  :stockRangeLower,
-                  :stockRangeUpper,
-                  :overridePercentageConstraints,
-                  :volatility,
-                  :volatilityType,
-                  :deltaNeutralOrderType,
-                  :deltaNeutralAuxPrice)))
-
-  !isempty(order.deltaNeutralOrderType) && o(splat(order, 54:61)) # :deltaNeutralConId -> :deltaNeutralDesignatedLocation
-
-  o(splat(order, (:continuousUpdate,
-                  :referencePriceType,
-                  :trailStopPrice,
-                  :trailingPercent,
-                  :scaleInitLevelSize,
-                  :scaleSubsLevelSize,
-                  :scalePriceIncrement)))
-
-  !isnothing(order.scalePriceIncrement) &&
-  order.scalePriceIncrement > 0         && o(splat(order, 69:75)) # :scalePriceAdjustValue -> :scaleRandomPercent
-
-  o(splat(order, (:scaleTable,
-                  :activeStartTime,
-                  :activeStopTime,
-                  :hedgeType)))
-
-  !isempty(order.hedgeType) && o(order.hedgeParam)
-
-  o(splat(order, (:optOutSmartRouting,
-                  :clearingAccount,
-                  :clearingIntent,
-                  :notHeld)))
-
-  # DeltaNeutralContract
-  isnothing(contract.deltaNeutralContract) ? o(false) :
-                                             o(true, splat(contract.deltaNeutralContract))
-
-  # Algo
-  o(order.algoStrategy)
-
-  !isempty(order.algoStrategy) && splatnt(o, order.algoParams)
-
-  o(splat(order, (:algoId,
-                  :whatIf,
-                  :orderMiscOptions,
-                  :solicited,
-                  :randomizeSize,
-                  :randomizePrice)))
-
-  if order.orderType == "PEG BENCH"
-    o(splat(order, (:referenceContractId,
-                    :isPeggedChangeAmountDecrease,
-                    :peggedChangeAmount,
-                    :referenceChangeAmount,
-                    :referenceExchangeId)))
-  end
-
-  # Conditions
-  o(length(order.conditions))
-
-  if !isempty(order.conditions)
-
-    for c ∈ order.conditions
-      o(c)
-    end
-
-    o(order.conditionsIgnoreRth,
-      order.conditionsCancelOrder)
-  end
-
-  o(splat(order, (:adjustedOrderType,
-                  :triggerPrice,
-                  :lmtPriceOffset,
-                  :adjustedStopPrice,
-                  :adjustedStopLimitPrice,
-                  :adjustedTrailingAmount,
-                  :adjustableTrailingUnit,
-                  :extOperator)))
-
-  o(order.softDollarTier.name,
-    order.softDollarTier.val)
-
-  o(splat(order, (:cashQty,
-                  :mifid2DecisionMaker,
-                  :mifid2DecisionAlgo,
-                  :mifid2ExecutionTrader,
-                  :mifid2ExecutionAlgo,
-                  :dontUseAutoPriceForHedge,
-                  :isOmsContainer,
-                  :discretionaryUpToLimitPrice,
-                  :usePriceMgmtAlgo,
-                  :duration,
-                  :postToAts,
-                  :autoCancelParent,
-                  :advancedErrorOverride,
-                  :manualOrderTime)))
-
-  contract.exchange == "IBKRATS" && o(order.minTradeQty)
-
-  order.orderType == "PEG BEST" && o(order.minCompeteSize,
-                                     order.competeAgainstBestOffset)
-
-  if order.orderType == "PEG BEST" && order.competeAgainstBestOffset == Inf ||
-     order.orderType == "PEG MID"
-
-    o(order.midOffsetAtWhole,
-      order.midOffsetAtHalf)
-  end
-
-  o(order.customerAccount,
-    order.professionalCustomer)
-
-  ib.version < Client.UNDO_RFQ_FIELDS && o("", nothing)
-
-  ib.version ≥ Client.INCLUDE_OVERNIGHT && o(order.includeOvernight)
-
-  ib.version ≥ Client.CME_TAGGING_FIELDS && o(order.manualOrderIndicator)
-
-  ib.version ≥ Client.IMBALANCE_ONLY && o(order.imbalanceOnly)
-
-  sendmsg(ib, o)
-end
-
-function cancelOrder(ib::Connection, id::Int, orderCancel::OrderCancel)
-
-  o = enc()
-
-  o(4) ### CANCEL_ORDER
-
-  ib.version < Client.CME_TAGGING_FIELDS && o(1)
-
-  o(id,
-    orderCancel.manualOrderCancelTime)
-
-  ib.version < Client.UNDO_RFQ_FIELDS && o("", "", nothing)
-
-  ib.version ≥ Client.CME_TAGGING_FIELDS && o(orderCancel.extOperator,
-                                              orderCancel.manualOrderIndicator)
-
-  sendmsg(ib, o)
-end
-
-reqOpenOrders(ib::Connection) = req_simple(ib, 5, 1) ### REQ_OPEN_ORDERS
-
-reqAccountUpdates(ib::Connection, subscribe::Bool, acctCode::String) = req_simple(ib, 6, 2, subscribe, acctCode) ### REQ_ACCT_DATA
-
-function reqExecutions(ib::Connection, reqId::Int, filter::ExecutionFilter)
-
-  o = enc()
-
-  o(7, 3, ### REQ_EXECUTIONS
-    reqId,
-    splat(filter))
-
-  sendmsg(ib, o)
-end
-
-reqIds(ib::Connection) = req_simple(ib, 8, 1, 1) ### REQ_IDS
-                                           #  ^ Hardcoded numIds=1. It's deprecated and unused
-
-function reqContractDetails(ib::Connection, reqId::Int, contract::Contract)
-
-  o = enc()
-
-  o(9, 8, ### REQ_CONTRACT_DATA
-    reqId,
-    splat(contract, [1:15; 17]))
-
-  sendmsg(ib, o)
-end
-
-function reqMktDepth(ib::Connection, tickerId::Int, contract::Contract, numRows::Int, isSmartDepth::Bool, mktDepthOptions::NamedTuple=(;))
-
-  o = enc()
-
-  o(10, 5, ### REQ_MKT_DEPTH
-    tickerId,
-    splat(contract, 1:12),
-    numRows,
-    isSmartDepth,
-    mktDepthOptions)
-
-  sendmsg(ib, o)
-end
-
-function cancelMktDepth(ib::Connection, tickerId::Int, isSmartDepth::Bool)
-
-  o = enc()
-
-  o(11, 1, ### CANCEL_MKT_DEPTH
-    tickerId,
-    isSmartDepth)
-
-  sendmsg(ib, o)
-end
-
-reqNewsBulletins(ib::Connection, allMsgs::Bool) = req_simple(ib, 12, 1, allMsgs) ### REQ_NEWS_BULLETINS
-
-cancelNewsBulletins(ib::Connection) = req_simple(ib, 13, 1) ### CANCEL_NEWS_BULLETINS
-
-setServerLogLevel(ib::Connection, logLevel::Int) = req_simple(ib, 14, 1, logLevel) ### SET_SERVER_LOGLEVEL
-
-reqAutoOpenOrders(ib::Connection, bAutoBind::Bool) = req_simple(ib, 15, 1, bAutoBind) ### REQ_AUTO_OPEN_ORDERS
-
-reqAllOpenOrders(ib::Connection) = req_simple(ib, 16, 1) ### REQ_ALL_OPEN_ORDERS
-
-reqManagedAccts(ib::Connection) = req_simple(ib, 17, 1) ### REQ_MANAGED_ACCTS
-
-requestFA(ib::Connection, faDataType::FaDataType) = req_simple(ib, 18, 1, faDataType) ### REQ_FA
-
-function replaceFA(ib::Connection, reqId::Int, faDataType::FaDataType, xml::String)
-
-  o = enc()
-
-  o(19, 1, ### REPLACE_FA
-    faDataType,
-    xml,
-    reqId)
-
-  sendmsg(ib, o)
-end
-
-function reqHistoricalData(ib::Connection, tickerId::Int, contract::Contract, endDateTime::String, durationStr::String, barSizeSetting::String, whatToShow::String, useRTH::Bool, formatDate::Int, keepUpToDate::Bool, chartOptions::NamedTuple=(;))
-
-  o = enc()
-
-  o(20, ### REQ_HISTORICAL_DATA
-    tickerId,
-    splat(contract, 1:13),
-    endDateTime,
-    barSizeSetting,
-    durationStr,
-    useRTH,
-    whatToShow,
-    formatDate)
-
-  if contract.secType == "BAG"
-
-    o(length(contract.comboLegs))
-
-    for leg ∈ contract.comboLegs
-      o(splat(leg, 1:4))
+  if n > 0
+    for (p, cl) ∈ zip(order.orderComboLegs, c[:comboLegs])
+      cl[:perLegPrice] = p
     end
   end
 
-  o(keepUpToDate,
-    chartOptions)
+  o = maptopb(order, (:orderId,
+                      :rule80A,
+                      :auctionStrategy,
+                      :basisPoints,
+                      :basisPointsType,
+                      :orderComboLegs,
+                      :mifid2DecisionMaker,
+                      :mifid2DecisionAlgo,
+                      :mifid2ExecutionTrader,
+                      :mifid2ExecutionAlgo,
+                      :autoCancelDate,
+                      :filledQuantity,
+                      :refFuturesConId,
+                      :shareholder,
+                      :routeMarketableToBbo,
+                      :parentPermId,
+                      :totalQuantity))
 
-  sendmsg(ib, o)
+  o[:totalQuantity] = string(order.totalQuantity)
+
+  msg = PB.Message(:PlaceOrderRequest; orderId=id,
+                                       contract=c,
+                                       order=o)
+
+  sendmsg(ib, msgid, msg)
 end
 
-function exerciseOptions(ib::Connection, tickerId::Int, contract::Contract, exerciseAction::Int,
+cancelOrder(ib::Connection, id::Int, orderCancel::OrderCancel) =
+  sendmsg(ib, 4, ### CANCEL_ORDER
+          maptopb(:CancelOrderRequest; orderId=id,
+                                       orderCancel))
+
+reqOpenOrders(ib::Connection) = sendmsg(ib, 5) ### REQ_OPEN_ORDERS
+
+reqAccountUpdates(ib::Connection, subscribe::Bool, acctCode::String) =
+  sendmsg(ib, 6, ### REQ_ACCT_DATA
+          maptopb(:AccountDataRequest; subscribe, acctCode))
+
+reqExecutions(ib::Connection, reqId::Int, filter::ExecutionFilter) =
+  sendmsg(ib, 7, ### REQ_EXECUTIONS
+          maptopb(:ExecutionRequest; reqId, filter))
+
+reqIds(ib::Connection) =
+  # numIds is omitted as it's deprecated and unused
+  sendmsg(ib, 8) ### REQ_IDS
+
+
+reqContractDetails(ib::Connection, reqId::Int, contract::Contract) =
+  sendmsg(ib, 9, ### REQ_CONTRACT_DATA
+          maptopb(:ContractDataRequest; reqId, contract))
+
+reqMktDepth(ib::Connection, reqId::Int, contract::Contract, numRows::Int,
+            isSmartDepth::Bool, mktDepthOptions::NamedTuple=(;)) =
+  sendmsg(ib, 10, ### REQ_MKT_DEPTH
+          maptopb(:MarketDepthRequest; reqId,
+                                       contract,
+                                       numRows,
+                                       isSmartDepth,
+                                       mktDepthOptions))
+
+cancelMktDepth(ib::Connection, reqId::Int, isSmartDepth::Bool) =
+  sendmsg(ib, 11, ### CANCEL_MKT_DEPTH
+          maptopb(:CancelMarketDepth; reqId, isSmartDepth))
+
+reqNewsBulletins(ib::Connection, allMsgs::Bool) = req_simple(ib, 12, allMsgs) ### REQ_NEWS_BULLETINS
+
+cancelNewsBulletins(ib::Connection) = sendmsg(ib, 13) ### CANCEL_NEWS_BULLETINS
+
+setServerLogLevel(ib::Connection, logLevel::Int) = req_simple(ib, 14, logLevel) ### SET_SERVER_LOGLEVEL
+
+reqAutoOpenOrders(ib::Connection, bAutoBind::Bool) = req_simple(ib, 15, bAutoBind) ### REQ_AUTO_OPEN_ORDER
+
+reqAllOpenOrders(ib::Connection) = sendmsg(ib, 16) ### REQ_ALL_OPEN_ORDERS
+
+reqManagedAccts(ib::Connection) = sendmsg(ib, 17) ### REQ_MANAGED_ACCTS
+
+requestFA(ib::Connection, faDataType::FaDataType) = req_simple(ib, 18, Int(faDataType)) ### REQ_FA
+
+replaceFA(ib::Connection, reqId::Int, faDataType::FaDataType, xml::String) =
+  sendmsg(ib, 19, ### REPLACE_FA
+          maptopb(:FAReplace; reqId,
+                              faDataType=Int(faDataType),
+                              xml))
+
+reqHistoricalData(ib::Connection, reqId::Int, contract::Contract, endDateTime::String,
+                  duration::String, barSizeSetting::String, whatToShow::String, useRTH::Bool,
+                  formatDate::Int, keepUpToDate::Bool, chartOptions::NamedTuple=(;)) =
+  sendmsg(ib, 20, ### REQ_HISTORICAL_DATA
+          maptopb(:HistoricalDataRequest; reqId,
+                                          contract,
+                                          endDateTime,
+                                          duration,
+                                          barSizeSetting,
+                                          whatToShow,
+                                          useRTH,
+                                          formatDate,
+                                          keepUpToDate,
+                                          chartOptions))
+
+exerciseOptions(ib::Connection, reqId::Int, contract::Contract, exerciseAction::Int,
                          exerciseQuantity::Int, account::String, override::Int, manualOrderTime::String,
-                         customerAccount::String, professionalCustomer::Bool)
+                         customerAccount::String, professionalCustomer::Bool) =
+  sendmsg(ib, 21, ### EXERCISE_OPTIONS
+          maptopb(:ExerciseOptionsRequest; reqId,
+                                           contract,
+                                           exerciseAction,
+                                           exerciseQuantity,
+                                           account,
+                                           override,
+                                           manualOrderTime,
+                                           customerAccount,
+                                           professionalCustomer))
 
-  o = enc()
+function reqScannerSubscription(ib::Connection, reqId::Int, subscription::ScannerSubscription,
+                                scannerSubscriptionOptions::NamedTuple=(;), scannerSubscriptionFilterOptions::NamedTuple=(;))
 
-  o(21, 2, ### EXERCISE_OPTIONS
-    tickerId,
-    splat(contract, [1:8; 10:12]),
-    exerciseAction,
-    exerciseQuantity,
-    account,
-    override,
-    manualOrderTime,
-    customerAccount,
-    professionalCustomer)
+  msgid = 22 ### REQ_SCANNER_SUBSCRIPTION
 
-  sendmsg(ib, o)
+  sub = maptopb(subscription)
+
+  isempty(scannerSubscriptionOptions) ||
+    (sub[:scannerSubscriptionOptions] = maptopb(scannerSubscriptionOptions))
+
+  isempty(scannerSubscriptionFilterOptions) ||
+    (sub[:scannerSubscriptionFilterOptions] = maptopb(scannerSubscriptionFilterOptions))
+
+  sendmsg(ib, msgid, PB.Message(:ScannerSubscriptionRequest; reqId,
+                                                             subscription=sub))
 end
 
-function reqScannerSubscription(ib::Connection, tickerId::Int, subscription::ScannerSubscription, scannerSubscriptionOptions::NamedTuple=(;), scannerSubscriptionFilterOptions::NamedTuple=(;))
+cancelScannerSubscription(ib::Connection, reqId::Int) = req_simple(ib, 23, reqId) ### CANCEL_SCANNER_SUBSCRIPTION
 
-  o = enc()
+reqScannerParameters(ib::Connection) = sendmsg(ib, 24) ### REQ_SCANNER_PARAMETERS
 
-  o(22, ### REQ_SCANNER_SUBSCRIPTION
-    tickerId,
-    splat(subscription),
-    scannerSubscriptionFilterOptions,
-    scannerSubscriptionOptions)
+cancelHistoricalData(ib::Connection, reqId::Int) =  req_simple(ib, 25, reqId) ### CANCEL_HISTORICAL_DATA
 
-  sendmsg(ib, o)
-end
+reqCurrentTime(ib::Connection) = sendmsg(ib, 49) ### REQ_CURRENT_TIME
 
-cancelScannerSubscription(ib::Connection, tickerId::Int) = req_simple(ib, 23, 1, tickerId) ### CANCEL_SCANNER_SUBSCRIPTION
+reqRealTimeBars(ib::Connection, reqId::Int, contract::Contract, barSize::Int,
+                whatToShow::String, useRTH::Bool, realTimeBarsOptions::NamedTuple=(;)) =
+  sendmsg(ib, 50, ### REQ_REAL_TIME_BARS
+          maptopb(:RealTimeBarsRequest; reqId,
+                                        contract,
+                                        barSize,
+                                        whatToShow,
+                                        useRTH,
+                                        realTimeBarsOptions))
 
-reqScannerParameters(ib::Connection) = req_simple(ib, 24, 1) ### REQ_SCANNER_PARAMETERS
+cancelRealTimeBars(ib::Connection, reqId::Int) = req_simple(ib, 51, reqId) ### CANCEL_REAL_TIME_BARS
 
-cancelHistoricalData(ib::Connection, tickerId::Int) =  req_simple(ib, 25, 1, tickerId) ### CANCEL_HISTORICAL_DATA
+reqFundamentalData(ib::Connection, reqId::Int, contract::Contract, reportType::String, fundamentalDataOptions::NamedTuple=(;)) =
+  sendmsg(ib, 52, ### REQ_FUNDAMENTAL_DATA
+          maptopb(:FundamentalDataRequest; reqId,
+                                           contract,
+                                           reportType,
+                                           fundamentalDataOptions))
 
-reqCurrentTime(ib::Connection) = req_simple(ib, 49, 1) ### REQ_CURRENT_TIME
+cancelFundamentalData(ib::Connection, reqId::Int) = req_simple(ib, 53, reqId) ### CANCEL_FUNDAMENTAL_DATA
 
-function reqRealTimeBars(ib::Connection, tickerId::Int, contract::Contract, barSize::Int, whatToShow::String, useRTH::Bool, realTimeBarsOptions::NamedTuple=(;))
+calculateImpliedVolatility(ib::Connection, reqId::Int, contract::Contract, optionPrice::Float64, underPrice::Float64, miscOptions::NamedTuple=(;)) =
+  sendmsg(ib, 54, ### REQ_CALC_IMPLIED_VOLAT
+          maptopb(:CalculateImpliedVolatilityRequest; reqId,
+                                                      contract,
+                                                      optionPrice,
+                                                      underPrice,
+                                                      miscOptions))
 
-  o = enc()
+calculateOptionPrice(ib::Connection, reqId::Int, contract::Contract, volatility::Float64, underPrice::Float64, miscOptions::NamedTuple=(;)) =
+  sendmsg(ib, 55, ### REQ_CALC_OPTION_PRICE
+          maptopb(:CalculateOptionPriceRequest; reqId,
+                                                contract,
+                                                volatility,
+                                                underPrice,
+                                                miscOptions))
 
-  o(50, 3, ### REQ_REAL_TIME_BARS
-    tickerId,
-    splat(contract, 1:12),
-    barSize,
-    whatToShow,
-    useRTH,
-    realTimeBarsOptions)
+cancelCalculateImpliedVolatility(ib::Connection, reqId::Int) = req_simple(ib, 56, reqId) ### CANCEL_CALC_IMPLIED_VOLAT
 
-  sendmsg(ib, o)
-end
+cancelCalculateOptionPrice(ib::Connection, reqId::Int) = req_simple(ib, 57, reqId) ### CANCEL_CALC_OPTION_PRICE
 
-cancelRealTimeBars(ib::Connection, tickerId::Int) = req_simple(ib, 51, 1, tickerId) ### CANCEL_REAL_TIME_BARS
+reqGlobalCancel(ib::Connection, orderCancel::OrderCancel) =
+  sendmsg(ib, 58, ### REQ_GLOBAL_CANCEL
+          maptopb(:GlobalCancelRequest; orderCancel))
 
-function reqFundamentalData(ib::Connection, reqId::Int, contract::Contract, reportType::String, fundamentalDataOptions::NamedTuple=(;))
+reqMarketDataType(ib::Connection, marketDataType::MarketDataType) = req_simple(ib, 59, Int(marketDataType)) ### REQ_MARKET_DATA_TYPE
 
-  o = enc()
+reqPositions(ib::Connection) = sendmsg(ib, 61) ### REQ_POSITIONS
 
-  o(52, 2, ### REQ_FUNDAMENTAL_DATA
-    reqId,
-    splat(contract, [1:3; 8:11]),
-    reportType,
-    fundamentalDataOptions)
+reqAccountSummary(ib::Connection, reqId::Int, group::String, tags::String) =
+  sendmsg(ib, 62, ### REQ_ACCOUNT_SUMMARY
+          maptopb(:AccountSummaryRequest; reqId,
+                                          group,
+                                          tags))
 
-  sendmsg(ib, o)
-end
+cancelAccountSummary(ib::Connection, reqId::Int) = req_simple(ib, 63, reqId) ### CANCEL_ACCOUNT_SUMMARY
 
-cancelFundamentalData(ib::Connection, reqId::Int) = req_simple(ib, 53, 1, reqId) ### CANCEL_FUNDAMENTAL_DATA
+cancelPositions(ib::Connection) = sendmsg(ib, 64) ### CANCEL_POSITIONS
 
-function calculateImpliedVolatility(ib::Connection, reqId::Int, contract::Contract, optionPrice::Float64, underPrice::Float64, miscOptions::NamedTuple=(;))
+verifyRequest(ib::Connection, apiName::String, apiVersion::String) =
+  sendmsg(ib, 65, ### VERIFY_REQUEST
+          maptopb(:VerifyRequest; apiName, apiVersion))
 
-  o = enc()
+verifyMessage(ib::Connection, apiData::String) =
+  sendmsg(ib, 66, ### VERIFY_MESSAGE
+          PB.Message(:SingleString; value=apiData))
 
-  o(54, 2, ### REQ_CALC_IMPLIED_VOLAT
-    reqId,
-    splat(contract, 1:12),
-    optionPrice,
-    underPrice,
-    miscOptions)
+queryDisplayGroups(ib::Connection, reqId::Int) = req_simple(ib, 67, reqId) ### QUERY_DISPLAY_GROUPS
 
-  sendmsg(ib, o)
-end
+subscribeToGroupEvents(ib::Connection, reqId::Int, groupId::Int) =
+  sendmsg(ib, 68, ### SUBSCRIBE_TO_GROUP_EVENTS
+          PB.Message(:SubscribeToGroupEventsRequest; reqId, groupId))
 
-function calculateOptionPrice(ib::Connection, reqId::Int, contract::Contract, volatility::Float64, underPrice::Float64, miscOptions::NamedTuple=(;))
+updateDisplayGroup(ib::Connection, reqId::Int, contractInfo::String) =
+  req_simple(ib, 69, reqId, contractInfo) ### UPDATE_DISPLAY_GROUP
 
-  o = enc()
+unsubscribeFromGroupEvents(ib::Connection, reqId::Int) = req_simple(ib, 70, reqId) ### UNSUBSCRIBE_FROM_GROUP_EVENTS
 
-  o(55, 2, ### REQ_CALC_OPTION_PRICE
-    reqId,
-    splat(contract, 1:12),
-    volatility,
-    underPrice,
-    miscOptions)
+startApi(ib::Connection, clientId::Int, optionalCapabilities::String) = req_simple(ib, 71, clientId, optionalCapabilities) ### START_API
 
-  sendmsg(ib, o)
-end
+# verifyAndAuthRequest(ib::Connection, apiName::String, apiVersion::String, opaqueIsvKey::String) = req_simple(ib, 72, 1, apiName, apiVersion, opaqueIsvKey) ### VERIFY_AND_AUTH_REQUEST
+#
+# verifyAndAuthMessage(ib::Connection, apiData::String, xyzResponse::String) = req_simple(ib, 73, 1, apiData, xyzResponse) ### VERIFY_AND_AUTH_MESSAGE
 
-cancelCalculateImpliedVolatility(ib::Connection, reqId::Int) = req_simple(ib, 56, 1, reqId) ### CANCEL_CALC_IMPLIED_VOLAT
+reqPositionsMulti(ib::Connection, reqId::Int, account::String, modelCode::String) =
+  sendmsg(ib, 74, ### REQ_POSITIONS_MULTI
+          maptopb(:PositionsMultiRequest; reqId, account, modelCode))
 
-cancelCalculateOptionPrice(ib::Connection, reqId::Int) = req_simple(ib, 57, 1, reqId) ### CANCEL_CALC_OPTION_PRICE
+cancelPositionsMulti(ib::Connection, reqId::Int) = req_simple(ib, 75, reqId) ### CANCEL_POSITIONS_MULTI
 
-function reqGlobalCancel(ib::Connection, orderCancel::OrderCancel)
+reqAccountUpdatesMulti(ib::Connection, reqId::Int, account::String, modelCode::String, ledgerAndNLV::Bool) =
+  sendmsg(ib, 76, ### REQ_ACCOUNT_UPDATES_MULTI
+          maptopb(:AccountUpdatesMultiRequest; reqId,
+                                               account,
+                                               modelCode,
+                                               ledgerAndNLV))
 
-  o = enc()
+cancelAccountUpdatesMulti(ib::Connection, reqId::Int) = req_simple(ib, 77, reqId) ### CANCEL_ACCOUNT_UPDATES_MULTI
 
-  o(58) ### REQ_GLOBAL_CANCEL
-
-  ib.version < Client.CME_TAGGING_FIELDS ? o(1) :
-                                           o(orderCancel.extOperator,
-                                             orderCancel.manualOrderIndicator)
-
-  sendmsg(ib, o)
-end
-
-reqMarketDataType(ib::Connection, marketDataType::MarketDataType) = req_simple(ib, 59, 1, marketDataType) ### REQ_MARKET_DATA_TYPE
-
-reqPositions(ib::Connection) = req_simple(ib, 61, 1) ### REQ_POSITIONS
-
-reqAccountSummary(ib::Connection, reqId::Int, groupName::String, tags::String) = req_simple(ib, 62, 1, reqId, groupName, tags) ### REQ_ACCOUNT_SUMMARY
-
-cancelAccountSummary(ib::Connection, reqId::Int) = req_simple(ib, 63, 1, reqId) ### CANCEL_ACCOUNT_SUMMARY
-
-cancelPositions(ib::Connection) = req_simple(ib, 64, 1) ### CANCEL_POSITIONS
-
-verifyRequest(ib::Connection, apiName::String, apiVersion::String) = req_simple(ib, 65, 1, apiName, apiVersion) ### VERIFY_REQUEST
-
-verifyMessage(ib::Connection, apiData::String) = req_simple(ib, 66, 1, apiData) ### VERIFY_MESSAGE
-
-queryDisplayGroups(ib::Connection, reqId::Int) = req_simple(ib, 67, 1, reqId) ### QUERY_DISPLAY_GROUPS
-
-subscribeToGroupEvents(ib::Connection, reqId::Int, groupId::Int) = req_simple(ib, 68, 1, reqId, groupId) ### SUBSCRIBE_TO_GROUP_EVENTS
-
-updateDisplayGroup(ib::Connection, reqId::Int, contractInfo::String) = req_simple(ib, 69, 1, reqId, contractInfo) ### UPDATE_DISPLAY_GROUP
-
-unsubscribeFromGroupEvents(ib::Connection, reqId::Int) = req_simple(ib, 70, 1, reqId) ### UNSUBSCRIBE_FROM_GROUP_EVENTS
-
-startApi(ib::Connection, clientId::Int, optionalCapabilities::String) = req_simple(ib, 71, 2, clientId, optionalCapabilities) ### START_API
-
-verifyAndAuthRequest(ib::Connection, apiName::String, apiVersion::String, opaqueIsvKey::String) = req_simple(ib, 72, 1, apiName, apiVersion, opaqueIsvKey) ### VERIFY_AND_AUTH_REQUEST
-
-verifyAndAuthMessage(ib::Connection, apiData::String, xyzResponse::String) = req_simple(ib, 73, 1, apiData, xyzResponse) ### VERIFY_AND_AUTH_MESSAGE
-
-reqPositionsMulti(ib::Connection, reqId::Int, account::String, modelCode::String) = req_simple(ib, 74, 1, reqId, account, modelCode) ### REQ_POSITIONS_MULTI
-
-cancelPositionsMulti(ib::Connection, reqId::Int) = req_simple(ib, 75, 1, reqId) ### CANCEL_POSITIONS_MULTI
-
-reqAccountUpdatesMulti(ib::Connection, reqId::Int, account::String, modelCode::String, ledgerAndNLV::Bool) = req_simple(ib, 76, 1, reqId, account, modelCode, ledgerAndNLV) ### REQ_ACCOUNT_UPDATES_MULTI
-
-cancelAccountUpdatesMulti(ib::Connection, reqId::Int) = req_simple(ib, 77, 1, reqId) ### CANCEL_ACCOUNT_UPDATES_MULTI
-
-reqSecDefOptParams(ib::Connection, reqId::Int, underlyingSymbol::String, futFopExchange::String, underlyingSecType::String, underlyingConId::Int) = req_simple(ib, 78, reqId, underlyingSymbol, futFopExchange, underlyingSecType, underlyingConId) ### REQ_SEC_DEF_OPT_PARAMS
+reqSecDefOptParams(ib::Connection, reqId::Int, underlyingSymbol::String, futFopExchange::String, underlyingSecType::String, underlyingConId::Int) =
+  sendmsg(ib, 78, ### REQ_SEC_DEF_OPT_PARAMS
+          maptopb(:SecDefOptParamsRequest; reqId,
+                                           underlyingSymbol,
+                                           futFopExchange,
+                                           underlyingSecType,
+                                           underlyingConId))
 
 reqSoftDollarTiers(ib::Connection, reqId::Int) = req_simple(ib, 79, reqId) ### REQ_SOFT_DOLLAR_TIERS
 
-reqFamilyCodes(ib::Connection) = req_simple(ib, 80) ### REQ_FAMILY_CODES
+reqFamilyCodes(ib::Connection) = sendmsg(ib, 80) ### REQ_FAMILY_CODES
 
 reqMatchingSymbols(ib::Connection, reqId::Int, pattern::String) = req_simple(ib, 81, reqId, pattern) ### REQ_MATCHING_SYMBOLS
 
-reqMktDepthExchanges(ib::Connection) = req_simple(ib, 82) ### REQ_MKT_DEPTH_EXCHANGES
+reqMktDepthExchanges(ib::Connection) = sendmsg(ib, 82) ### REQ_MKT_DEPTH_EXCHANGES
 
 reqSmartComponents(ib::Connection, reqId::Int, bboExchange::String) = req_simple(ib, 83, reqId, bboExchange) ### REQ_SMART_COMPONENTS
 
-function reqNewsArticle(ib::Connection, requestId::Int, providerCode::String, articleId::String, newsArticleOptions::NamedTuple=(;))
+reqNewsArticle(ib::Connection, reqId::Int, providerCode::String, articleId::String, newsArticleOptions::NamedTuple=(;)) =
+  sendmsg(ib, 84, ### REQ_NEWS_ARTICLE
+          maptopb(:NewsArticleRequest; reqId,
+                                       providerCode,
+                                       articleId,
+                                       newsArticleOptions))
 
-  o = enc()
+reqNewsProviders(ib::Connection) = sendmsg(ib, 85) ### REQ_NEWS_PROVIDERS
 
-  o(84, ### REQ_NEWS_ARTICLE
-    requestId,
-    providerCode,
-    articleId,
-    newsArticleOptions)
+reqHistoricalNews(ib::Connection, reqId::Int, conId::Int, providerCodes::String,
+                  startDateTime::String, endDateTime::String, totalResults::Int, historicalNewsOptions::NamedTuple=(;)) =
+  sendmsg(ib, 86, ### REQ_HISTORICAL_NEWS
+          maptopb(:HistoricalNewsRequest; reqId,
+                                          conId,
+                                          providerCodes,
+                                          startDateTime,
+                                          endDateTime,
+                                          totalResults,
+                                          historicalNewsOptions))
 
-  sendmsg(ib, o)
-end
+reqHeadTimestamp(ib::Connection, reqId::Int, contract::Contract, whatToShow::String, useRTH::Bool, formatDate::Int) =
+  sendmsg(ib, 87, ### REQ_HEAD_TIMESTAMP
+          maptopb(:HeadTimestampRequest; reqId,
+                                         contract,
+                                         useRTH,
+                                         whatToShow,
+                                         formatDate))
 
-reqNewsProviders(ib::Connection) = req_simple(ib, 85) ### REQ_NEWS_PROVIDERS
-
-function reqHistoricalNews(ib::Connection, requestId::Int, conId::Int, providerCodes::String, startDateTime::String, endDateTime::String, totalResults::Int, historicalNewsOptions::NamedTuple=(;))
-
-  o = enc()
-
-  o(86, ### REQ_HISTORICAL_NEWS
-    requestId,
-    conId,
-    providerCodes,
-    startDateTime,
-    endDateTime,
-    totalResults,
-    historicalNewsOptions)
-
-  sendmsg(ib, o)
-end
-
-function reqHeadTimestamp(ib::Connection, tickerId::Int, contract::Contract, whatToShow::String, useRTH::Bool, formatDate::Int)
-
-  o = enc()
-
-  o(87, ### REQ_HEAD_TIMESTAMP
-    tickerId,
-    splat(contract, 1:13),
-    useRTH,
-    whatToShow,
-    formatDate)
-
-  sendmsg(ib, o)
-end
-
-function reqHistogramData(ib::Connection, reqId::Int, contract::Contract, useRTH::Bool, timePeriod::String)
-
-  o = enc()
-
-  o(88, ### REQ_HISTOGRAM_DATA
-    reqId,
-    splat(contract, 1:13),
-    useRTH,
-    timePeriod)
-
-  sendmsg(ib, o)
-end
+reqHistogramData(ib::Connection, reqId::Int, contract::Contract, useRTH::Bool, timePeriod::String) =
+  sendmsg(ib, 88, ### REQ_HISTOGRAM_DATA
+          maptopb(:HistogramDataRequest; reqId,
+                                         contract,
+                                         useRTH,
+                                         timePeriod))
 
 cancelHistogramData(ib::Connection, reqId::Int) = req_simple(ib, 89, reqId) ### CANCEL_HISTOGRAM_DATA
 
-cancelHeadTimestamp(ib::Connection, tickerId::Int) = req_simple(ib, 90, tickerId) ### CANCEL_HEAD_TIMESTAMP
+cancelHeadTimestamp(ib::Connection, reqId::Int) = req_simple(ib, 90, reqId) ### CANCEL_HEAD_TIMESTAMP
 
 reqMarketRule(ib::Connection, marketRuleId::Int) = req_simple(ib, 91, marketRuleId) ### REQ_MARKET_RULE
 
-reqPnL(ib::Connection, reqId::Int, account::String, modelCode::String) = req_simple(ib, 92, reqId, account, modelCode) ### REQ_PNL
+reqPnL(ib::Connection, reqId::Int, account::String, modelCode::String) =
+  sendmsg(ib, 92,  ### REQ_PNL
+          maptopb(:PnLRequest; reqId,
+                               account,
+                               modelCode))
 
 cancelPnL(ib::Connection, reqId::Int) = req_simple(ib, 93, reqId) ### CANCEL_PNL
 
-reqPnLSingle(ib::Connection, reqId::Int, account::String, modelCode::String, conId::Int) = req_simple(ib, 94, reqId, account, modelCode, conId) ### REQ_PNL_SINGLE
+reqPnLSingle(ib::Connection, reqId::Int, account::String, modelCode::String, conId::Int) =
+  sendmsg(ib, 94, ### REQ_PNL_SINGLE
+          maptopb(:PnLSingleRequest; reqId,
+                                     account,
+                                     modelCode,
+                                     conId))
 
 cancelPnLSingle(ib::Connection, reqId::Int) = req_simple(ib, 95, reqId) ### CANCEL_PNL_SINGLE
 
-function reqHistoricalTicks(ib::Connection, reqId::Int, contract::Contract, startDateTime::String, endDateTime::String, numberOfTicks::Int, whatToShow::String, useRTH::Bool, ignoreSize::Bool, miscOptions::NamedTuple=(;))
+reqHistoricalTicks(ib::Connection, reqId::Int, contract::Contract, startDateTime::String, endDateTime::String,
+                   numberOfTicks::Int, whatToShow::String, useRTH::Bool, ignoreSize::Bool, miscOptions::NamedTuple=(;)) =
+  sendmsg(ib, 96, ### REQ_HISTORICAL_TICKS
+          maptopb(:HistoricalTicksRequest; reqId,
+                                           contract,
+                                           startDateTime,
+                                           endDateTime,
+                                           numberOfTicks,
+                                           whatToShow,
+                                           useRTH,
+                                           ignoreSize,
+                                           miscOptions))
 
-  o = enc()
-
-  o(96, ### REQ_HISTORICAL_TICKS
-    reqId,
-    splat(contract, 1:13),
-    startDateTime,
-    endDateTime,
-    numberOfTicks,
-    whatToShow,
-    useRTH,
-    ignoreSize,
-    miscOptions)
-
-  sendmsg(ib, o)
-end
-
-function reqTickByTickData(ib::Connection, reqId::Int, contract::Contract, tickType::String, numberOfTicks::Int, ignoreSize::Bool)
-
-  o = enc()
-
-  o(97, ### REQ_TICK_BY_TICK_DATA
-    reqId,
-    splat(contract, 1:12),
-    tickType,
-    numberOfTicks,
-    ignoreSize)
-
-  sendmsg(ib, o)
-end
+reqTickByTickData(ib::Connection, reqId::Int, contract::Contract, tickType::String,
+                  numberOfTicks::Int, ignoreSize::Bool) =
+  sendmsg(ib, 97,
+          maptopb(:TickByTickRequest; reqId,
+                                      contract,
+                                      tickType,
+                                      numberOfTicks,
+                                      ignoreSize))
 
 cancelTickByTickData(ib::Connection, reqId::Int) = req_simple(ib, 98, reqId) ### CANCEL_TICK_BY_TICK_DATA
 
@@ -666,21 +412,25 @@ cancelWshMetaData(ib::Connection, reqId::Int) = req_simple(ib, 101, reqId) ### C
 
 function reqWshEventData(ib::Connection, reqId::Int, wshEventData::WshEventData)
 
-  o = enc()
+  msgid = 102 ### REQ_WSH_EVENT_DATA
 
-  o(102, ### REQ_WSH_EVENT_DATA
-    reqId,
-    isnothing(wshEventData.conId) && !isempty(wshEventData.filter) ? 2147483647 : wshEventData.conId,
-    splat(wshEventData, 2:8))
+  msg = maptopb(wshEventData)
 
-  sendmsg(ib, o)
+  msg[:reqId] = reqId
+
+  sendmsg(ib, msgid, msg)
 end
 
 cancelWshEventData(ib::Connection, reqId::Int) = req_simple(ib, 103, reqId) ### CANCEL_WSH_EVENT_DATA
 
 reqUserInfo(ib::Connection, reqId::Int) = req_simple(ib, 104, reqId) ### REQ_USER_INFO
 
-reqCurrentTimeInMillis(ib::Connection) = req_simple(ib, 105) ### REQ_CURRENT_TIME_IN_MILLIS
+reqCurrentTimeInMillis(ib::Connection) = sendmsg(ib, 105) ### REQ_CURRENT_TIME_IN_MILLIS
+
+cancelContractData(ib::Connection, reqId::Int) = req_simple(ib, 106, reqId) ### CANCEL_CONTRACT_DATA
+
+cancelHistoricalTick(ib::Connection, reqId::Int) = req_simple(ib, 107, reqId) ### CANCEL_HISTORICAL_TICKS
+
 
 # Exports
 export reqMktData,
@@ -730,8 +480,8 @@ export reqMktData,
        updateDisplayGroup,
        unsubscribeFromGroupEvents,
 #       startApi,
-       verifyAndAuthRequest,
-       verifyAndAuthMessage,
+#       verifyAndAuthRequest,
+#       verifyAndAuthMessage,
        reqPositionsMulti,
        cancelPositionsMulti,
        reqAccountUpdatesMulti,
@@ -763,5 +513,7 @@ export reqMktData,
        reqWshEventData,
        cancelWshEventData,
        reqUserInfo,
-       reqCurrentTimeInMillis
+       reqCurrentTimeInMillis,
+       cancelContractData,
+       cancelHistoricalTick
 end

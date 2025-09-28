@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package IBProto;
+
+message SecDefOptParamsRequest {
+    optional int32 reqId = 1;
+    optional string underlyingSymbol = 2;
+    optional string futFopExchange = 3;
+    optional string underlyingSecType = 4;
+    optional int32 underlyingConId = 5;
+}
+
+message SecDefOptParameter {
+    optional int32 reqId = 1;
+    optional string exchange = 2;
+    optional int32 underlyingConId = 3;
+    optional string tradingClass = 4;
+    optional string multiplier = 5;
+    repeated string expirations = 6;
+    repeated double strikes = 7;
+}

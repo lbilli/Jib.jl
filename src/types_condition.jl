@@ -2,8 +2,8 @@ abstract type AbstractCondition{T} end
 
 struct ConditionPrice <: AbstractCondition{PRICE}
   conjunction::String
-  is_more::Bool
-  value::Float64
+  isMore::Bool
+  price::Float64
   conId::Int
   exchange::String
   triggerMethod::Int
@@ -11,14 +11,14 @@ end
 
 struct ConditionTime <: AbstractCondition{TIME}
   conjunction::String
-  is_more::Bool
-  value::String
+  isMore::Bool
+  time::String
 end
 
 struct ConditionMargin <: AbstractCondition{MARGIN}
   conjunction::String
-  is_more::Bool
-  value::Int
+  isMore::Bool
+  percent::Int
 end
 
 struct ConditionExecution <: AbstractCondition{EXECUTION}
@@ -30,16 +30,16 @@ end
 
 struct ConditionVolume <: AbstractCondition{VOLUME}
   conjunction::String
-  is_more::Bool
-  value::Int
+  isMore::Bool
+  volume::Int
   conId::Int
   exchange::String
 end
 
 struct ConditionPercentChange <: AbstractCondition{PERCENTCHANGE}
   conjunction::String
-  is_more::Bool
-  value::Float64
+  isMore::Bool
+  changePercent::Float64
   conId::Int
   exchange::String
 end

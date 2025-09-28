@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package IBProto;
+
+message OrderAllocation {
+    optional string account = 1;
+    optional string position = 2;
+    optional string positionDesired = 3;
+    optional string positionAfter = 4;
+    optional string desiredAllocQty = 5;
+    optional string allowedAllocQty = 6;
+    optional bool isMonetary = 7;
+}
+
+message OrderState {
+    optional string status = 1;
+    optional double initMarginBefore = 2;
+    optional double maintMarginBefore = 3;
+    optional double equityWithLoanBefore = 4;
+    optional double initMarginChange = 5;
+    optional double maintMarginChange = 6;
+    optional double equityWithLoanChange = 7;
+    optional double initMarginAfter = 8;
+    optional double maintMarginAfter = 9;
+    optional double equityWithLoanAfter = 10;
+
+    optional double commission = 11;
+    optional double minCommission = 12;
+    optional double maxCommission = 13;
+    optional string commissionCurrency = 14;
+    optional string marginCurrency = 15;
+
+    optional double initMarginBeforeOutsideRTH = 16;
+    optional double maintMarginBeforeOutsideRTH = 17;
+    optional double equityWithLoanBeforeOutsideRTH = 18;
+    optional double initMarginChangeOutsideRTH = 19;
+    optional double maintMarginChangeOutsideRTH = 20;
+    optional double equityWithLoanChangeOutsideRTH = 21;
+    optional double initMarginAfterOutsideRTH = 22;
+    optional double maintMarginAfterOutsideRTH = 23;
+    optional double equityWithLoanAfterOutsideRTH = 24;
+
+    optional string suggestedSize = 25;
+    optional string rejectReason = 26;
+    repeated OrderAllocation orderAllocations = 27;
+    optional string warningText = 28;
+    optional string completedTime = 29;
+    optional string completedStatus = 30;
+}

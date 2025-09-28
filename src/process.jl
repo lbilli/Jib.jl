@@ -1,39 +1,38 @@
-using Base.Iterators: take
-
-import ...AbstractCondition,
-       ...ComboLeg,
-       ...CommissionReport,
-       ...ConditionType,
+import ...CommissionReport,
        ...Contract,
        ...ContractDescription,
        ...ContractDetails,
-       ...DeltaNeutralContract,
        ...Execution,
        ...FaDataType,
-       ...IneligibilityReason,
        ...MarketDataType,
        ...Order,
-       ...OrderAllocation,
        ...OrderState,
        ...SoftDollarTier,
        ...TickAttrib,
-       ...TickAttribLast,
-       ...TickAttribBidAsk,
+       ...Bar,
        ...VBar,
-       ...VDepthMktDataDescription,
-       ...VFamilyCode,
-       ...VHistogramEntry,
-       ...VHistoricalSession,
-       ...HistoricalTick,
-       ...VHistoricalTickBidAsk,
-       ...VHistoricalTickLast,
+       ...DepthMktDataDescription,
+       ...FamilyCode,
+       ...HistogramEntry,
        ...VNewsProvider,
        ...VPriceIncrement,
        ...VSmartComponent,
-       ...condition_map,
+       ...ScannerDataElement,
+       ...Tick,
+       ...VTick,
+       ...TickBidAsk,
+       ...VTickBidAsk,
+       ...TickLast,
+       ...VTickLast,
        ...funddist,
        ...fundtype,
-       ...ns
+       ...optexercisetype,
+       ...ns,
+       ...PB,
+       ...splat1,
+       ...todouble,
+       ...toint,
+       ...transform
 
 
 """
@@ -43,893 +42,847 @@ Collection of parsers indexed by message ID
 """
 const process = Dict(
 
+  #
+  # Messages using ProtoBuf have an offset applied
+  #
+  #  msgid -> msgid + PROTOBUF_MSG_ID = 200
+  #
+
   # TICK_PRICE
-   1 => function(it, w, ver)
+  201 => function(msg, w, ver)
 
-          tickerId::Int,
-          ticktype::Int,
-          price::Union{Float64,Nothing},
-          size::Union{Float64,Nothing},
-          mask::TickAttrib = it
+    pb = PB.deserialize(:TickPrice, msg)
 
-          w.tickPrice(tickerId, tickname(ticktype), price, size, mask)
-        end,
+    transform(tickname, pb, :tickType)
+    todouble(pb, :size)
+
+    # Unmask
+    transform(m -> TickAttrib(digits(Bool, m, base=2, pad=3)),
+              pb, :attrMask)
+
+    w.tickPrice(splat1(pb; price=nothing, size=nothing)...)
+  end,
 
   # TICK_SIZE
-   2 => function(it, w, ver)
+  202 => function(msg, w, ver)
 
-          tickerId::Int,
-          ticktype::Int,
-          size::Float64 = it
+    pb = PB.deserialize(:TickString, msg)
 
-          w.tickSize(tickerId, tickname(ticktype), size)
-        end,
+    transform(tickname, pb, :tickType)
+    todouble(pb, :value)
+
+    w.tickSize(splat1(pb)...)
+  end,
 
   # ORDER_STATUS
-   3 => (it, w, ver) -> w.orderStatus(slurp((Int,String,Float64,Float64,Float64,Int,Int,Float64,Int,String,Float64), it)...),
+  203 => function(msg, w, ver)
+
+    pb = PB.deserialize(:OrderStatus, msg)
+
+    todouble(pb, :filled)
+    todouble(pb, :remaining)
+
+    w.orderStatus(splat1(pb; whyHeld=ns)...)
+  end,
 
   # ERR_MSG
-   4 => function(it, w, ver)
+  204 => function(msg, w, ver)
 
-          id::Union{Int,Nothing},
-          errorCode::Union{Int,Nothing},
-          errorMsg::String,
-          adv::String = it
+    pb = PB.deserialize(:Error, msg)
 
-          errorTime::Int = ver ≥ Client.ERROR_TIME ? it : 0
-
-          w.error(id, errorTime, errorCode, errorMsg, adv)
-        end,
+    w.error(splat1(pb; errorCode=nothing, advancedOrderRejectJson=ns)...)
+  end,
 
   # OPEN_ORDER
-   5 => function(it, w, ver)
+  205 => function(msg, w, ver)
 
-          c = Contract()
-          o = Order()
-          os = OrderState()
+    pb = PB.deserialize(:OpenOrder, msg)
 
-          o.orderId = it
+    o = pb[:order]
 
-          slurp!(c, [1:8; 10:12], it)
+    # Check orderId
+    pb[:orderId] == o[:orderId] ||
+      @warn "orderId mismatch" OID=pb[:orderId] OOID=o[:orderId]
 
-          slurp!(o, 4:9, it) # :action -> :tif
+    # Conversions
+    todouble(o, :totalQuantity)
+    todouble(o, :filledQuantity)
 
-          slurp!(o, (:ocaGroup,
-                     :account,
-                     :openClose,
-                     :origin,
-                     :orderRef,
-                     :clientId,
-                     :permId,
-                     :outsideRth,
-                     :hidden,
-                     :discretionaryAmt,
-                     :goodAfterTime), it)
+    for oa ∈ get(pb[:orderState], :orderAllocations, ()),
+        n ∈ (:position,
+              :positionDesired,
+              :positionAfter,
+              :desiredAllocQty,
+              :allowedAllocQty)
+      todouble(oa, n)
+    end
 
-          pop(it) # Deprecated sharesAllocation
+    o[:usePriceMgmtAlgo] ∈ (0, 1) ||
+      @warn "unexpected usePriceMgmtAlgo" U=o[:usePriceMgmtAlgo]
 
-          slurp!(o, (:faGroup,
-                     :faMethod,
-                     :faPercentage,
-                     :modelCode,
-                     :goodTillDate,
-                     :rule80A,
-                     :percentOffset,
-                     :settlingFirm,
-                     :shortSaleSlot,
-                     :designatedLocation,
-                     :exemptCode), it)
+    oid,
+    contract::Contract,
+    order::Order,
+    orderState::OrderState = splat1(pb)
 
-          slurp!(o, 42:47, it) # :auctionStrategy -> :stockRangeUpper
+    # Transfer comboLeg prices
+    # TODO: Fix this
+    if PB.has(pb[:contract], :comboLegs)
+      ocl = [ get(cl, :perLegPrice, nothing) for cl ∈ pb[:contract][:comboLegs] ]
 
-          slurp!(o, (:displaySize,
-                     :blockOrder,
-                     :sweepToFill,
-                     :allOrNone,
-                     :minQty,
-                     :ocaType), it)
+      n = count(isnothing, ocl)
 
-          pop(it) # Deprecated eTradeOnly
-          pop(it) # Deprecated firmQuoteOnly
-          pop(it) # Deprecated nbboPriceCap
+      if n == 0
+        order.orderComboLegs = ocl
 
-          slurp!(o, (:parentId,
-                     :triggerMethod), it)
+      elseif n < length(ocl)
+        @warn "perLegPrice: not all filled" ocl
+      end
+    end
 
-          slurp!(o, 50:53, it) # :volatility -> :deltaNeutralAuxPrice
-
-          !isempty(o.deltaNeutralOrderType) && slurp!(o, 54:61, it) # :deltaNeutralConId -> :deltaNeutralDesignatedLocation
-
-          slurp!(o, (:continuousUpdate,
-                     :referencePriceType,
-                     :trailStopPrice,
-                     :trailingPercent,
-                     :basisPoints,
-                     :basisPointsType), it)
-
-          c.comboLegsDescrip,
-          c.comboLegs = it
-
-          slurp!(o, (:orderComboLegs,
-                     :smartComboRoutingParams,
-                     :scaleInitLevelSize,
-                     :scaleSubsLevelSize,
-                     :scalePriceIncrement), it)
-
-          !isnothing(o.scalePriceIncrement) &&
-          o.scalePriceIncrement > 0         && slurp!(o, 69:75, it) # :scalePriceAdjustValue -> :scaleRandomPercent
-
-          o.hedgeType = it
-
-          !isempty(o.hedgeType) && (o.hedgeParam = it)
-
-          slurp!(o, (:optOutSmartRouting,
-                     :clearingAccount,
-                     :clearingIntent,
-                     :notHeld), it)
-
-          # DeltaNeutralContract
-          convert(Bool, it) && (c.deltaNeutralContract = it)
-
-          # AlgoStrategy
-          o.algoStrategy = it
-
-          !isempty(o.algoStrategy) && (o.algoParams = it)
-
-          o.solicited,
-          o.whatIf = it
-
-          slurp!(os, 1:14, it) # :status -> :commissionCurrency
-
-          ver ≥ Client.FULL_ORDER_PREVIEW_FIELDS &&
-            slurp!(os, 15:27, it) # :marginCurrency -> :orderAllocations
-
-          os.warningText,
-          o.randomizeSize,
-          o.randomizePrice = it
-
-          o.orderType == "PEG BENCH" && slurp!(o, (:referenceContractId,
-                                                   :isPeggedChangeAmountDecrease,
-                                                   :peggedChangeAmount,
-                                                   :referenceChangeAmount,
-                                                   :referenceExchangeId), it)
-
-          # Conditions
-          o.conditions = it
-
-          if !isempty(o.conditions)
-            o.conditionsIgnoreRth,
-            o.conditionsCancelOrder = it
-          end
-
-          slurp!(o, (:adjustedOrderType,
-                     :triggerPrice,
-                     :trailStopPrice,
-                     :lmtPriceOffset,
-                     :adjustedStopPrice,
-                     :adjustedStopLimitPrice,
-                     :adjustedTrailingAmount,
-                     :adjustableTrailingUnit,
-                     :softDollarTier,
-                     :cashQty,
-                     :dontUseAutoPriceForHedge,
-                     :isOmsContainer,
-                     :discretionaryUpToLimitPrice,
-                     :usePriceMgmtAlgo,
-                     :duration,
-                     :postToAts,
-                     :autoCancelParent,
-                     :minTradeQty,
-                     :minCompeteSize,
-                     :competeAgainstBestOffset,
-                     :midOffsetAtWhole,
-                     :midOffsetAtHalf,
-                     :customerAccount,
-                     :professionalCustomer,
-                     :bondAccruedInterest), it)
-
-          ver ≥ Client.INCLUDE_OVERNIGHT && (o.includeOvernight = it)
-
-          ver ≥ Client.CME_TAGGING_FIELDS_IN_OPEN_ORDER && slurp!(o, (:extOperator,
-                                                                      :manualOrderIndicator), it)
-
-          ver ≥ Client.SUBMITTER && (o.submitter = it)
-
-          ver ≥ Client.IMBALANCE_ONLY && (o.imbalanceOnly = it)
-
-          w.openOrder(o.orderId, c, o, os)
-        end,
+    w.openOrder(oid, contract, order, orderState)
+  end,
 
   # ACCT_VALUE
-   6 => (it, w, ver) -> w.updateAccountValue(collect(String, take(it, 4))...),
+  206 => function(msg, w, ver)
+
+    pb = PB.deserialize(:AccountValue, msg)
+
+    w.updateAccountValue(splat1(pb; currency=ns)...)
+  end,
 
   # PORTFOLIO_VALUE
-   7 => function(it, w, ver)
+  207 => function(msg, w, ver)
 
-          c = Contract()
+    pb = PB.deserialize(:PortfolioValue, msg)
 
-          slurp!(c, [1:7; 9:12], it)
+    todouble(pb, :position)
 
-          w.updatePortfolio(c, collect(Float64, take(it, 6))..., convert(String, it))
-        end,
+    w.updatePortfolio(splat1(pb)...)
+  end,
 
   # ACCT_UPDATE_TIME
-   8 => (it, w, ver) -> w.updateAccountTime(convert(String, it)),
+  208 => function(msg, w, ver)
+
+    pb = PB.deserialize(:SingleString, msg)
+
+    w.updateAccountTime(pb[:value])
+  end,
 
   # NEXT_VALID_ID
-   9 => (it, w, ver) -> w.nextValidId(convert(Int, it)),
+  209 => (msg, w, ver) -> w.nextValidId(PB.deserialize(:SingleInt32, msg)[:value]),
 
   # CONTRACT_DATA
-  10 => function(it, w, ver)
+  210 => function(msg, w, ver)
 
-          reqId::Int = it
+    pb = PB.deserialize(:ContractData, msg)
 
-          cd = ContractDetails()
+    cd = pb[:contractDetails]
+    todouble.(Ref(cd), (:minTick, :minSize, :sizeIncrement, :suggestedSizeIncrement))
+    transform(funddist, cd, :fundDistributionPolicyIndicator)
+    transform(fundtype, cd, :fundAssetType)
 
-          slurp!(cd.contract, (2, 3, 4, 18, 5, 6, 8, 10, 11), it)
+    reqId,
+    contract::Contract,
+    contractDetails::ContractDetails = splat1(pb)
 
-          cd.marketName,
-          cd.contract.tradingClass,
-          cd.contract.conId,
-          cd.minTick,
-          cd.contract.multiplier = it
+    contractDetails.contract = contract
 
-          slurp!(cd, 4:8, it)
-          cd.contract.primaryExchange = it
-          slurp!(cd, 9:17, it)
-
-          slurp!(cd, (:secIdList,
-                      :aggGroup,
-                      :underSymbol,
-                      :underSecType,
-                      :marketRuleIds,
-                      :realExpirationDate,
-                      :stockType,
-                      :minSize,
-                      :sizeIncrement,
-                      :suggestedSizeIncrement), it)
-
-          if cd.contract.secType == "FUND"
-
-            slurp!(cd, 44:58, it)
-
-            cd.fundDistributionPolicyIndicator = funddist(convert(String, it))
-            cd.fundAssetType = fundtype(convert(String, it))
-          end
-
-          cd.ineligibilityReasonList = it
-
-          w.contractDetails(reqId, cd)
-        end,
+    w.contractDetails(reqId, contractDetails)
+  end,
 
   # EXECUTION_DATA
-  11 => function(it, w, ver)
+  211 => function(msg, w, ver)
 
-          reqId::Int,
-          orderId::Union{Int,Nothing} = it
+    pb = PB.deserialize(:ExecutionDetails, msg)
 
-          c = Contract()
-          slurp!(c, [1:8; 10:12], it)
+    e = pb[:execution]
+    todouble(e, :shares)
+    todouble(e, :cumQty)
+    transform(optexercisetype, e, :optExerciseOrLapseType)
 
-          e = Execution(orderId, take(it, 18)..., ver ≥ Client.SUBMITTER ? it : ns)
+    execution = Execution(splat1(e; liquidation=false,
+                                    orderRef=ns,
+                                    evRule=ns,
+                                    evMultiplier=nothing,
+                                    modelCode=ns,
+                                    pendingPriceRevision=false,
+                                    submitter=ns)...)
 
-          w.execDetails(reqId, c, e)
-        end,
+    w.execDetails(pb[:reqId], convert(Contract, pb[:contract]), execution)
+  end,
 
   # MARKET_DEPTH
-  12 => (it, w, ver) -> w.updateMktDepth(slurp((Int,Int,Int,Int,Float64,Float64), it)...),
+  212 => function(msg, w, ver)
+
+    pb = PB.deserialize(:MarketDepth, msg)
+
+    md = pb[:marketDepthData]
+
+    todouble(md, :size)
+
+    w.updateMktDepth(pb[:reqId], splat1(md, (:position,
+                                             :operation,
+                                             :side,
+                                             :price,
+                                             :size))...)
+  end,
 
   # MARKET_DEPTH_L2
-  13 => (it, w, ver) -> w.updateMktDepthL2(slurp((Int,Int,String,Int,Int,Float64,Float64,Bool), it)...),
+  213 => function(msg, w, ver)
+
+    pb = PB.deserialize(:MarketDepth, msg)
+
+    md = pb[:marketDepthData]
+
+    todouble(md, :size)
+
+    w.updateMktDepthL2(pb[:reqId], splat1(md, (:position,
+                                               :marketMaker,
+                                               :operation,
+                                               :side,
+                                               :price,
+                                               :size,
+                                               :isSmartDepth))...)
+  end,
 
   # NEWS_BULLETINS
-  14 => (it, w, ver) -> w.updateNewsBulletin(slurp((Int,Int,String,String), it)...),
+  214 => function(msg, w, ver)
+
+    pb = PB.deserialize(:NewsBulletin, msg)
+
+    w.updateNewsBulletin(splat1(pb)...)
+  end,
 
   # MANAGED_ACCTS
-  15 => (it, w, ver) -> w.managedAccounts(convert(String, it)),
+  215 => (msg, w, ver) -> w.managedAccounts(PB.deserialize(:SingleString, msg)[:value]),
 
   # RECEIVE_FA
-  16 => (it, w, ver) -> w.receiveFA(slurp((FaDataType,String), it)...),
+  216 => function(msg, w, ver)
+
+    pb = PB.deserialize(:StringData, msg)
+
+    w.receiveFA(FaDataType(pb[:reqId]), pb[:data])
+  end,
 
   # HISTORICAL_DATA
-  17 => function(it, w, ver)
+  217 => function(msg, w, ver)
 
-          reqId::Int = it
+    pb = PB.deserialize(:HistoricalData, msg)
 
-          if ver < Client.HISTORICAL_DATA_END
-            pop(it) # Ignore startDate
-            pop(it) # Ignore endDate
-          end
+    bars = map(pb[:bars]) do b
+                            todouble(b, :volume)
+                            todouble(b, :wap)
 
-          bars::VBar = it
+                            convert(Bar, b)
+                          end
 
-          w.historicalData(reqId, bars)
-        end,
+    w.historicalData(pb[:reqId], bars)
+  end,
 
   # BOND_CONTRACT_DATA
-  18 => function(it, w, ver)
+  218 => function(msg, w, ver)
 
-          reqId::Int = it
+    pb = PB.deserialize(:ContractData, msg)
 
-          cd = ContractDetails()
+    cd = pb[:contractDetails]
 
-          slurp!(cd.contract, 2:3, it)
+    todouble.(Ref(cd), (:minTick, :minSize, :sizeIncrement, :suggestedSizeIncrement))
 
-          slurp!(cd, (:cusip,
-                      :coupon,
-                      :maturity,
-                      :issueDate,
-                      :ratings,
-                      :bondType,
-                      :couponType,
-                      :convertible,
-                      :callable,
-                      :putable,
-                      :descAppend), it)
+    reqId,
+    contract::Contract,
+    contractDetails::ContractDetails = splat1(pb)
 
-          cd.contract.exchange,
-          cd.contract.currency,
-          cd.marketName,
-          cd.contract.tradingClass,
-          cd.contract.conId = it
+    contractDetails.contract = contract
 
-          slurp!(cd, (:minTick,
-                      :orderTypes,
-                      :validExchanges,
-                      :nextOptionDate,
-                      :nextOptionType,
-                      :nextOptionPartial,
-                      :notes,
-                      :longName), it)
-
-          ver ≥ Client.BOND_TRADING_HOURS && slurp!(cd, 13:15, it) # :timeZoneId -> :liquidHours
-
-          slurp!(cd, 16:17, it) # :evRule -> :evMultiplier
-
-          slurp!(cd, (:secIdList,
-                      :aggGroup,
-                      :marketRuleIds,
-                      :minSize,
-                      :sizeIncrement,
-                      :suggestedSizeIncrement), it)
-
-          w.bondContractDetails(reqId, cd)
-        end,
+    w.bondContractDetails(reqId, contractDetails)
+  end,
 
   # SCANNER_PARAMETERS
-  19 => (it, w, ver) -> w.scannerParameters(convert(String, it)),
+  219 => (msg, w, ver) -> w.scannerParameters(PB.deserialize(:SingleString, msg)[:value]),
 
   # SCANNER_DATA
-  20 => function(it, w, ver)
+  220 => function(msg, w, ver)
 
-          tickerId::Int,
-          n::Int = it
+    pb = PB.deserialize(:ScannerData, msg)
 
-          rank =       Vector{Int}(undef, n)
-          cd =         [ ContractDetails() for _ ∈ 1:n ]
-          distance =   Vector{String}(undef, n)
-          benchmark =  Vector{String}(undef, n)
-          projection = Vector{String}(undef, n)
-          legsStr =    Vector{String}(undef, n)
+    data = map(pb[:data]) do sd
 
-          for i ∈ 1:n
+                            ScannerDataElement(splat1(sd; distance=ns,
+                                                          benchmark=ns,
+                                                          projection=ns,
+                                                          comboKey=ns))
+                          end
 
-            rank[i] = it
-
-            slurp!(cd[i].contract, [1:6; 8; 10; 11], it)
-
-            cd[i].marketName,
-            cd[i].contract.tradingClass,
-            distance[i],
-            benchmark[i],
-            projection[i],
-            legsStr[i] = it
-          end
-
-          w.scannerData(tickerId, rank, cd, distance, benchmark, projection, legsStr)
-        end,
+    w.scannerData(pb[:reqId], data)
+  end,
 
   # TICK_OPTION_COMPUTATION
-  21 => function(it, w, ver)
+  221 => function(msg, w, ver)
 
-          tickerId::Int,
-          ticktype::Int,
-          tickAttrib::Int = it
+    pb = PB.deserialize(:TickOptionComputation, msg)
 
-          v = collect(Union{Float64,Nothing}, take(it, 8))
+    args = Iterators.map(PB.allnames(pb)) do n
 
-          # (impliedVol, optPrice, pvDividend, undPrice) == -1 means NA
-          replace!(view(v, [1, 3, 4, 8]), -1 => nothing)
+            val = pb[n]
 
-          # (delta, gamma, vega, theta) == -2 means NA
-          replace!(view(v, [2, 5, 6, 7]), -2 => nothing)
+            n === :tickType ? tickname(val) :
+            val == -1 && n ∈ (:impliedVol, :optPrice, :pvDividend, :undPrice) ? nothing :
+            val == -2 && n ∈ (:delta, :gamma, :vega, :theta) ? nothing :
+              val
+          end
 
-          w.tickOptionComputation(tickerId, tickname(ticktype), tickAttrib, v...)
-        end,
+    w.tickOptionComputation(args...)
+  end,
 
   # TICK_GENERIC
-  45 => function(it, w, ver)
+  245 => function(msg, w, ver)
 
-          tickerId::Int,
-          ticktype::Int,
-          value::Float64 = it
+    pb = PB.deserialize(:TickGeneric, msg)
 
-          w.tickGeneric(tickerId, tickname(ticktype), value)
-        end,
+    transform(tickname, pb, :tickType)
+
+    w.tickGeneric(splat1(pb)...)
+  end,
 
   # TICK_STRING
-  46 => function(it, w, ver)
+  246 => function(msg, w, ver)
 
-          tickerId::Int,
-          ticktype::Int,
-          value::String = it
+    pb = PB.deserialize(:TickString, msg)
 
-          w.tickString(tickerId, tickname(ticktype), value)
-        end,
+    transform(tickname, pb, :tickType)
 
-  # TICK_EFP
-  47 => function(it, w, ver)
-
-          tickerId::Int,
-          ticktype::Int = it
-
-          w.tickEFP(tickerId, tickname(ticktype), slurp((Float64,String,Float64,Int,String,Float64,Float64), it)...)
-        end,
+    w.tickString(splat1(pb)...)
+  end,
 
   # CURRENT_TIME
-  49 => (it, w, ver) -> w.currentTime(convert(Int, it)),
+  249 => (msg, w, ver) -> w.currentTime(PB.deserialize(:SingleInt64, msg)[:value]),
 
   # REAL_TIME_BARS
-  50 => (it, w, ver) -> w.realtimeBar(slurp((Int,Int,Float64,Float64,Float64,Float64,Float64,Float64,Int), it)...),
+  250 => function(msg, w, ver)
+
+    pb = PB.deserialize(:RealTimeBarTick, msg)
+
+    todouble(pb, :volume)
+    todouble(pb, :wap)
+
+    w.realtimeBar(splat1(pb)...)
+  end,
 
   # FUNDAMENTAL_DATA
-  51 => (it, w, ver) -> w.fundamentalData(slurp((Int,String), it)...),
+  251 => function(msg, w, ver)
+
+    pb = PB.deserialize(:StringData, msg)
+
+    w.fundamentalData(splat1(pb)...)
+  end,
 
   # CONTRACT_DATA_END
-  52 => (it, w, ver) -> w.contractDetailsEnd(convert(Int, it)),
+  252 => (msg, w, ver) -> w.contractDetailsEnd(PB.deserialize(:SingleInt32, msg)[:value]),
 
   # OPEN_ORDER_END
-  53 => (it, w, ver) -> w.openOrderEnd(),
+  253 => (msg, w, ver) -> w.openOrderEnd(),
 
   # ACCT_DOWNLOAD_END
-  54 => (it, w, ver) -> w.accountDownloadEnd(convert(String, it)),
+  254 => (msg, w, ver) -> w.accountDownloadEnd(PB.deserialize(:SingleString, msg)[:value]),
 
   # EXECUTION_DATA_END
-  55 => (it, w, ver) -> w.execDetailsEnd(convert(Int, it)),
-
-  # DELTA_NEUTRAL_VALIDATION
-  56 => (it, w, ver) -> w.deltaNeutralValidation(slurp((Int,DeltaNeutralContract), it)...),
+  255 => (msg, w, ver) -> w.execDetailsEnd(PB.deserialize(:SingleInt32, msg)[:value]),
 
   # TICK_SNAPSHOT_END
-  57 => (it, w, ver) -> w.tickSnapshotEnd(convert(Int, it)),
+  257 => (msg, w, ver) -> w.tickSnapshotEnd(PB.deserialize(:SingleInt32, msg)[:value]),
 
   # MARKET_DATA_TYPE
-  58 => (it, w, ver) -> w.marketDataType(slurp((Int,MarketDataType), it)...),
+  258 => function(msg, w, ver)
+
+    pb = PB.deserialize(:MarketDataType, msg)
+
+    w.marketDataType(pb[:reqId], MarketDataType(pb[:marketDataType]))
+  end,
 
   # COMMISSION_REPORT
-  59 => (it, w, ver) -> w.commissionReport(convert(CommissionReport, it)),
+  259 => function(msg, w, ver)
+
+    pb = PB.deserialize(:CommissionReport, msg)
+
+    toint(pb, :yieldRedemptionDate)
+
+    commission = CommissionReport(splat1(pb; realizedPNL=nothing,
+                                             yield=nothing,
+                                             yieldRedemptionDate=nothing)...)
+
+    w.commissionReport(commission)
+  end,
 
   # POSITION_DATA
-  61 => function(it, w, ver)
+  261 => function(msg, w, ver)
 
-          account::String = it
+    pb = PB.deserialize(:Position, msg)
 
-          c = Contract()
-          slurp!(c, [1:8; 10:12], it)
+    todouble(pb, :position)
 
-          w.position(account, c, slurp((Float64,Float64), it)...)
-        end,
+    w.position(splat1(pb)...)
+  end,
 
   # POSITION_END
-  62 => (it, w, ver) -> w.positionEnd(),
+  262 => (msg, w, ver) -> w.positionEnd(),
 
   # ACCOUNT_SUMMARY
-  63 => function(it, w, ver)
+  263 => function(msg, w, ver)
 
-          reqId::Int = it
+    pb = PB.deserialize(:AccountSummary, msg)
 
-          w.accountSummary(reqId, collect(String, take(it, 4))...)
-        end,
+    w.accountSummary(splat1(pb; currency=ns)...)
+  end,
 
   # ACCOUNT_SUMMARY_END
-  64 => (it, w, ver) -> w.accountSummaryEnd(convert(Int, it)),
+  264 => (msg, w, ver) -> w.accountSummaryEnd(PB.deserialize(:SingleInt32, msg)[:value]),
 
   # VERIFY_MESSAGE_API
-  65 => (it, w, ver) -> w.verifyMessageAPI(convert(String, it)),
+  265 => (msg, w, ver) -> w.verifyMessageAPI(PB.deserialize(:SingleString, msg)[:value]),
 
   # VERIFY_COMPLETED
-  66 => (it, w, ver) -> w.verifyCompleted(slurp((Bool,String), it)...),
+  266 => function(msg, w, ver)
+
+    pb = PB.deserialize(:VerifyCompleted, msg)
+
+    w.verifyCompleted(splat1(pb)...)
+  end,
 
   # DISPLAY_GROUP_LIST
-  67 => (it, w, ver) -> w.displayGroupList(slurp((Int,String), it)...),
+  267 => function(msg, w, ver)
+
+    pb = PB.deserialize(:StringData, msg)
+
+    w.displayGroupList(pb[:reqId], pd[:data])
+  end,
 
   # DISPLAY_GROUP_UPDATED
-  68 => (it, w, ver) -> w.displayGroupUpdated(slurp((Int,String), it)...),
+  268 => function(msg, w, ver)
 
-  # VERIFY_AND_AUTH_MESSAGE_API
-  69 => (it, w, ver) -> w.verifyAndAuthMessageAPI(slurp((String,String), it)...),
+    pb = PB.deserialize(:StringData, msg)
 
-  # VERIFY_AND_AUTH_COMPLETED
-  70 => (it, w, ver) -> w.verifyAndAuthCompleted(slurp((Bool,String), it)...),
+    w.displayGroupUpdated(pb[:reqId], pd[:data])
+  end,
 
   # POSITION_MULTI
-  71 => function(it, w, ver)
+  271 => function(msg, w, ver)
 
-          reqId::Int,
-          account::String = it
+    pb = PB.deserialize(:PositionMulti, msg)
 
-          c = Contract()
-          slurp!(c, [1:8; 10:12], it)
+    todouble(pb, :position)
 
-          position::Float64,
-          avgCost::Float64,
-          modelCode::String = it
-
-          w.positionMulti(reqId, account, modelCode, c, position, avgCost)
-        end,
+    w.positionMulti(splat1(pb, (:reqId,
+                                :account,
+                                :modelCode,
+                                :contract,
+                                :position,
+                                :avgCost);
+                            modelCode=ns)...)
+  end,
 
   # POSITION_MULTI_END
-  72 => (it, w, ver) -> w.positionMultiEnd(convert(Int, it)),
+  272 => (msg, w, ver) -> w.positionMultiEnd(PB.deserialize(:SingleInt32, msg)[:value]),
 
   # ACCOUNT_UPDATE_MULTI
-  73 => (it, w, ver) -> w.accountUpdateMulti(convert(Int, it), collect(String, take(it, 5))...),
+  273 => function(msg, w, ver)
+
+    pb = PB.deserialize(:AccountUpdateMulti, msg)
+
+    w.accountUpdateMulti(splat1(pb; modelCode=ns, currency=ns)...)
+  end,
 
   # ACCOUNT_UPDATE_MULTI_END
-  74 => (it, w, ver) -> w.accountUpdateMultiEnd(convert(Int, it)),
+  274 => (msg, w, ver) -> w.accountUpdateMultiEnd(PB.deserialize(:SingleInt32, msg)[:value]),
 
   # SECURITY_DEFINITION_OPTION_PARAMETER
-  75 => function(it, w, ver)
+  275 => function(msg, w, ver)
 
-          args = slurp((Int,String,Int,String,String), it)
+    pb = PB.deserialize(:SecDefOptParameter, msg)
 
-          expirations::Vector{String},
-          strikes::Vector{Float64} = it
-
-          w.securityDefinitionOptionalParameter(args..., expirations, strikes)
-        end,
+    w.securityDefinitionOptionalParameter(splat1(pb)...)
+  end,
 
   # SECURITY_DEFINITION_OPTION_PARAMETER_END
-  76 => (it, w, ver) -> w.securityDefinitionOptionalParameterEnd(convert(Int, it)),
+  276 => (msg, w, ver) -> w.securityDefinitionOptionalParameterEnd(PB.deserialize(:SingleInt32, msg)[:value]),
 
   # SOFT_DOLLAR_TIERS
-  77 => (it, w, ver) -> w.softDollarTiers(slurp((Int,Vector{SoftDollarTier}), it)...),
+  277 => function(msg, w, ver)
+
+    pb = PB.deserialize(:SoftDollarTiers, msg)
+
+    w.softDollarTiers(splat1(pb; tiers=SoftDollarTier[])...)
+  end,
 
   # FAMILY_CODES
-  78 => (it, w, ver) -> w.familyCodes(convert(VFamilyCode, it)),
+  278 => function(msg, w, ver)
+
+    pb = PB.deserialize(:FamilyCodes, msg)
+
+    fc = map(pb[:familyCodes]) do r
+
+                        FamilyCode(splat1(r; familyCode=ns))
+                      end
+
+    w.familyCodes(fc)
+  end,
 
   # SYMBOL_SAMPLES
-  79 => function(it, w, ver)
+  279 => function(msg, w, ver)
 
-          reqId::Int,
-          n::Int = it
+    pb = PB.deserialize(:SymbolSamples, msg)
 
-          cd = map(1:n) do _
+    cds = PB.has(pb, :contractDescriptions) ? map(pb[:contractDescriptions]) do cd
 
-                  c = Contract()
+                                ContractDescription(splat1(cd; derivativeSecTypes=String[])...)
+                              end : ContractDescription[]
 
-                  slurp!(c, (:conId,
-                             :symbol,
-                             :secType,
-                             :primaryExchange,
-                             :currency), it)
-
-                  nd::Int = it
-
-                  dst = collect(String, take(it, nd))
-
-                  c.description,
-                  c.issuerId = it
-
-                  ContractDescription(c, dst)
-                end
-
-          w.symbolSamples(reqId, cd)
-        end,
+    w.symbolSamples(pb[:reqId], cds)
+  end,
 
   # MKT_DEPTH_EXCHANGES
-  80 => (it, w, ver) -> w.mktDepthExchanges(convert(VDepthMktDataDescription, it)),
+  280 => function(msg, w, ver)
+
+    pb = PB.deserialize(:MarketDepthExchanges, msg)
+
+    mde = map(pb[:depthMktDataDescriptions]) do e
+
+                        DepthMktDataDescription(splat1(e; listingExch=ns, aggGroup=nothing))
+                      end
+
+    w.mktDepthExchanges(mde)
+  end,
 
   # TICK_REQ_PARAMS
-  81 => (it, w, ver) -> w.tickReqParams(slurp((Int,Float64,String,Int), it)...),
+  281 => function(msg, w, ver)
+
+    pb = PB.deserialize(:TickReqParams, msg)
+
+    todouble(pb, :minTick)
+
+    w.tickReqParams(splat1(pb; bboExchange=ns)...)
+  end,
 
   # SMART_COMPONENTS
-  82 => (it, w, ver) -> w.smartComponents(slurp((Int,VSmartComponent), it)...),
+  282 => function(msg, w, ver)
+
+    pb = PB.deserialize(:SmartComponents, msg)
+
+    w.smartComponents(splat1(pb; map=VSmartComponent())...)
+  end,
 
   # NEWS_ARTICLE
-  83 => (it, w, ver) -> w.newsArticle(slurp((Int,Int,String), it)...),
+  283 => function(msg, w, ver)
+
+    pb = PB.deserialize(:NewsArticle, msg)
+
+    w.newsArticle(splat1(pb)...)
+  end,
 
   # TICK_NEWS
-  84 => (it, w, ver) -> w.tickNews(slurp((Int,Int,String,String,String,String), it)...),
+  284 => function(msg, w, ver)
+
+    pb = PB.deserialize(:TickNews, msg)
+
+    w.tickNews(splat1(pb)...)
+  end,
 
   # NEWS_PROVIDERS
-  85 => (it, w, ver) -> w.newsProviders(convert(VNewsProvider, it)),
+  285 => function(msg, w, ver)
+
+    pb = PB.deserialize(:NewsProviders, msg)
+
+    w.newsProviders(convert(VNewsProvider, splat1(pb; newsProviders=VNewsProvider())...))
+  end,
 
   # HISTORICAL_NEWS
-  86 => (it, w, ver) -> w.historicalNews(slurp((Int,String,String,String,String), it)...),
+  286 => function(msg, w, ver)
+
+    pb = PB.deserialize(:HistoricalNews, msg)
+
+    w.historicalNews(splat1(pb)...)
+  end,
 
   # HISTORICAL_NEWS_END
-  87 => (it, w, ver) -> w.historicalNewsEnd(slurp((Int,Bool), it)...),
+  287 => function(msg, w, ver)
+
+    pb = PB.deserialize(:HistoricalNewsEnd, msg)
+
+    w.historicalNewsEnd(splat1(pb)...)
+  end,
 
   # HEAD_TIMESTAMP
-  88 => (it, w, ver) -> w.headTimestamp(slurp((Int,String), it)...),
+  288 => function(msg, w, ver)
+
+    pb = PB.deserialize(:StringData, msg)
+
+    w.headTimestamp(splat1(pb)...)
+  end,
 
   # HISTOGRAM_DATA
-  89 => (it, w, ver) -> w.histogramData(slurp((Int,VHistogramEntry), it)...),
+  289 => function(msg, w, ver)
+
+    pb = PB.deserialize(:HistogramData, msg)
+
+    data = map(pb[:data]) do d
+
+                            todouble(d, :size)
+
+                            convert(HistogramEntry, d)
+                          end
+
+    w.histogramData(pb[:reqId], data)
+  end,
 
   # HISTORICAL_DATA_UPDATE
-  90 => function(it, w, ver)
+  290 => function(msg, w, ver)
 
-          reqId::Int,
-          count::Int,
-          time::String,
-          open::Float64,
-          close::Float64,
-          high::Float64,
-          low::Float64,
-          wap::Float64,
-          volume::Float64 = it
+    pb = PB.deserialize(:HistoricalDataUpdate, msg)
 
-          w.historicalDataUpdate(reqId, (; time, open, high, low, close,
-                                           volume, wap, count))
-        end,
+    todouble.(Ref(pb[:bar]), (:volume, :wap))
+
+    reqId,
+    bar::Bar = splat1(pb)
+
+    w.historicalDataUpdate(reqId, bar)
+  end,
 
   # REROUTE_MKT_DATA_REQ
-  91 => (it, w, ver) -> w.rerouteMktDataReq(slurp((Int,Int,String), it)...),
+  291 => function(msg, w, ver)
+
+    pb = PB.deserialize(:Reroute, msg)
+
+    w.rerouteMktDataReq(splat1(pb)...)
+  end,
 
   # REROUTE_MKT_DEPTH_REQ
-  92 => (it, w, ver) -> w.rerouteMktDepthReq(slurp((Int,Int,String), it)...),
+  292 => function(msg, w, ver)
+
+    pb = PB.deserialize(:Reroute, msg)
+
+    w.rerouteMktDepthReq(splat1(pb)...)
+  end,
 
   # MARKET_RULE
-  93 => (it, w, ver) -> w.marketRule(slurp((Int,VPriceIncrement), it)...),
+  293 => function(msg, w, ver)
+
+    pb = PB.deserialize(:MarketRule, msg)
+
+    id,
+    priceIncrements::VPriceIncrement = splat1(pb)
+
+    w.marketRule(id, priceIncrements)
+  end,
 
   # PNL
-  94 => function(it, w, ver)
+  294 => function(msg, w, ver)
 
-          reqId::Int,
-          dailyPnL::Float64,
-          unrealizedPnL::Float64,
-          realizedPnL::Float64 = it
+    pb = PB.deserialize(:PnL, msg)
 
-          w.pnl(reqId, dailyPnL, unrealizedPnL, realizedPnL)
-        end,
+    w.pnl(splat1(pb)...)
+  end,
 
   # PNL_SINGLE
-  95 => function(it, w, ver)
+  295 => function(msg, w, ver)
 
-          reqId::Int,
-          pos::Int,
-          dailyPnL::Float64,
-          unrealizedPnL::Union{Float64,Nothing},
-          realizedPnL::Union{Float64,Nothing},
-          value::Float64 = it
+    pb = PB.deserialize(:PnLSingle, msg)
 
-          w.pnlSingle(reqId, pos, dailyPnL, unrealizedPnL, realizedPnL, value)
+    todouble(pb, :position)
 
-        end,
+    w.pnlSingle(splat1(pb; dailyPnL=nothing, realizedPnL=nothing)...)
+  end,
 
   # HISTORICAL_TICKS
-  96 => function(it, w, ver)
+  296 => function(msg, w, ver)
 
-          reqId::Int,
-          ticks::Vector{@NamedTuple{time::Int, ignore::Int, price::Float64, size::Float64}},
-          done::Bool = it
+    pb = PB.deserialize(:HistoricalTicks, msg)
 
+    ticks = PB.has(pb, :ticks) ? map(pb[:ticks]) do t
 
-          w.historicalTicks(reqId, HistoricalTick.(ticks), done)
-        end,
+                                    todouble(t, :size)
+
+                                    convert(Tick, t)
+                                  end : VTick()
+
+    w.historicalTicks(pb[:reqId], ticks, pb[:done])
+  end,
 
   # HISTORICAL_TICKS_BID_ASK
-  97 => function(it, w, ver)
+  297 => function(msg, w, ver)
 
-          reqId::Int,
-          ticks::VHistoricalTickBidAsk,
-          done::Bool = it
+    pb = PB.deserialize(:HistoricalTicksBidAsk, msg)
 
-          w.historicalTicksBidAsk(reqId, ticks, done)
-        end,
+    ticks = PB.has(pb, :ticks) ? map(pb[:ticks]) do t
+
+                                    todouble(t, :bidSize)
+                                    todouble(t, :askSize)
+
+                                    TickBidAsk(splat1(t))
+                                  end : VTickBidAsk()
+
+    w.historicalTicksBidAsk(pb[:reqId], ticks, pb[:done])
+  end,
 
   # HISTORICAL_TICKS_LAST
-  98 => function(it, w, ver)
+  298 => function(msg, w, ver)
 
-          reqId::Int,
-          ticks::VHistoricalTickLast,
-          done::Bool = it
+    pb = PB.deserialize(:HistoricalTicksLast, msg)
 
-          w.historicalTicksLast(reqId, ticks, done)
-        end,
+    ticks = PB.has(pb, :ticks) ? map(pb[:ticks]) do t
+
+                                    todouble(t, :size)
+
+                                    TickLast(splat1(t; exchange=ns,
+                                                       specialConditions=ns))
+                                  end : VTickLast()
+
+    w.historicalTicksLast(pb[:reqId], ticks, pb[:done])
+  end,
 
   # TICK_BY_TICK
-  99 => function(it, w, ver)
+  299 => function(msg, w, ver)
 
-          reqId::Int,
-          ticktype::Int,
-          time::Int = it
+    pb = PB.deserialize(:TickByTickData, msg)
 
-          if ticktype ∈ (1, 2)
+    reqId = pb[:reqId]
+    tickType = pb[:tickType]
 
-            price::Float64,
-            size::Float64,
-            mask1::TickAttribLast,
-            exchange::String,
-            specialConditions::String = it
+    if tickType ∈ (1, 2)
 
-            w.tickByTickAllLast(reqId, ticktype, time, price, size, mask1, exchange, specialConditions)
+      tick = pb[:tickLast]
 
-          elseif ticktype == 3
+      todouble(tick, :size)
 
-            bidPrice::Float64,
-            askPrice::Float64,
-            bidSize::Float64,
-            askSize::Float64,
-            mask2::TickAttribBidAsk = it
+      w.tickByTickAllLast(reqId, tickType, splat1(tick, (:time,
+                                                         :price,
+                                                         :size,
+                                                         :attribs,
+                                                         :exchange,
+                                                         :specialConditions);
+                                                        exchange=ns,
+                                                        specialConditions=ns)...)
+    elseif tickType == 3
 
-            w.tickByTickBidAsk(reqId, time, bidPrice, askPrice, bidSize, askSize, mask2)
+      tick = pb[:tickBidAsk]
 
-          elseif ticktype == 4
+      todouble(tick, :bidSize)
+      todouble(tick, :askSize)
 
-            w.tickByTickMidPoint(reqId, time, convert(Float64, it))
+      w.tickByTickBidAsk(reqId, splat1(tick, (:time,
+                                              :bidPrice,
+                                              :askPrice,
+                                              :bidSize,
+                                              :askSize,
+                                              :attribs))...)
+    elseif tickType == 4
 
-          else
-            @warn "TICK_BY_TICK: unknown ticktype" T=ticktype
-          end
-        end,
+      tick = pb[:tickMidPoint]
+
+      w.tickByTickMidPoint(reqId, tick[:time], tick[:price])
+    else
+
+      @warn "TICK_BY_TICK: unknown ticktype" T=ticktype
+    end
+  end,
 
   # ORDER_BOUND
- 100 => (it, w, ver) -> w.orderBound(collect(Int, take(it, 3))...),
+  300 => function(msg, w, ver)
+
+    pb = PB.deserialize(:OrderBound, msg)
+
+    w.orderBound(splat1(pb)...)
+  end,
 
   # COMPLETED_ORDER
- 101 => function(it, w, ver)
+  301 => function(msg, w, ver)
 
-          c = Contract()
-          o = Order()
-          os = OrderState()
+    pb = PB.deserialize(:CompletedOrder, msg)
 
+    # Conversions
+    todouble(pb[:order], :totalQuantity)
+    todouble(pb[:order], :filledQuantity)
 
-          slurp!(c, [1:8; 10:12], it)
+    pb[:order][:usePriceMgmtAlgo] ∈ (0, 1) ||
+      @warn "unexpected usePriceMgmtAlgo" U=pb[:order][:usePriceMgmtAlgo]
 
-          slurp!(o, 4:9, it) # :action -> :tif
+    contract::Contract,
+    order::Order,
+    orderState::OrderState = splat1(pb)
 
-          slurp!(o, (:ocaGroup,
-                     :account,
-                     :openClose,
-                     :origin,
-                     :orderRef,
-                     :permId,
-                     :outsideRth,
-                     :hidden,
-                     :discretionaryAmt,
-                     :goodAfterTime,
-                     :faGroup,
-                     :faMethod,
-                     :faPercentage,
-                     :modelCode,
-                     :goodTillDate,
-                     :rule80A,
-                     :percentOffset,
-                     :settlingFirm,
-                     :shortSaleSlot,
-                     :designatedLocation,
-                     :exemptCode), it)
+    # Transfer comboLeg prices
+    if PB.has(pb[:contract], :comboLegs)
+      ocl = [ get(cl, :perLegPrice, nothing) for cl ∈ pb[:contract][:comboLegs] ]
 
-          slurp!(o, 43:47, it) # :startingPrice -> :stockRangeUpper
+      n = count(isnothing, ocl)
 
-          slurp!(o, (:displaySize,
-                     :sweepToFill,
-                     :allOrNone,
-                     :minQty,
-                     :ocaType,
-                     :triggerMethod), it)
+      if n == 0
+        order.orderComboLegs = ocl
 
-          slurp!(o, 50:53, it) # :volatility -> :deltaNeutralAuxPrice
+      elseif n < length(ocl)
+        @warn "perLegPrice: not all filled" ocl
+      end
+    end
 
-          !isempty(o.deltaNeutralOrderType) && slurp!(o, [54; 59:61], it) # :deltaNeutralConId -> :deltaNeutralDesignatedLocation
-
-          slurp!(o, (:continuousUpdate,
-                     :referencePriceType,
-                     :trailStopPrice,
-                     :trailingPercent), it)
-
-          c.comboLegsDescrip,
-          c.comboLegs = it
-
-          slurp!(o, (:orderComboLegs,
-                     :smartComboRoutingParams,
-                     :scaleInitLevelSize,
-                     :scaleSubsLevelSize,
-                     :scalePriceIncrement), it)
-
-          !isnothing(o.scalePriceIncrement) &&
-          o.scalePriceIncrement > 0         && slurp!(o, 69:75, it) # :scalePriceAdjustValue -> :scaleRandomPercent
-
-          o.hedgeType = it
-
-          !isempty(o.hedgeType) && (o.hedgeParam = it)
-
-          slurp!(o, (:clearingAccount,
-                     :clearingIntent,
-                     :notHeld), it)
-
-          # DeltaNeutralContract
-          convert(Bool, it) && (c.deltaNeutralContract = it)
-
-          # AlgoStrategy
-          o.algoStrategy = it
-
-          !isempty(o.algoStrategy) && (o.algoParams = it)
-
-          o.solicited,
-          os.status,
-          o.randomizeSize,
-          o.randomizePrice = it
-
-          o.orderType == "PEG BENCH" && slurp!(o, (:referenceContractId,
-                                                   :isPeggedChangeAmountDecrease,
-                                                   :peggedChangeAmount,
-                                                   :referenceChangeAmount,
-                                                   :referenceExchangeId), it)
-
-          # Conditions
-          o.conditions = it
-
-          if !isempty(o.conditions)
-            o.conditionsIgnoreRth,
-            o.conditionsCancelOrder = it
-          end
-
-          slurp!(o, (:trailStopPrice,
-                     :lmtPriceOffset,
-                     :cashQty,
-                     :dontUseAutoPriceForHedge,
-                     :isOmsContainer), it)
-
-          slurp!(o, 118:125, it) # :autoCancelDate -> :parentPermId
-
-          os.completedTime,
-          os.completedStatus = it
-
-          slurp!(o, (:minTradeQty,
-                     :minCompeteSize,
-                     :competeAgainstBestOffset,
-                     :midOffsetAtWhole,
-                     :midOffsetAtHalf,
-                     :customerAccount,
-                     :professionalCustomer), it)
-
-          ver ≥ Client.SUBMITTER && (o.submitter = it)
-
-          w.completedOrder(c, o, os)
-         end,
+    w.completedOrder(contract, order, orderState)
+  end,
 
   # COMPLETED_ORDERS_END
- 102 => (it, w, ver) -> w.completedOrdersEnd(),
+  302 => (msg, w, ver) -> w.completedOrdersEnd(),
 
   # REPLACE_FA_END
- 103 => (it, w, ver) -> w.replaceFAEnd(slurp((Int,String), it)...),
+  303 => function(msg, w, ver)
 
- # WSH_META_DATA
- 104 => (it, w, ver) -> w.wshMetaData(slurp((Int,String), it)...),
+    pb = PB.deserialize(:StringData, msg)
 
- # WSH_EVENT_DATA
- 105 => (it, w, ver) -> w.wshEventData(slurp((Int,String), it)...),
+    w.replaceFAEnd(splat1(pb)...)
+  end,
 
- # HISTORICAL_SCHEDULE
- 106 => function(it, w, ver)
+  # WSH_META_DATA
+  304 => function(msg, w, ver)
 
-          reqId::Int,
-          startDateTime::String,
-          endDateTime::String,
-          timeZone::String,
-          sessions::VHistoricalSession = it
+    pb = PB.deserialize(:StringData, msg)
 
-          w.historicalSchedule(reqId, startDateTime, endDateTime, timeZone, sessions)
-        end,
+    w.wshMetaData(splat1(pb)...)
+  end,
+
+  # WSH_EVENT_DATA
+  305 => function(msg, w, ver)
+
+    pb = PB.deserialize(:StringData, msg)
+
+    w.wshEventData(splat1(pb)...)
+  end,
+
+  # HISTORICAL_SCHEDULE
+  306 => function(msg, w, ver)
+
+    pb = PB.deserialize(:HistoricalSchedule, msg)
+
+    w.historicalSchedule(splat1(pb)...)
+  end,
 
   # USER_INFO
-  107 => (it, w, ver) -> w.userInfo(slurp((Int,String), it)...),
+  307 => function(msg, w, ver)
+
+    pb = PB.deserialize(:StringData, msg)
+
+    w.userInfo(splat1(pb)...)
+  end,
 
   # HISTORICAL_DATA_END
-  108 => (it, w, ver) -> w.historicalDataEnd(slurp((Int,String,String), it)...),
+  308 => function(msg, w, ver)
+
+    pb = PB.deserialize(:HistoricalDataEnd, msg)
+
+    w.historicalDataEnd(splat1(pb)...)
+  end,
 
   # CURRENT_TIME_IN_MILLIS
-  109 => (it, w, ver) -> w.currentTimeInMillis(convert(Int, it))
+  309 => function(msg, w, ver)
+
+    pb = PB.deserialize(:SingleInt64, msg)
+
+    w.currentTimeInMillis(pb[:value])
+  end
+
 )

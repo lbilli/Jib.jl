@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "TagValue.proto";
+
+message NewsBulletin {
+    optional int32 msgId = 1;
+    optional int32 msgType = 2;
+    optional string newsMessage = 3;
+    optional string originExch = 4;
+}
+
+message NewsArticleRequest {
+    optional int32 reqId = 1;
+    optional string providerCode = 2;
+    optional string articleId = 3;
+    repeated TagValue newsArticleOptions = 4;
+}
+
+message NewsArticle {
+    optional int32 reqId = 1;
+    optional int32 articleType = 2;
+    optional string articleText = 3;
+}
+
+message NewsProvider {
+    optional string providerCode = 1;
+    optional string providerName = 2;
+}
+
+message NewsProviders {
+    repeated NewsProvider newsProviders = 1;
+}
+
+message HistoricalNewsRequest {
+    optional int32 reqId = 1;
+    optional int32 conId = 2;
+    optional string providerCodes = 3;
+    optional string startDateTime = 4;
+    optional string endDateTime = 5;
+    optional int32 totalResults = 6;
+    repeated TagValue historicalNewsOptions = 7;
+}
+
+message HistoricalNews {
+    optional int32 reqId = 1;
+    optional string time = 2;
+    optional string providerCode = 3;
+    optional string articleId = 4;
+    optional string headline = 5;
+}
+
+message HistoricalNewsEnd {
+    optional int32 reqId = 1;
+    optional bool hasMore = 2;
+}
+
+message TickNews {
+    optional int32 reqId = 1;
+    optional int64 timestamp = 2;
+    optional string providerCode = 3;
+    optional string articleId = 4;
+    optional string headline = 5;
+    optional string extraData = 6;
+}

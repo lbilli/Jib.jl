@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+import "TagValue.proto";
+
+// HistoricalData
+
+message HistoricalDataRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional string endDateTime = 3;
+    optional string duration = 5;
+    optional string barSizeSetting = 4;
+    optional string whatToShow = 7;
+    optional bool useRTH = 6;
+    optional int32 formatDate = 8;
+    optional bool keepUpToDate = 9;
+    repeated TagValue chartOptions = 10;
+}
+
+message Bar {
+    optional string time = 1;
+    optional double open = 2;
+    optional double high = 3;
+    optional double low = 4;
+    optional double close = 5;
+    optional string volume = 6;
+    optional string wap = 7;
+    optional int32 count = 8;
+}
+
+message HistoricalData {
+    optional int32 reqId = 1;
+    repeated Bar bars = 2;
+}
+
+message HistoricalDataUpdate {
+    optional int32 reqId = 1;
+    optional Bar bar = 2;
+}
+
+message HistoricalDataEnd {
+    optional int32 reqId = 1;
+    optional string startDate = 2;
+    optional string endDate = 3;
+}
+
+// HeadTimestamp
+
+message HeadTimestampRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional bool useRTH = 3;
+    optional string whatToShow = 4;
+    optional int32 formatDate = 5;
+}
+
+// HistogramData
+
+message HistogramDataRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional bool useRTH = 3;
+    optional string timePeriod = 4;
+}
+
+message HistogramDataEntry {
+    optional double price = 1;
+    optional string size = 2;
+}
+
+message HistogramData {
+    optional int32 reqId = 1;
+    repeated HistogramDataEntry data = 2;
+}
+
+// HistoricalSchedule
+
+message HistoricalSession {
+    optional string startDateTime = 1;
+    optional string endDateTime = 2;
+    optional string refDate = 3;
+}
+
+message HistoricalSchedule {
+    optional int32 reqId = 1;
+    optional string startDateTime = 2;
+    optional string endDateTime = 3;
+    optional string timeZone = 4;
+    repeated HistoricalSession sessions = 5;
+}

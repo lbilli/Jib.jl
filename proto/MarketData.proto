@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+import "TagValue.proto";
+
+message MarketDataRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional string genericTicks = 3;
+    optional bool snapshot = 4;
+    optional bool regulatorySnapshot = 5;
+    repeated TagValue mktDataOptions = 6;
+}
+
+message TickPrice {
+    optional int32 reqId = 1;
+    optional int32 tickType = 2;
+    optional double price = 3;
+    optional string size = 4;
+    optional int32 attrMask = 5;
+}
+
+message TickGeneric {
+    optional int32 reqId = 1;
+    optional int32 tickType = 2;
+    optional double value = 3;
+}
+
+message TickString {
+    optional int32 reqId = 1;
+    optional int32 tickType = 2;
+    optional string value = 3;
+}
+
+message TickOptionComputation {
+    optional int32 reqId = 1;
+    optional int32 tickType = 2;
+    optional int32 tickAttrib = 3;
+    optional double impliedVol = 4;
+    optional double delta = 5;
+    optional double optPrice = 6;
+    optional double pvDividend = 7;
+    optional double gamma = 8;
+    optional double vega = 9;
+    optional double theta = 10;
+    optional double undPrice = 11;
+}
+
+message MarketDataType {
+    optional int32 reqId = 1;
+    optional int32 marketDataType = 2;
+}
+
+message TickReqParams {
+    optional int32 reqId = 1;
+    optional string minTick = 2;
+    optional string bboExchange = 3;
+    optional int32 snapshotPermissions = 4;
+}

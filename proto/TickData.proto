@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+import "TagValue.proto";
+
+message TickAttribBidAsk {
+    optional bool bidPastLow = 1;
+    optional bool askPastHigh = 2;
+}
+
+message TickAttribLast {
+    optional bool pastLimit = 1;
+    optional bool unreported = 2;
+}
+
+// HistoricalTicks
+
+message HistoricalTicksRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional string startDateTime = 3;
+    optional string endDateTime = 4;
+    optional int32 numberOfTicks = 5;
+    optional string whatToShow = 6;
+    optional bool useRTH = 7;
+    optional bool ignoreSize = 8;
+    repeated TagValue miscOptions = 9;
+}
+
+message Tick {
+    optional int64 time = 1;
+    optional double price = 2;
+    optional string size = 3;
+}
+
+message HistoricalTicks {
+    optional int32 reqId = 1;
+    repeated Tick ticks = 2;
+    optional bool done = 3;
+}
+
+message TickBidAsk {
+    optional int64 time = 1;
+    optional TickAttribBidAsk attribs = 2;
+    optional double bidPrice = 3;
+    optional double askPrice = 4;
+    optional string bidSize = 5;
+    optional string askSize = 6;
+}
+
+message HistoricalTicksBidAsk {
+    optional int32 reqId = 1;
+    repeated TickBidAsk ticks = 2;
+    optional bool done = 3;
+}
+
+message TickLast {
+    optional int64 time = 1;
+    optional TickAttribLast attribs = 2;
+    optional double price = 3;
+    optional string size = 4;
+    optional string exchange = 5;
+    optional string specialConditions = 6;
+}
+
+message HistoricalTicksLast {
+    optional int32 reqId = 1;
+    repeated TickLast ticks = 2;
+    optional bool done = 3;
+}
+
+// TickByTick
+
+message TickByTickRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional string tickType = 3;
+    optional int32 numberOfTicks = 4;
+    optional bool ignoreSize = 5;
+}
+
+message TickByTickData {
+    optional int32 reqId = 1;
+    optional int32 tickType = 2;
+//    oneof tick {
+    optional TickLast tickLast = 3;
+    optional TickBidAsk tickBidAsk = 4;
+    optional Tick tickMidPoint = 5;
+//    }
+}

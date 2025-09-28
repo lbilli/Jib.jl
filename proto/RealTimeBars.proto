@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+import "TagValue.proto";
+
+message RealTimeBarsRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional int32 barSize = 3;
+    optional string whatToShow = 4;
+    optional bool useRTH = 5;
+    repeated TagValue realTimeBarsOptions = 6;
+}
+
+message RealTimeBarTick {
+    optional int32 reqId = 1;
+    optional int64 time = 2;
+    optional double open = 3;
+    optional double high = 4;
+    optional double low = 5;
+    optional double close = 6;
+    optional string volume = 7;
+    optional string wap = 8;
+    optional int32 count = 9;
+}

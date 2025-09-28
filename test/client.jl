@@ -1,13 +1,9 @@
 @testset "Client" begin
 
   @test sizeof(Jib.Client.HEADTYPE) == 4
+  @test sizeof(Jib.Client.RAWIDTYPE) == 4
 
   @test Jib.Client.MAX_LEN < typemax(Jib.Client.HEADTYPE)
-
-  # isascii
-  @test Jib.Client.isascii([0x80, 0x79, 0x79], 1)
-
-  @test !Jib.Client.isascii([0x80, 0x80, 0x79], 1)
 
   # buffer
   buf = Jib.Client.buffer(true)
@@ -26,14 +22,18 @@
 
   # Round trip
   buf = Jib.Client.buffer(false)
+  write(buf, hton(Jib.Client.RAWIDTYPE(123)))
   write(buf, "ABC")
 
   bo = IOBuffer()
   Jib.Client.write_one(bo, buf)
 
   seekstart(bo) # Rewind
-  @test String(Jib.Client.read_one(bo)) == "ABC"
+  id, m = Jib.Client.read_one(bo)
+
+  @test id == 123
+  @test String(m) == "ABC"
   @test eof(bo)
-  @test bo.size == 7
+  @test bo.size == 11
 
 end

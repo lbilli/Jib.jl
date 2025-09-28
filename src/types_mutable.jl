@@ -3,9 +3,9 @@ mutable struct Contract
   symbol::String
   secType::String
   lastTradeDateOrContractMonth::String
-  strike::Float64
+  strike::Union{Float64,Nothing}
   right::String
-  multiplier::String
+  multiplier::Union{Float64,Nothing}
   exchange::String
   primaryExchange::String
   currency::String
@@ -26,7 +26,7 @@ Contract(; conId=        0,
            secType=     ns,
            exchange=    ns,
            currency=    ns,
-           localSymbol= ns) = Contract(conId, symbol, secType, ns, 0.0, ns, ns,
+           localSymbol= ns) = Contract(conId, symbol, secType, ns, nothing, ns, nothing,
                                        exchange, ns, currency, localSymbol, ns,
                                        false, ns, ns, ns, ns, ns, ns, ComboLeg[], nothing)
 
@@ -67,13 +67,13 @@ mutable struct Order
   faMethod::String
   faPercentage::String
   openClose::String
-  origin::Origin
+  origin::Int
   shortSaleSlot::Int
   designatedLocation::String
   exemptCode::Int
   discretionaryAmt::Float64
   optOutSmartRouting::Bool
-  auctionStrategy::AuctionStrategy
+  auctionStrategy::Int
   startingPrice::Union{Float64,Nothing}
   stockRefPrice::Union{Float64,Nothing}
   delta::Union{Float64,Nothing}
@@ -176,8 +176,8 @@ mutable struct Order
 end
 Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0,
                 false, false, nothing, 0, false, false, ns, ns, ns, false, nothing, nothing,
-                false, nothing, nothing, ns, ns, ns, ns, CUSTOMER, 0, ns, -1, 0,
-                false, UNSET, fill(nothing, 5)..., false, false,
+                false, nothing, nothing, ns, ns, ns, ns, 0, 0, ns, -1, 0,
+                false, 0, fill(nothing, 5)..., false, false,
                 nothing, nothing, ns, nothing, 0, ns, ns, ns, ns, false, 0, ns, false,
                 fill(nothing, 9)..., false, nothing, nothing, false, fill(ns, 8)...,
                 (;), (;), ns, false, false, false, ns, Float64[], (;), 0, 0, false, 0, ns, ns,

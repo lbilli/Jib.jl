@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package IBProto;
+
+message PnLRequest {
+    optional int32 reqId = 1;
+    optional string account = 2;
+    optional string modelCode = 3;
+}
+
+message PnL {
+    optional int32 reqId = 1;
+    optional double dailyPnL = 2;
+    optional double unrealizedPnL = 3;
+    optional double realizedPnL = 4;
+}
+
+message PnLSingleRequest {
+    optional int32 reqId = 1;
+    optional string account = 2;
+    optional string modelCode = 3;
+    optional int32 conId = 4;
+}
+
+message PnLSingle {
+    optional int32 reqId = 1;
+    optional string position = 2;
+    optional double dailyPnL = 3;
+    optional double unrealizedPnL = 4;
+    optional double realizedPnL = 5;
+    optional double value = 6;
+}

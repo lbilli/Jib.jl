@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message TagValue {
+  optional string key = 1;
+  optional string value = 2;
+}

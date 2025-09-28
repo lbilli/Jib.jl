@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "ContractDetails.proto";
+
+message ComboLeg {
+    optional int32 conId = 1;
+    optional int32 ratio = 2;
+    optional string action = 3;
+    optional string exchange = 4;
+    optional int32 openClose = 5;
+    optional int32 shortSaleSlot = 6;
+    optional string designatedLocation = 7;
+    optional int32 exemptCode = 8;
+    optional double perLegPrice = 9;
+}
+
+message DeltaNeutralContract {
+    optional int32 conId = 1;
+    optional double delta = 2;
+    optional double price = 3;
+}
+
+message Contract {
+    optional int32 conId = 1;
+    optional string symbol = 2;
+    optional string secType = 3;
+    optional string lastTradeDateOrContractMonth = 4;
+    optional double strike = 5;
+    optional string right = 6;
+    optional double multiplier = 7;
+    optional string exchange = 8;
+    optional string primaryExchange = 9;
+    optional string currency = 10;
+    optional string localSymbol = 11;
+    optional string tradingClass = 12;
+    optional string secIdType = 13;
+    optional string secId = 14;
+    optional string description = 15;
+    optional string issuerId = 16;
+    optional DeltaNeutralContract deltaNeutralContract = 17;
+    optional bool includeExpired = 18;
+    optional string comboLegsDescrip = 19;
+    repeated ComboLeg comboLegs = 20;
+    optional string lastTradeDate = 21;
+}
+
+message ContractDataRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+}
+
+message ContractData {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional ContractDetails contractDetails = 3;
+}

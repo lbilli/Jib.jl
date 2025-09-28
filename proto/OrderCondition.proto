@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package IBProto;
+
+message OrderCondition {
+    optional int32 type = 1;
+    optional bool isConjunction = 2;
+    optional bool isMore = 3;
+    optional int32 conId = 4;
+    optional string exchange = 5;
+    optional string symbol = 6;
+    optional string secType = 7;
+    optional int32 percent = 8;
+    optional double changePercent = 9;
+    optional double price = 10;
+    optional int32 triggerMethod = 11;
+    optional string time = 12;
+    optional int32 volume = 13;
+}

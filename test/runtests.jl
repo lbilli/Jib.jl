@@ -2,14 +2,11 @@ using Test,
       Jib
 
 include("client.jl")
-include("decode.jl")
-include("requests.jl")
-include("roundtrip.jl")
 
 
 @testset "Utils" begin
 
-  @test Jib.Reader.tickname( 0) == "BID_SIZE"
+  @test Jib.Reader.tickname(0) == "BID_SIZE"
 
   @test Jib.Reader.tickname(90) == "DELAYED_HALTED"
 

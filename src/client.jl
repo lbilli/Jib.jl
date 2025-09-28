@@ -6,8 +6,8 @@ const API_SIGN = "API\0"
 const HEADTYPE = UInt32    # sizeof(HEADTYPE) == 4 bytes
 const MAX_LEN =  0xffffff
 
-
-isascii(m, d) = reduce(|, Iterators.drop(m, d)) < 0x80
+const RAWIDTYPE = UInt32   # sizeof(RAWIDTYPE) == 4 bytes
+const PROTOBUF_MSG_ID = 200
 
 
 function write_one(socket, buf)
@@ -23,9 +23,19 @@ function write_one(socket, buf)
 
   msg = take!(buf)
 
-  @assert isascii(msg, s)
-
   write(socket, msg)
+end
+
+
+function read_init(socket)
+
+  len = ntoh(read(socket, HEADTYPE))
+
+  res = split(String(read(socket, len)), '\0'; keepempty=false)
+
+  @assert length(res) == 2
+
+  parse(Int, res[1]), res[2]
 end
 
 
@@ -35,7 +45,7 @@ function read_one(socket)
 
   @assert len ≤ MAX_LEN
 
-  read(socket, len)
+  ntoh(read(socket, RAWIDTYPE)), read(socket, len - sizeof(RAWIDTYPE))
 end
 
 

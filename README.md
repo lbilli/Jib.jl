@@ -7,7 +7,13 @@
 with TWS or IBGateway.
 
 It aims to be feature complete, however it does not support legacy versions.
-Currently, only API versions `v187+` are supported.
+
+It is noteworthy to mention that the official IB API has recently adopted
+Protocol Buffers as the underlying wire format, replacing the legacy custom protocol.
+This package followed suit and support for the latter has been dropped.
+
+Currently, only API versions `v213+` are supported, which translates to
+TWS version `10.40` or later.
 
 The package design follows the official C++/Java
 [IB API](https://interactivebrokers.github.io/tws-api/),
@@ -146,15 +152,12 @@ However, there are few exceptions:
 - `historicalData()` is invoked only once per request,
   presenting all the historical data as a single `Vector{Bar}`,
   whereas the official IB API invokes it row-by-row.
-- `scannerData()` is also invoked once per request and its arguments
-  are in fact vectors rather than single values.
+- `scannerData()` is similarly invoked once per request with a `Vector{ScannerDataElement}`
+  as argument. Consequently, `scannerDataEnd()` is redundant and
+  it is **not** used in this package.
 
 These modifications make it possible to establish the rule:
 _one callback per server response_.
-
-Consequently, ~~`historicalDataEnd()`~~
-(starting from `v196` it's sent in a separate message)
-and `scannerDataEnd()` are redundant and are **not** used in this package.
 
 #### Missing Values
 Occasionally, for numerical types, there is the need to represent

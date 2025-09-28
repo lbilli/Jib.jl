@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package IBProto;
+
+message Error {
+    optional int32 id = 1;
+    optional int64 errorTime = 2;
+    optional int32 errorCode = 3;
+    optional string errorString = 4;
+    optional string advancedOrderRejectJson = 5;
+}

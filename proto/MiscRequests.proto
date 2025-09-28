@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+import "TagValue.proto";
+
+message CalculateImpliedVolatilityRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional double optionPrice = 3;
+    optional double underPrice = 4;
+    repeated TagValue miscOptions = 5;
+}
+
+message CalculateOptionPriceRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional double volatility = 3;
+    optional double underPrice = 4;
+    repeated TagValue miscOptions = 5;
+}
+
+message ExerciseOptionsRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional int32 exerciseAction = 3;
+    optional int32 exerciseQuantity = 4;
+    optional string account = 5;
+    optional bool override = 6;
+    optional string manualOrderTime = 7;
+    optional string customerAccount = 8;
+    optional bool professionalCustomer = 9;
+}
+
+message FAReplace {
+    optional int32 reqId = 1;
+    optional int32 faDataType = 2;
+    optional string xml = 3;
+}
+
+message FundamentalDataRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional string reportType = 3;
+    repeated TagValue fundamentalDataOptions = 4;
+}
+
+message SubscribeToGroupEventsRequest {
+    optional int32 reqId = 1;
+    optional int32 groupId = 2;
+}
+
+message VerifyRequest {
+    optional string apiName = 1;
+    optional string apiVersion = 2;
+}
+
+message WshEventDataRequest {
+    optional int32 reqId = 1;
+    optional int32 conId = 2;
+    optional string filter = 3;
+    optional bool fillWatchlist = 4;
+    optional bool fillPortfolio = 5;
+    optional bool fillCompetitors = 6;
+    optional string startDate = 7;
+    optional string endDate = 8;
+    optional int32 totalLimit = 9;
+}

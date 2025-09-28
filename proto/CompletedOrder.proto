@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+import "Order.proto";
+import "OrderState.proto";
+
+message CompletedOrder {
+    optional Contract contract = 1;
+    optional Order order = 2;
+    optional OrderState orderState = 3;
+}

@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+import "TagValue.proto";
+
+message MarketDepthRequest {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional int32 numRows = 3;
+    optional bool isSmartDepth = 4;
+    repeated TagValue mktDepthOptions = 5;
+}
+
+message CancelMarketDepth {
+    optional int32 reqId = 1;
+    optional bool isSmartDepth = 2;
+}
+
+message MarketDepthData {
+    optional int32 position = 1;
+    optional int32 operation = 2;
+    optional int32 side = 3;
+    optional double price = 4;
+    optional string size = 5;
+    optional string marketMaker = 6;
+    optional bool isSmartDepth = 7;
+}
+
+message MarketDepth {
+    optional int32 reqId = 1;
+    optional MarketDepthData marketDepthData = 2;
+}
+
+message DepthMarketDataDescription {
+    optional string exchange = 1;
+    optional string secType = 2;
+    optional string listingExch = 3;
+    optional string serviceDataType = 4;
+    optional int32 aggGroup = 5;
+}
+
+message MarketDepthExchanges {
+    repeated DepthMarketDataDescription depthMktDataDescriptions = 1;
+}

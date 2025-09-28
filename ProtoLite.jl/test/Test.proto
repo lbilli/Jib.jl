@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+import "Test2.proto";
+
+message Test {
+  optional int32 a = 1;
+  optional int64 b = 2;
+  optional bool c = 3;
+  optional double d = 4;
+  optional string e = 5;
+  optional TagValue f = 6;
+  repeated int32 g = 7;
+  repeated double h = 8;
+  repeated string i = 9;
+  repeated TagValue j = 10;
+  optional int32 k = 11;
+  repeated int32 l = 536870911;
+}

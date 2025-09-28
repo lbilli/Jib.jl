@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+
+message AccountDataRequest {
+    optional bool subscribe = 1;
+    optional string acctCode = 2;
+}
+
+message AccountSummaryRequest {
+    optional int32 reqId = 1;
+    optional string group = 2;
+    optional string tags = 3;
+}
+
+message PositionsMultiRequest {
+    optional int32 reqId = 1;
+    optional string account = 2;
+    optional string modelCode = 3;
+}
+
+message AccountUpdatesMultiRequest {
+    optional int32 reqId = 1;
+    optional string account = 2;
+    optional string modelCode = 3;
+    optional bool ledgerAndNLV = 4;
+}
+
+message AccountValue {
+    optional string key = 1;
+    optional string value = 2;
+    optional string currency = 3;
+    optional string accountName = 4;
+}
+
+message PortfolioValue {
+    optional Contract contract = 1;
+    optional string position = 2;
+    optional double marketPrice = 3;
+    optional double marketValue = 4;
+    optional double averageCost = 5;
+    optional double unrealizedPNL = 6;
+    optional double realizedPNL = 7;
+    optional string accountName = 8;
+}
+
+message Position {
+    optional string account = 1;
+    optional Contract contract = 2;
+    optional string position = 3;
+    optional double avgCost = 4;
+}
+
+message AccountSummary {
+    optional int32 reqId = 1;
+    optional string account = 2;
+    optional string tag = 3;
+    optional string value = 4;
+    optional string currency = 5;
+}
+
+message PositionMulti {
+    optional int32 reqId = 1;
+    optional string account = 2;
+    optional Contract contract = 3;
+    optional string position = 4;
+    optional double avgCost = 5;
+    optional string modelCode = 6;
+}
+
+message AccountUpdateMulti {
+    optional int32 reqId = 1;
+    optional string account = 2;
+    optional string modelCode = 3;
+    optional string key = 4;
+    optional string value = 5;
+    optional string currency = 6;
+}

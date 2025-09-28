@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+
+message FamilyCode {
+    optional string accountId = 1;
+    optional string familyCode = 2;
+}
+
+message FamilyCodes {
+    repeated FamilyCode familyCodes = 1;
+}
+
+message PriceIncrement {
+    optional double lowEdge = 1;
+    optional double increment = 2;
+}
+
+message MarketRule {
+    optional int32 marketRuleId = 1;
+    repeated PriceIncrement priceIncrements = 2;
+}
+
+message Reroute {
+    optional int32 reqId = 1;
+    optional int32 conId = 2;
+    optional string exchange = 3;
+}
+
+message SmartComponent {
+    optional int32 bit = 1;
+    optional string exchange = 2;
+    optional string exchangeLetter = 3;
+}
+
+message SmartComponents {
+    optional int32 reqId = 1;
+    repeated SmartComponent map = 2;
+}
+
+message SoftDollarTier {
+    optional string name = 1;
+    optional string val = 2;
+    optional string displayName = 3;
+}
+
+message SoftDollarTiers {
+    optional int32 reqId = 1;
+    repeated SoftDollarTier tiers = 2;
+}
+
+message ContractDescription {
+    optional Contract contract = 1;
+    repeated string derivativeSecTypes = 2;
+}
+
+message SymbolSamples {
+    optional int32 reqId = 1;
+    repeated ContractDescription contractDescriptions = 2;
+}
+
+message VerifyCompleted {
+    optional bool isSuccessful = 1;
+    optional string errorText = 2;
+}

@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package IBProto;
+
+message TagValue {
+    optional string key = 1;
+    optional string value = 2;
+}

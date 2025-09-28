@@ -5,7 +5,7 @@ struct ComboLeg
   ratio::Int
   action::String
   exchange::String
-  openClose::LegOpenClose
+  openClose::Int
   shortSaleSlot::Int
   designatedLocation::String
   exemptCode::Int
@@ -13,7 +13,7 @@ end
 ComboLeg(; conId=     0,
            ratio=     0,
            action=   ns,
-           exchange= ns) = ComboLeg(conId, ratio, action, exchange, SAME, 0, ns, -1)
+           exchange= ns) = ComboLeg(conId, ratio, action, exchange, 0, 0, ns, -1)
 
 
 struct DeltaNeutralContract
@@ -31,14 +31,20 @@ struct ExecutionFilter
   secType::String
   exchange::String
   side::String
+  lastNDays::Union{Int,Nothing}
+  specificDates::Vector{Int}
 end
-ExecutionFilter(; clientId=  0,
-                  acctCode= ns,
-                  time=     ns,
-                  symbol=   ns,
-                  secType=  ns,
-                  exchange= ns,
-                  side=     ns) = ExecutionFilter(clientId, acctCode, time, symbol, secType, exchange, side)
+ExecutionFilter(; clientId=       0,
+                  acctCode=       ns,
+                  time=           ns,
+                  symbol=         ns,
+                  secType=        ns,
+                  exchange=       ns,
+                  side=           ns,
+                  lastNDays=      nothing,
+                  specificDates = Int[]) = ExecutionFilter(clientId, acctCode, time, symbol,
+                                                           secType, exchange, side, lastNDays,
+                                                           specificDates)
 
 
 struct SoftDollarTier
@@ -54,7 +60,7 @@ struct OrderCancel
   extOperator::String
   manualOrderIndicator::Union{Int,Nothing}
 end
-OrderCancel(manualOrderCancelTime="") = OrderCancel(manualOrderCancelTime, "", nothing)
+OrderCancel(manualOrderCancelTime=ns) = OrderCancel(manualOrderCancelTime, ns, nothing)
 
 
 struct WshEventData
@@ -68,11 +74,11 @@ struct WshEventData
   totalLimit::Union{Int,Nothing}
 end
 WshEventData(; conId=           nothing,
-               filter=          "",
+               filter=          ns,
                fillWatchlist=   false,
                fillPortfolio=   false,
                fillCompetitors= false,
-               startDate=       "",
-               endDate=         "",
+               startDate=       ns,
+               endDate=         ns,
                totalLimit=      nothing) = WshEventData(conId, filter, fillWatchlist, fillPortfolio,
                                                         fillCompetitors, startDate, endDate, totalLimit)

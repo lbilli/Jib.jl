@@ -135,41 +135,51 @@ function simple_wrap()
 
   w = Wrapper(
 
-    tickPrice= (tickerId::Int, field::String, price::Union{Float64,Nothing}, size::Union{Float64,Nothing}, attrib::TickAttrib) ->
-                 println("tickPrice: $tickerId $field $(something(price, "NA")) $(something(size, "NA")) $attrib"),
+    tickPrice= (reqId::Int, field::String, price::Union{Float64,Nothing}, size::Union{Float64,Nothing}, attrib::TickAttrib) ->
+                 println("tickPrice: $reqId $field $(something(price, "NA")) $(something(size, "NA")) $attrib"),
 
-    tickSize= (tickerId::Int, field::String, size::Float64) -> println("tickSize: $tickerId $field $size"),
+    tickSize= (reqId::Int, field::String, size::Float64) -> println("tickSize: $reqId $field $size"),
 
-    tickOptionComputation= function(tickerId::Int, tickType::String, tickAttrib::Int, impliedVol::Union{Float64,Nothing}, delta::Union{Float64,Nothing}, optPrice::Union{Float64,Nothing}, pvDividend::Union{Float64,Nothing}, gamma::Union{Float64,Nothing}, vega::Union{Float64,Nothing}, theta::Union{Float64,Nothing}, undPrice::Union{Float64,Nothing})
-                             d[:option] = (tickType, tickAttrib, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta, undPrice)
-                             println("tickOption: $tickerId $tickType")
+    tickOptionComputation= function(reqId::Int, tickType::String, tickAttrib::Int, impliedVol::Union{Float64,Nothing}, delta::Union{Float64,Nothing}, optPrice::Union{Float64,Nothing}, pvDividend::Union{Float64,Nothing}, gamma::Union{Float64,Nothing}, vega::Union{Float64,Nothing}, theta::Union{Float64,Nothing}, undPrice::Union{Float64,Nothing})
+                             d[:option] = (; tickType,
+                                             tickAttrib,
+                                             impliedVol,
+                                             delta,
+                                             optPrice,
+                                             pvDividend,
+                                             gamma,
+                                             vega,
+                                             theta,
+                                             undPrice)
+                             println("tickOption: $reqId $tickType")
                            end,
 
-    tickGeneric= (tickerId::Int, tickType::String, value::Float64) ->
-                   println("tickGeneric: $tickerId $tickType $value"),
+    tickGeneric= (reqId::Int, tickType::String, value::Float64) ->
+                   println("tickGeneric: $reqId $tickType $value"),
 
-    tickString= (tickerId::Int, tickType::String, value::String) ->
-                  println("tickString: $tickerId $tickType $value"),
+    tickString= (reqId::Int, tickType::String, value::String) ->
+                  println("tickString: $reqId $tickType $value"),
 
     orderStatus= function(orderId::Int, status::String, filled::Float64, remaining::Float64, avgFillPrice::Float64, permId::Int, parentId::Int, lastFillPrice::Float64, clientId::Int, whyHeld::String, mktCapPrice::Float64)
-                   d[:orderstatus] = (orderId=       orderId,
-                                      status=        status,
-                                      filled=        filled,
-                                      remaining=     remaining,
-                                      avgFillPrice=  avgFillPrice,
-                                      permId=        permId,
-                                      lastFillPrice= lastFillPrice,
-                                      clientId=      clientId,
-                                      whyHeld=       whyHeld,
-                                      mktCapPrice=   mktCapPrice)
+                   d[:orderstatus] = (; orderId,
+                                        status,
+                                        filled,
+                                        remaining,
+                                        avgFillPrice,
+                                        permId,
+                                        parentId,
+                                        lastFillPrice,
+                                        clientId,
+                                        whyHeld,
+                                        mktCapPrice)
                    println("orderStatus: $orderId $status")
                  end,
 
-    openOrder= function(orderId::Int, contract::Contract, order::Order, orderstate::OrderState)
+    openOrder= function(orderId::Int, contract::Contract, order::Order, orderState::OrderState)
                  d[:order_contract] = contract
                  d[:order] = order
-                 d[:orderstate] = orderstate
-                 println("openOrder: $orderId $(orderstate.status)")
+                 d[:orderstate] = orderState
+                 println("openOrder: $orderId $(orderState.status)")
               end,
 
     openOrderEnd= () -> println("openOrderEnd"),
@@ -180,7 +190,7 @@ function simple_wrap()
     updatePortfolio= (contract::Contract, position::Float64, marketPrice::Float64, marketValue::Float64, averageCost::Float64, unrealizedPNL::Float64, realizedPNL::Float64, accountName::String) ->
                        println("portfolio:  $(contract.symbol) $position $marketPrice $marketValue $averageCost $unrealizedPNL $realizedPNL $accountName"),
 
-    updateAccountTime= (timeStamp::String) -> println("accountTime: $timeStamp"),
+    updateAccountTime= (timestamp::String) -> println("accountTime: $timestamp"),
 
     accountDownloadEnd= (accountName::String) -> println("accountDownloadEnd: $accountName"),
 
@@ -201,7 +211,7 @@ function simple_wrap()
     execDetails= function(reqId::Int, contract::Contract, execution::Execution)
                    d[:ex_con] = contract
                    d[:execution] = execution
-                   println("execDetails: $reqId")
+                   println("execDetails: $reqId $(contract.symbol) $(execution.time)")
                  end,
 
     execDetailsEnd= (reqId::Int) -> println("execDetailsEnd: $reqId"),
@@ -243,14 +253,9 @@ function simple_wrap()
                          println("scannerParameters")
                        end,
 
-    scannerData= function(reqId::Int, rank::Vector{Int}, contractDetails::Vector{ContractDetails}, distance::Vector{String}, benchmark::Vector{String}, projection::Vector{String}, legsStr::Vector{String})
-                   d[:scannerdata] = (rank=       rank,
-                                      cd=         contractDetails,
-                                      distance=   distance,
-                                      benchmark=  benchmark,
-                                      projection= projection,
-                                      legsStr=    legsStr)
-                   println("scannerData: $reqId $(length(rank))")
+    scannerData= function(reqId::Int, data::VScannerDataElement)
+                   d[:scannerdata] = data
+                   println("scannerData: $reqId $(length(data))")
                  end,
 
     realtimeBar= (reqId::Int, time::Int, open::Float64, high::Float64, low::Float64, close::Float64, volume::Float64, wap::Float64, count::Int) ->
@@ -322,16 +327,16 @@ function simple_wrap()
                          println("mktDepthExchanges: $(length(depthMktDataDescriptions))")
                        end,
 
-    tickNews= (tickerId::Int, timeStamp::Int, providerCode::String, articleId::String, headline::String, extraData::String) ->
-                println("tickNews: $tickerId $timeStamp $providerCode $articleId $headline $extraData"),
+    tickNews= (reqId::Int, timestamp::Int, providerCode::String, articleId::String, headline::String, extraData::String) ->
+                println("tickNews: $reqId $timestamp $providerCode $articleId $headline $extraData"),
 
     smartComponents= function(reqId::Int, theMap::VSmartComponent)
                        d[:smartcomponents] = theMap
                        println("smartComponents: $reqId $(length(theMap))")
                      end,
 
-    tickReqParams= (tickerId::Int, minTick::Union{Float64,Nothing}, bboExchange::String, snapshotPermissions::Int) ->
-                     println("tickReqParams: $tickerId ",
+    tickReqParams= (reqId::Int, minTick::Union{Float64,Nothing}, bboExchange::String, snapshotPermissions::Int) ->
+                     println("tickReqParams: $reqId ",
                              something(minTick, "NA"),
                              " $bboExchange $snapshotPermissions"),
 
@@ -340,16 +345,16 @@ function simple_wrap()
                      println("newsProviders: $(length(newsProviders))")
                    end,
 
-    newsArticle= function(requestId::Int, articleType::Int, articleText::String)
+    newsArticle= function(reqId::Int, articleType::Int, articleText::String)
                    d[:newsarticle] = articleText
-                   println("newsArticle: $requestId $articleType")
+                   println("newsArticle: $reqId $articleType")
                  end,
 
-    historicalNews= function(requestId::Int, time::String, providerCode::String, articleId::String, headline::String)
-                      println("historicalNews: $requestId $time $providerCode $articleId $headline")
+    historicalNews= function(reqId::Int, time::String, providerCode::String, articleId::String, headline::String)
+                      println("historicalNews: $reqId $time $providerCode $articleId $headline")
                     end,
 
-    historicalNewsEnd= (requestId::Int, hasMore::Bool) -> println("historicalNewsEnd: $requestId $hasMore"),
+    historicalNewsEnd= (reqId::Int, hasMore::Bool) -> println("historicalNewsEnd: $reqId $hasMore"),
 
     headTimestamp= (reqId::Int, headTimestamp::String) -> println("headTimestamp: $reqId $headTimestamp"),
 
@@ -375,23 +380,23 @@ function simple_wrap()
     pnl= (reqId::Int, dailyPnL::Float64, unrealizedPnL::Float64, realizedPnL::Float64) ->
            println("pnl: $reqId $dailyPnL $unrealizedPnL $realizedPnL"),
 
-    pnlSingle= (reqId::Int, pos::Int, dailyPnL::Float64, unrealizedPnL::Union{Float64,Nothing}, realizedPnL::Union{Float64,Nothing}, value::Float64) ->
+    pnlSingle= (reqId::Int, pos::Float64, dailyPnL::Union{Float64,Nothing}, unrealizedPnL::Union{Float64,Nothing}, realizedPnL::Union{Float64,Nothing}, value::Float64) ->
                  println("pnlSingle: $reqId $pos $dailyPnL ",
                          something(unrealizedPnL, "NA"), " ",
                          something(realizedPnL, "NA"),   " ",
                          value),
 
-    historicalTicks= function(reqId::Int, ticks::VHistoricalTick, done::Bool)
+    historicalTicks= function(reqId::Int, ticks::VTick, done::Bool)
                        d[:historyticks] = ticks
                        println("historicalTicks: $reqId $done $(length(ticks))")
                      end,
 
-    historicalTicksBidAsk= function(reqId::Int, ticks::VHistoricalTickBidAsk, done::Bool)
+    historicalTicksBidAsk= function(reqId::Int, ticks::VTickBidAsk, done::Bool)
                              d[:historyticksbidask] = ticks
                              println("historicalTicksBidAsk: $reqId $done $(length(ticks))")
                            end,
 
-    historicalTicksLast= function(reqId::Int, ticks::VHistoricalTickLast, done::Bool)
+    historicalTicksLast= function(reqId::Int, ticks::VTickLast, done::Bool)
                            d[:historytickslast] = ticks
                            println("historicalTicksLast: $reqId $done $(length(ticks))")
                          end,
@@ -402,8 +407,8 @@ function simple_wrap()
     tickByTickBidAsk= (reqId::Int, time::Int, bidPrice::Float64, askPrice::Float64, bidSize::Float64, askSize::Float64, attribs::TickAttribBidAsk) ->
                         println("tickByTickBidAsk: $reqId $time $bidPrice $askPrice $bidSize $askSize $attribs"),
 
-    tickByTickMidPoint= (reqId::Int, time::Int, midPoint::Float64) ->
-                          println("tickByTickMidPoint: $reqId $time $midPoint"),
+    tickByTickMidPoint= (reqId::Int, time::Int, price::Float64) ->
+                          println("tickByTickMidPoint: $reqId $time $price"),
 
     orderBound= (permId::Int, clientId::Int, orderId::Int) ->
                   println("orderBound: $permId $clientId $orderId"),

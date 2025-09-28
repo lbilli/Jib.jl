@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package IBProto;
+
+import "Contract.proto";
+
+message ExecutionFilter {
+    optional int32 clientId = 1;
+    optional string acctCode = 2;
+    optional string time = 3;
+    optional string symbol = 4;
+    optional string secType = 5;
+    optional string exchange = 6;
+    optional string side = 7;
+    optional int32 lastNDays = 8;
+    repeated int32 specificDates = 9;
+}
+
+message ExecutionRequest {
+    optional int32 reqId = 1;
+    optional ExecutionFilter filter = 2;
+}
+
+message Execution {
+    optional int32 orderId = 1;
+    optional string execId = 2;
+    optional string time = 3;
+    optional string acctNumber = 4;
+    optional string exchange = 5;
+    optional string side = 6;
+    optional string shares = 7;
+    optional double price = 8;
+    optional int64 permId = 9;
+    optional int32 clientId = 10;
+    optional bool liquidation = 11;
+    optional string cumQty = 12;
+    optional double avgPrice = 13;
+    optional string orderRef = 14;
+    optional string evRule = 15;
+    optional double evMultiplier = 16;
+    optional string modelCode = 17;
+    optional int32 lastLiquidity = 18;
+    optional bool pendingPriceRevision = 19;
+    optional string submitter = 20;
+    optional int32 optExerciseOrLapseType = 21;
+}
+
+message ExecutionDetails {
+    optional int32 reqId = 1;
+    optional Contract contract = 2;
+    optional Execution execution = 3;
+}
+
+message CommissionReport {
+    optional string execId = 1;
+    optional double commission = 2;
+    optional string currency = 3;
+    optional double realizedPNL = 4;
+    optional double yield = 5;
+    optional string yieldRedemptionDate = 6;
+}
