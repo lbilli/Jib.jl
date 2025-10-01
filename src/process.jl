@@ -10,7 +10,6 @@ import ...CommissionReport,
        ...SoftDollarTier,
        ...TickAttrib,
        ...Bar,
-       ...VBar,
        ...DepthMktDataDescription,
        ...FamilyCode,
        ...HistogramEntry,
@@ -126,7 +125,6 @@ const process = Dict(
     orderState::OrderState = splat1(pb)
 
     # Transfer comboLeg prices
-    # TODO: Fix this
     if PB.has(pb[:contract], :comboLegs)
       ocl = [ get(cl, :perLegPrice, nothing) for cl ∈ pb[:contract][:comboLegs] ]
 
@@ -158,7 +156,7 @@ const process = Dict(
 
     todouble(pb, :position)
 
-    w.updatePortfolio(splat1(pb)...)
+    w.updatePortfolio(splat1(pb; unrealizedPNL=0.)...)
   end,
 
   # ACCT_UPDATE_TIME
