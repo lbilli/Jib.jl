@@ -15,14 +15,11 @@ import ...CommissionReport,
        ...HistogramEntry,
        ...VNewsProvider,
        ...VPriceIncrement,
-       ...VSmartComponent,
        ...ScannerDataElement,
+       ...SmartComponent,
        ...Tick,
-       ...VTick,
        ...TickBidAsk,
-       ...VTickBidAsk,
        ...TickLast,
-       ...VTickLast,
        ...funddist,
        ...fundtype,
        ...optexercisetype,
@@ -452,7 +449,7 @@ const process = Dict(
 
     pb = PB.deserialize(:StringData, msg)
 
-    w.displayGroupList(pb[:reqId], pd[:data])
+    w.displayGroupList(splat1(pb)...)
   end,
 
   # DISPLAY_GROUP_UPDATED
@@ -460,7 +457,7 @@ const process = Dict(
 
     pb = PB.deserialize(:StringData, msg)
 
-    w.displayGroupUpdated(pb[:reqId], pd[:data])
+    w.displayGroupUpdated(splat1(pb)...)
   end,
 
   # POSITION_MULTI
@@ -566,7 +563,12 @@ const process = Dict(
 
     pb = PB.deserialize(:SmartComponents, msg)
 
-    w.smartComponents(splat1(pb; map=VSmartComponent())...)
+    sc = PB.has(pb, :map) ? map(pb[:map]) do s
+
+                                      SmartComponent(splat1(s; bit=0))
+                                    end : SmartComponent[]
+
+    w.smartComponents(pb[:reqId], sc)
   end,
 
   # NEWS_ARTICLE
@@ -687,7 +689,7 @@ const process = Dict(
 
     todouble(pb, :position)
 
-    w.pnlSingle(splat1(pb; dailyPnL=nothing, realizedPnL=nothing)...)
+    w.pnlSingle(splat1(pb; dailyPnL=nothing, unrealizedPnL=nothing, realizedPnL=nothing)...)
   end,
 
   # HISTORICAL_TICKS
@@ -700,7 +702,7 @@ const process = Dict(
                                     todouble(t, :size)
 
                                     convert(Tick, t)
-                                  end : VTick()
+                                  end : Tick[]
 
     w.historicalTicks(pb[:reqId], ticks, pb[:done])
   end,
@@ -716,7 +718,7 @@ const process = Dict(
                                     todouble(t, :askSize)
 
                                     TickBidAsk(splat1(t))
-                                  end : VTickBidAsk()
+                                  end : TickBidAsk[]
 
     w.historicalTicksBidAsk(pb[:reqId], ticks, pb[:done])
   end,
@@ -732,7 +734,7 @@ const process = Dict(
 
                                     TickLast(splat1(t; exchange=ns,
                                                        specialConditions=ns))
-                                  end : VTickLast()
+                                  end : TickLast[]
 
     w.historicalTicksLast(pb[:reqId], ticks, pb[:done])
   end,
@@ -864,7 +866,7 @@ const process = Dict(
 
     pb = PB.deserialize(:StringData, msg)
 
-    w.userInfo(splat1(pb)...)
+    w.userInfo(splat1(pb; data=ns)...)
   end,
 
   # HISTORICAL_DATA_END

@@ -204,7 +204,9 @@ VTickLast = Vector{TickLast}
 
 VPriceIncrement = Vector{@NamedTuple{lowEdge::Float64, increment::Float64}}
 VNewsProvider =   Vector{@NamedTuple{providerCode::String, providerName::String}}
-VSmartComponent = Vector{@NamedTuple{bit::Int, exchange::String, exchangeLetter::String}}
+
+SmartComponent = @NamedTuple{bit::Int, exchange::String, exchangeLetter::String}
+VSmartComponent = Vector{SmartComponent}
 
 ScannerDataElement = @NamedTuple{rank::Int, contract::Contract, marketName::String, distance::String,
                                  benchmark::String, projection::String, comboKey::String}
