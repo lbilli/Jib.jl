@@ -71,7 +71,7 @@ mutable struct Order
   shortSaleSlot::Int
   designatedLocation::String
   exemptCode::Int
-  discretionaryAmt::Float64
+  discretionaryAmt::Union{Float64,Nothing}
   optOutSmartRouting::Bool
   auctionStrategy::Int
   startingPrice::Union{Float64,Nothing}
@@ -155,7 +155,7 @@ mutable struct Order
   autoCancelParent::Bool
   shareholder::String
   imbalanceOnly::Bool
-  routeMarketableToBbo::Bool
+  routeMarketableToBbo::Union{Bool,Nothing}
   parentPermId::Union{Int,Nothing}
   usePriceMgmtAlgo::Union{Bool,Nothing}
   duration::Union{Int,Nothing}
@@ -177,18 +177,21 @@ mutable struct Order
   postOnly::Bool
   allowPreOpen::Bool
   ignoreOpenAuction::Bool
+  seekPriceImprovement::Union{Bool,Nothing}
+  whatIfType::Union{Int,Nothing}
 end
 Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0,
                 false, false, nothing, 0, false, false, ns, ns, ns, false, nothing, nothing,
-                false, nothing, nothing, ns, ns, ns, ns, 0, 0, ns, -1, 0,
+                false, nothing, nothing, ns, ns, ns, ns, 0, 0, ns, -1, nothing,
                 false, 0, fill(nothing, 5)..., false, false,
                 nothing, nothing, ns, nothing, 0, ns, ns, ns, ns, false, 0, ns, false,
                 fill(nothing, 9)..., false, nothing, nothing, false, fill(ns, 8)...,
                 (;), (;), ns, false, false, false, ns, Float64[], (;), 0, 0, false, 0, ns, ns,
                 fill(nothing, 4)..., 0, nothing, AbstractCondition[], false, false, ns,
                 SoftDollarTier(), nothing, ns, ns, ns, ns, false, false, false, ns, nothing,
-                nothing, false, ns, false, false, fill(nothing, 4)..., ns, ns,
-                fill(nothing, 5)..., ns, false, ns, false, nothing, ns, false, false, false, false)
+                nothing, false, ns, false, fill(nothing, 5)..., ns, ns, fill(nothing, 5)...,
+                ns, false, ns, false, nothing, ns, false, false, false, false,
+                nothing, nothing)
 
 
 mutable struct ScannerSubscription

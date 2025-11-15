@@ -81,11 +81,34 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                       :filledQuantity,
                       :refFuturesConId,
                       :shareholder,
-                      :routeMarketableToBbo,
                       :parentPermId,
-                      :totalQuantity))
+
+                      # Require separate handling
+                      :totalQuantity,         # Decimal
+                      :routeMarketableToBbo,  # Three-state boolean
+                      :usePriceMgmtAlgo,      # Three-state boolean
+                      :seekPriceImprovement)) # Three-state boolean
 
   o[:totalQuantity] = string(order.totalQuantity)
+
+  for n ∈ (:routeMarketableToBbo, :usePriceMgmtAlgo, :seekPriceImprovement)
+    val = getfield(order, n)
+
+    isnothing(val) || (o[n] = Int(val))
+  end
+
+  if ib.version < Client.ADDITIONAL_ORDER_PARAMS_1
+    for n ∈ (:deactivate, :postOnly, :allowPreOpen, :ignoreOpenAuction)
+      PB.has(o, n) && error("Order parameter :$n not supported")
+    end
+
+  end
+
+  if ib.version < Client.ADDITIONAL_ORDER_PARAMS_2
+    for n ∈ (:routeMarketableToBbo, :seekPriceImprovement, :whatIfType)
+      PB.has(o, n) && error("Order parameter :$n not supported")
+    end
+  end
 
   msg = PB.Message(:PlaceOrderRequest; orderId=id,
                                        contract=c,

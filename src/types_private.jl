@@ -48,6 +48,7 @@ mutable struct ContractDetails
   minSize::Union{Float64,Nothing}
   sizeIncrement::Union{Float64,Nothing}
   suggestedSizeIncrement::Union{Float64,Nothing}
+  minAlgoSize::Union{Float64,Nothing}
   secIdList::NamedTuple
   cusip::String
   ratings::String
@@ -88,7 +89,7 @@ mutable struct ContractDetails
 end
 ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)...,
                                     nothing, nothing, fill(ns, 6)..., nothing, nothing,
-                                    nothing, (;), fill(ns, 5)..., false, false,
+                                    nothing, nothing, (;), fill(ns, 5)..., false, false,
                                     nothing, false, ns, ns, ns, ns, false, ns,
                                     fill(ns, 7)..., false, false, false, fill(ns, 7)...,
                                     IneligibilityReason[], ns, ns, ns)
