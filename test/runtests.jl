@@ -22,8 +22,8 @@ include("client.jl")
   @test fieldname(Jib.Contract, 17) === :issuerId
   @test fieldname(Jib.Contract, 18) === :lastTradeDate
 
-  @test fieldname(Jib.ContractDetails, 44) === :fundName
-  @test fieldname(Jib.ContractDetails, 58) === :fundBlueSkyTerritories
+  @test fieldname(Jib.ContractDetails, 45) === :fundName
+  @test fieldname(Jib.ContractDetails, 59) === :fundBlueSkyTerritories
 
   @test fieldname(Jib.Order, 79) === :account
   @test fieldname(Jib.Order, 125) === :parentPermId
