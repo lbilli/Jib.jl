@@ -179,6 +179,10 @@ mutable struct Order
   ignoreOpenAuction::Bool
   seekPriceImprovement::Union{Bool,Nothing}
   whatIfType::Union{Int,Nothing}
+  slOrderId::Union{Int,Nothing}
+  slOrderType::String
+  ptOrderId::Union{Int,Nothing}
+  ptOrderType::String
 end
 Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, true, 0,
                 false, false, nothing, 0, false, false, ns, ns, ns, false, nothing, nothing,
@@ -191,7 +195,7 @@ Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, tru
                 SoftDollarTier(), nothing, ns, ns, ns, ns, false, false, false, ns, nothing,
                 nothing, false, ns, false, fill(nothing, 5)..., ns, ns, fill(nothing, 5)...,
                 ns, false, ns, false, nothing, ns, false, false, false, false,
-                nothing, nothing)
+                nothing, nothing, nothing, ns, nothing, ns)
 
 
 mutable struct ScannerSubscription

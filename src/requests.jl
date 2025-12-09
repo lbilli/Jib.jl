@@ -13,7 +13,8 @@ import ..AbstractCondition,
        ..ScannerSubscription,
        ..WshEventData,
        ..PB,
-       ..maptopb
+       ..maptopb,
+       ..maptopb!
 
 
 function sendmsg(ib, msgid::Int, msg::Union{PB.Message,Nothing}=nothing)
@@ -84,10 +85,14 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
                       :parentPermId,
 
                       # Require separate handling
-                      :totalQuantity,         # Decimal
-                      :routeMarketableToBbo,  # Three-state boolean
-                      :usePriceMgmtAlgo,      # Three-state boolean
-                      :seekPriceImprovement)) # Three-state boolean
+                      :totalQuantity,        # Decimal
+                      :routeMarketableToBbo, # Three-state boolean
+                      :usePriceMgmtAlgo,     # Three-state boolean
+                      :seekPriceImprovement, # Three-state boolean
+                      :slOrderId,            # Attached Orders
+                      :slOrderType,          # Attached Orders
+                      :ptOrderId,            # Attached Orders
+                      :ptOrderType))         # Attached Orders
 
   o[:totalQuantity] = string(order.totalQuantity)
 
@@ -110,9 +115,19 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
     end
   end
 
+  ao = maptopb!(PB.Message(:AttachedOrders),
+                (n => getfield(order, n) for n ∈ (:slOrderId,
+                                                  :slOrderType,
+                                                  :ptOrderId,
+                                                  :ptOrderType)))
+
+  ib.version < Client.ATTACHED_ORDERS && length(ao) > 0 &&
+    error("Attached Orders parameters not supported")
+
   msg = PB.Message(:PlaceOrderRequest; orderId=id,
                                        contract=c,
-                                       order=o)
+                                       order=o,
+                                       attachedOrders=ao)
 
   sendmsg(ib, msgid, msg)
 end

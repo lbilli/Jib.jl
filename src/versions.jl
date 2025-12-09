@@ -5,5 +5,6 @@
   CANCEL_CONTRACT_DATA               = 215
   ADDITIONAL_ORDER_PARAMS_1          = 216
   ADDITIONAL_ORDER_PARAMS_2          = 217
+  ATTACHED_ORDERS                    = 218
 
 end
