@@ -877,6 +877,14 @@ const process = Dict(
     pb = PB.deserialize(:SingleInt64, msg)
 
     w.currentTimeInMillis(pb[:value])
+  end,
+
+  # CONFIG_RESPONSE
+  310 => function(msg, w, ver)
+
+    pb = PB.deserialize(:ConfigResponse, msg)
+
+    w.configResponseProtoBuf(pb)
   end
 
 )

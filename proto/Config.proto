@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package IBProto;
+
+message LockAndExitConfig {
+    optional string autoLogoffTime = 1;
+    optional string autoLogoffPeriod = 2;
+    optional string autoLogoffType = 3;
+}
+
+message MessageConfig {
+    optional int32 id = 1;
+    optional string title = 2;
+    optional string message = 3;
+    optional string defaultAction = 4;
+    optional bool enabled = 5;
+}
+
+message ApiPrecautionsConfig {
+    optional bool bypassOrderPrecautions = 1;
+    optional bool bypassBondWarning = 2;
+    optional bool bypassNegativeYieldConfirmation = 3;
+    optional bool bypassCalledBondWarning = 4;
+    optional bool bypassSameActionPairTradeWarning = 5;
+    optional bool bypassFlaggedAccountsWarning = 6;
+    optional bool bypassPriceBasedVolatilityWarning = 7;
+    optional bool bypassRedirectOrderWarning = 8;
+    optional bool bypassNoOverfillProtection = 9;
+    optional bool bypassRouteMarketableToBBO = 10;
+}
+
+message ApiSettingsConfig {
+    optional bool readOnlyApi = 1;
+    optional bool totalQuantityForMutualFunds = 2;
+    optional bool downloadOpenOrdersOnConnection = 3;
+    optional bool includeVirtualFxPositions = 4;
+    optional bool prepareDailyPnL = 5;
+    optional bool sendStatusUpdatesForVolatilityOrders = 6;
+    optional string encodeApiMessages = 7;
+    optional int32 socketPort = 8;
+    optional bool useNegativeAutoRange = 9;
+    optional bool createApiMessageLogFile = 10;
+    optional bool includeMarketDataInLogFile = 11;
+    optional bool exposeTradingScheduleToApi = 12;
+    optional bool splitInsuredDepositFromCashBalance = 13;
+    optional bool sendZeroPositionsForTodayOnly = 14;
+    optional bool letApiAccountRequestsSwitchSubscription = 15;
+    optional bool useAccountGroupsWithAllocationMethods = 16;
+    optional string loggingLevel = 17;
+    optional int32 masterClientId = 18;
+    optional int32 bulkDataTimeout = 19;
+    optional string componentExchSeparator = 20;
+    optional bool showForexDataIn1_10Pips = 21;
+    optional bool allowForexTradingIn1_10Pips = 22;
+    optional bool roundAccountValuesToNearestWholeNumber = 23;
+    optional bool sendMarketDataInLotsForUsStocks = 24;
+    optional bool showAdvancedOrderRejectInUi = 25;
+    optional bool rejectMessagesAboveMaxRate = 26;
+    optional bool maintainConnectionOnIncorrectFields = 27;
+    optional bool compatibilityModeNasdaqStocks = 28;
+    optional string sendInstrumentTimezone = 29;
+    optional bool sendForexDataInCompatibilityMode = 30;
+    optional bool maintainAndResubmitOrdersOnReconnect = 31;
+    optional int32 historicalDataMaxSize = 32;
+    optional bool autoReportNettingEventContractTrades = 33;
+    optional string optionExerciseRequestType = 34;
+    optional bool allowLocalhostOnly = 35;
+    repeated string trustedIPs = 36;
+}
+
+message OrdersSmartRoutingConfig {
+    optional bool seekPriceImprovement = 1;
+    optional bool preOpenReroute = 2;
+    optional bool doNotRouteToDarkPools = 3;
+    optional string defaultAlgorithm = 4;
+}
+
+message ApiConfig {
+    optional ApiPrecautionsConfig precautions = 1;
+    optional ApiSettingsConfig settings = 2;
+}
+
+message OrdersConfig {
+    optional OrdersSmartRoutingConfig smartRouting = 1;
+}
+
+message ConfigResponse {
+    optional int32 reqId = 1;
+    optional LockAndExitConfig lockAndExit = 2;
+    repeated MessageConfig messages = 3;
+    optional ApiConfig api = 4;
+    optional OrdersConfig orders = 5;
+}

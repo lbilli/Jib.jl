@@ -6,5 +6,6 @@
   ADDITIONAL_ORDER_PARAMS_1          = 216
   ADDITIONAL_ORDER_PARAMS_2          = 217
   ATTACHED_ORDERS                    = 218
+  CONFIG                             = 219
 
 end

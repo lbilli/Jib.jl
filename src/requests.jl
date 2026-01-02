@@ -469,6 +469,7 @@ cancelContractData(ib::Connection, reqId::Int) = req_simple(ib, 106, reqId) ### 
 
 cancelHistoricalTick(ib::Connection, reqId::Int) = req_simple(ib, 107, reqId) ### CANCEL_HISTORICAL_TICKS
 
+reqConfig(ib::Connection, reqId::Int) = req_simple(ib, 108, reqId) ### REQ_CONFIG
 
 # Exports
 export reqMktData,
@@ -553,5 +554,6 @@ export reqMktData,
        reqUserInfo,
        reqCurrentTimeInMillis,
        cancelContractData,
-       cancelHistoricalTick
+       cancelHistoricalTick,
+       reqConfig
 end

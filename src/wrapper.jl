@@ -86,7 +86,8 @@ const callbacks = [:tickPrice,
                    :historicalSchedule,
                    :userInfo,
                    :historicalDataEnd,
-                   :currentTimeInMillis]
+                   :currentTimeInMillis,
+                   :configResponseProtoBuf]
 
 
 struct Wrapper
@@ -444,7 +445,13 @@ function simple_wrap()
     historicalDataEnd= (reqId::Int, startDateStr::String, endDateStr::String) ->
                          println("historicalDataEnd: $reqId $startDateStr $endDateStr"),
 
-    currentTimeInMillis= (timeInMillis::Int) -> println("currentTimeInMillis: $timeInMillis")
+    currentTimeInMillis= (timeInMillis::Int) -> println("currentTimeInMillis: $timeInMillis"),
+
+    configResponseProtoBuf= function(configResponse::PB.Message)
+                              d[:configpb] = configResponse
+                              println("configResponse: $(configResponse[:reqId])")
+                            end
+
   )
 
   d, w
