@@ -87,7 +87,8 @@ const callbacks = [:tickPrice,
                    :userInfo,
                    :historicalDataEnd,
                    :currentTimeInMillis,
-                   :configResponseProtoBuf]
+                   :configResponseProtoBuf,
+                   :updateConfigResponseProtoBuf]
 
 
 struct Wrapper
@@ -450,7 +451,12 @@ function simple_wrap()
     configResponseProtoBuf= function(configResponse::PB.Message)
                               d[:configpb] = configResponse
                               println("configResponse: $(configResponse[:reqId])")
-                            end
+                            end,
+
+    updateConfigResponseProtoBuf= function(updateConfigResponse::PB.Message)
+                                    d[:updateconfigpb] = updateConfigResponse
+                                    println("updateConfigResponse: $(updateConfigResponse[:reqId])")
+                                  end
 
   )
 

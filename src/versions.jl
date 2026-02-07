@@ -7,5 +7,7 @@
   ADDITIONAL_ORDER_PARAMS_2          = 217
   ATTACHED_ORDERS                    = 218
   CONFIG                             = 219
+  MARKET_DATA_VOLUMES_IN_SHARES      = 220
+  UPDATE_CONFIG                      = 221
 
 end

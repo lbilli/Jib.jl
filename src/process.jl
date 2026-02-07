@@ -885,6 +885,14 @@ const process = Dict(
     pb = PB.deserialize(:ConfigResponse, msg)
 
     w.configResponseProtoBuf(pb)
+  end,
+
+  # UPDATE_CONFIG_RESPONSE
+  311 => function(msg, w, ver)
+
+    pb = PB.deserialize(:UpdateConfigResponse, msg)
+
+    w.updateConfigResponseProtoBuf(pb)
   end
 
 )

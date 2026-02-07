@@ -7,7 +7,7 @@ include("decode.jl")
 
 function read_msg(ib)
 
-  msgid::Int, msg = read_one(ib.socket)
+  msgid, msg = read_one(ib.socket)
 
   @assert msgid > Client.PROTOBUF_MSG_ID
 

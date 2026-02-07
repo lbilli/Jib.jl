@@ -53,16 +53,17 @@ d = Dict(:a => -123,
          :j => [ Dict(:key => "k1", :value => "v1"), Dict(:key => "k2", :value => "v2") ],
          :l => [ 4 ])
 
-mtod(m::PB.Message) = Dict{Symbol,Any}( n => isa(v, PB.Message)         ? mtod(v)  :
-                                             isa(v, Vector{PB.Message}) ? mtod.(v) :
-                                             v
-                                        for (n, v) ∈ m.data )
+@testset "Wrap" begin
+
+  @test isequal(d, PB.unwrap(PB.wrap(d, :Test)))
+
+end
 
 @testset "Message" begin
 
   m = PB.deserialize(:Test, pb)
 
-  @test isequal(mtod(m), d)
+  @test isequal(PB.unwrap(m), d)
 
   buf = IOBuffer()
 

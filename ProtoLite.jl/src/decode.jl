@@ -124,7 +124,15 @@ function decode(desc::Descriptor, buf, nb)
 
     id, w = readtag(buf)
 
-    fld = desc[id]
+    fld = get(desc, id, nothing)
+
+    if isnothing(fld)
+      @info "ignoring field" D=desc.name ID=Int(id)
+
+      payload(buf, w)
+
+      continue
+    end
 
     wireassert(w, fld.type)
 

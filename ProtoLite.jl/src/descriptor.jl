@@ -4,7 +4,7 @@ isprimitive(t) = isscalar(t) && t !== :string
 wireassert(w, t) = w === 0x00 && t ∈ (:int32, :int64, :bool) || # VARINT
                    w === 0x01 && t === :double               || # I64
                    w === 0x02                                || # LEN
-                     error("wrong wire/type combination: $w $t")
+                   error("wrong wire/type combination: $w $t")
 
 
 struct Field
@@ -59,6 +59,11 @@ end
 Base.getindex(desc::Descriptor, id::UInt32) = desc.fields[desc.idmap[id]]
 Base.getindex(desc::Descriptor, name::Symbol) = desc.fields[desc.namemap[name]]
 
+function Base.get(desc::Descriptor, id::UInt32, default)
+  idx = get(desc.idmap, id, nothing)
+
+  isnothing(idx) ? default : desc.fields[idx]
+end
 
 struct Message
   desc::Descriptor
@@ -85,7 +90,7 @@ isvalid(fld, v::Vector{T}) where T =
 
 isvalid(fld, v::T) where T = !fld.repeated && xor(isscalar(fld.type), T === Message)
 
-Base.getindex(m::Message, name) = getindex(m.data, name)
+Base.getindex(m::Message, name) = m.data[name]
 
 function Base.setindex!(m::Message, v, name)
 
@@ -93,7 +98,7 @@ function Base.setindex!(m::Message, v, name)
 
   @assert isvalid(fld, v)
 
-  setindex!(m.data, v, name)
+  m.data[name] = v
 end
 
 Base.get(m::Message, name, default) = get(m.data, name, default)

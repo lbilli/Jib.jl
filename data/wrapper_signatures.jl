@@ -171,3 +171,5 @@ historicalDataEnd(reqId::Int, startDateStr::String, endDateStr::String)
 currentTimeInMillis(timeInMillis::Int)
 
 configResponseProtoBuf(configResponse::PB.Message)
+
+updateConfigResponseProtoBuf(updateConfigResponse::PB.Message)

@@ -118,7 +118,7 @@ function encode(bufout, m::Message, id=nothing)
     fld = m.desc[name]
 
     !fld.repeated         ? fld.encode(buf, v, fld.id) :
-    isprimitive(fld.type) ? pack(buf, v, fld)     :
+    isprimitive(fld.type) ? pack(buf, v, fld)          :
                             foreach(e -> fld.encode(buf, e, fld.id), v)
   end
 

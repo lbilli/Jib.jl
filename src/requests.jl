@@ -433,7 +433,7 @@ reqHistoricalTicks(ib::Connection, reqId::Int, contract::Contract, startDateTime
 
 reqTickByTickData(ib::Connection, reqId::Int, contract::Contract, tickType::String,
                   numberOfTicks::Int, ignoreSize::Bool) =
-  sendmsg(ib, 97,
+  sendmsg(ib, 97, ### REQ_TICK_BY_TICK_DATA
           maptopb(:TickByTickRequest; reqId,
                                       contract,
                                       tickType,
@@ -470,6 +470,10 @@ cancelContractData(ib::Connection, reqId::Int) = req_simple(ib, 106, reqId) ### 
 cancelHistoricalTick(ib::Connection, reqId::Int) = req_simple(ib, 107, reqId) ### CANCEL_HISTORICAL_TICKS
 
 reqConfig(ib::Connection, reqId::Int) = req_simple(ib, 108, reqId) ### REQ_CONFIG
+
+updateConfig(ib::Connection, updateConfigRequest::PB.Message) =
+  sendmsg(ib, 109, ### UPDATE_CONFIG
+          updateConfigRequest)
 
 # Exports
 export reqMktData,
@@ -555,5 +559,6 @@ export reqMktData,
        reqCurrentTimeInMillis,
        cancelContractData,
        cancelHistoricalTick,
-       reqConfig
+       reqConfig,
+       updateConfig
 end

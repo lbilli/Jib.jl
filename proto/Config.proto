@@ -91,3 +91,28 @@ message ConfigResponse {
     optional ApiConfig api = 4;
     optional OrdersConfig orders = 5;
 }
+
+message UpdateConfigWarning {
+    optional int32 messageId = 1;
+    optional string title = 2;
+    optional string message = 3;
+}
+
+message UpdateConfigRequest {
+    optional int32 reqId = 1;
+    optional LockAndExitConfig lockAndExit = 2;
+    repeated MessageConfig messages = 3;
+    optional ApiConfig api = 4;
+    optional OrdersConfig orders = 5;
+    repeated UpdateConfigWarning acceptedWarnings = 6;
+    optional bool resetAPIOrderSequence = 7;
+}
+
+message UpdateConfigResponse {
+    optional int32 reqId = 1;
+    optional string status = 2;
+    optional string message = 3;
+    repeated string changedFields = 4;
+    repeated string errors = 5;
+    repeated UpdateConfigWarning warnings = 6;
+}

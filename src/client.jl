@@ -21,9 +21,7 @@ function write_one(socket, buf)
   # Rewind and write length
   write(skip(buf, -sizeof(HEADTYPE)), hton(HEADTYPE(len)))
 
-  msg = take!(buf)
-
-  write(socket, msg)
+  write(socket, seekstart(buf))
 end
 
 
