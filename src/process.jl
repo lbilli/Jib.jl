@@ -170,7 +170,8 @@ const process = Dict(
     pb = PB.deserialize(:ContractData, msg)
 
     cd = pb[:contractDetails]
-    todouble.(Ref(cd), (:minTick, :minSize, :sizeIncrement, :suggestedSizeIncrement, :minAlgoSize))
+    todouble.(Ref(cd), (:minTick, :minSize, :sizeIncrement, :suggestedSizeIncrement,
+                        :minAlgoSize, :lastPricePrecision, :lastSizePrecision))
     transform(funddist, cd, :fundDistributionPolicyIndicator)
     transform(fundtype, cd, :fundAssetType)
 
@@ -279,7 +280,8 @@ const process = Dict(
 
     cd = pb[:contractDetails]
 
-    todouble.(Ref(cd), (:minTick, :minSize, :sizeIncrement, :suggestedSizeIncrement, :minAlgoSize))
+    todouble.(Ref(cd), (:minTick, :minSize, :sizeIncrement, :suggestedSizeIncrement,
+                        :minAlgoSize, :lastPricePrecision, :lastSizePrecision))
 
     reqId,
     contract::Contract,
@@ -539,7 +541,8 @@ const process = Dict(
 
     mde = map(pb[:depthMktDataDescriptions]) do e
 
-                        DepthMktDataDescription(splat1(e; listingExch=ns, aggGroup=nothing))
+                        DepthMktDataDescription(splat1(e; listingExch=ns,
+                                                          aggGroup=nothing))
                       end
 
     w.mktDepthExchanges(mde)
@@ -551,8 +554,17 @@ const process = Dict(
     pb = PB.deserialize(:TickReqParams, msg)
 
     todouble(pb, :minTick)
+    todouble(pb, :lastPricePrecision)
+    todouble(pb, :lastSizePrecision)
 
-    w.tickReqParams(splat1(pb; bboExchange=ns)...)
+    # TODO: expose :lastPricePrecision and :lastSizePrecision
+    w.tickReqParams(splat1(pb, (:reqId,
+                                :minTick,
+                                :bboExchange,
+                                :snapshotPermissions);
+                           bboExchange=ns,
+                           lastPricePrecision=nothing,
+                           lastSizePrecision=nothing)...)
   end,
 
   # SMART_COMPONENTS
@@ -686,7 +698,9 @@ const process = Dict(
 
     todouble(pb, :position)
 
-    w.pnlSingle(splat1(pb; dailyPnL=nothing, unrealizedPnL=nothing, realizedPnL=nothing)...)
+    w.pnlSingle(splat1(pb; dailyPnL=nothing,
+                           unrealizedPnL=nothing,
+                           realizedPnL=nothing)...)
   end,
 
   # HISTORICAL_TICKS
