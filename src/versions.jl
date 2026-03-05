@@ -10,5 +10,6 @@
   MARKET_DATA_VOLUMES_IN_SHARES      = 220
   UPDATE_CONFIG                      = 221
   FRACTIONAL_LAST_SIZE               = 222
+  HEDGE_MAX_SIZE                     = 223
 
 end

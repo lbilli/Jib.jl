@@ -115,6 +115,9 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
     end
   end
 
+  ib.version < Client.HEDGE_MAX_SIZE && PB.has(o, :hedgeMaxSize) &&
+    error("Order parameter :hedgeMaxSize not supported")
+
   ao = maptopb!(PB.Message(:AttachedOrders),
                 (n => getfield(order, n) for n ∈ (:slOrderId,
                                                   :slOrderType,

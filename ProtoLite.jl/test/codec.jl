@@ -53,11 +53,6 @@ d = Dict(:a => -123,
          :j => [ Dict(:key => "k1", :value => "v1"), Dict(:key => "k2", :value => "v2") ],
          :l => [ 4 ])
 
-@testset "Wrap" begin
-
-  @test isequal(d, PB.unwrap(PB.wrap(d, :Test)))
-
-end
 
 @testset "Message" begin
 

@@ -110,6 +110,7 @@ mutable struct Order
   scaleTable::String
   hedgeType::String
   hedgeParam::String
+  hedgeMaxSize::Union{Int,Nothing}
   account::String
   settlingFirm::String
   clearingAccount::String
@@ -189,9 +190,10 @@ Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, tru
                 false, nothing, nothing, ns, ns, ns, ns, 0, 0, ns, -1, nothing,
                 false, 0, fill(nothing, 5)..., false, false,
                 nothing, nothing, ns, nothing, 0, ns, ns, ns, ns, false, 0, ns, false,
-                fill(nothing, 9)..., false, nothing, nothing, false, fill(ns, 8)...,
-                (;), (;), ns, false, false, false, ns, Float64[], (;), 0, 0, false, 0, ns, ns,
-                fill(nothing, 4)..., 0, nothing, AbstractCondition[], false, false, ns,
+                fill(nothing, 9)..., false, nothing, nothing, false, ns, ns, ns,
+                nothing, fill(ns, 5)..., (;), (;), ns, false, false, false,
+                ns, Float64[], (;), 0, 0, false, 0, ns, ns, fill(nothing, 4)..., 0,
+                nothing, AbstractCondition[], false, false, ns,
                 SoftDollarTier(), nothing, ns, ns, ns, ns, false, false, false, ns, nothing,
                 nothing, false, ns, false, fill(nothing, 5)..., ns, ns, fill(nothing, 5)...,
                 ns, false, ns, false, nothing, ns, false, false, false, false,
