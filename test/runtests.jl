@@ -12,6 +12,8 @@ include("client.jl")
 
   @test Jib.Reader.tickname(102) == "FINAL_IPO_LAST"
 
+  @test Jib.Reader.tickname(110) == "ODD_LOT_ASK_EXCH"
+
   @test (@test_logs (:error, "tickname(): unknown ticktype") Jib.Reader.tickname(-1)) == "UNKNOWN"
 
   @test Jib.funddist("Y") == "Income Fund"

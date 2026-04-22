@@ -107,4 +107,10 @@ const ticktype = ["BID_SIZE",                  #   0
                   "ESTIMATED_IPO_MIDPOINT",    # 101
                   "FINAL_IPO_LAST",            # 102
                   "DELAYED_YIELD_BID",         # 103
-                  "DELAYED_YIELD_ASK"]         # 104
+                  "DELAYED_YIELD_ASK",         # 104
+                  "ODD_LOT_BID",               # 105
+                  "ODD_LOT_ASK",               # 106
+                  "ODD_LOT_BID_SIZE",          # 107
+                  "ODD_LOT_ASK_SIZE",          # 108
+                  "ODD_LOT_BID_EXCH",          # 109
+                  "ODD_LOT_ASK_EXCH"]          # 110
