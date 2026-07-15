@@ -39,13 +39,6 @@ message FAReplace {
     optional string xml = 3;
 }
 
-message FundamentalDataRequest {
-    optional int32 reqId = 1;
-    optional Contract contract = 2;
-    optional string reportType = 3;
-    repeated TagValue fundamentalDataOptions = 4;
-}
-
 message SubscribeToGroupEventsRequest {
     optional int32 reqId = 1;
     optional int32 groupId = 2;

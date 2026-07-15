@@ -50,7 +50,7 @@ const ticktype = ["BID_SIZE",                  #   0
                   "CLOSE_EFP_COMPUTATION",     #  44
                   "LAST_TIMESTAMP",            #  45
                   "SHORTABLE",                 #  46
-                  "FUNDAMENTAL_RATIOS",        #  47
+                  "FUNDAMENTAL_RATIOS",        #  47 (obsolete)
                   "RT_VOLUME",                 #  48
                   "HALTED",                    #  49
                   "BID_YIELD",                 #  50

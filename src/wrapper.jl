@@ -30,7 +30,6 @@ const callbacks = [:tickPrice,
                    :scannerData,
                    :realtimeBar,
                    :currentTime,
-                   :fundamentalData,
                    :deltaNeutralValidation,
                    :tickSnapshotEnd,
                    :marketDataType,
@@ -264,11 +263,6 @@ function simple_wrap()
                    println("realtimeBar: $reqId $time $open $high, $low $close $volume $wap $count"),
 
     currentTime= (time::Int) -> println("currentTime: $time"),
-
-    fundamentalData= function(reqId::Int, data::String)
-                       d[:fundamental] = data
-                       println("fundamentalData: $reqId")
-                     end,
 
     tickSnapshotEnd= (reqId::Int) -> println("tickSnapshotEnd: $reqId"),
 

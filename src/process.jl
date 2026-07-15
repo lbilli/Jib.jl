@@ -363,14 +363,6 @@ const process = Dict(
     w.realtimeBar(splat1(pb)...)
   end,
 
-  # FUNDAMENTAL_DATA
-  251 => function(msg, w, ver)
-
-    pb = PB.deserialize(:StringData, msg)
-
-    w.fundamentalData(splat1(pb)...)
-  end,
-
   # CONTRACT_DATA_END
   252 => (msg, w, ver) -> w.contractDetailsEnd(PB.deserialize(:SingleInt32, msg)[:value]),
 

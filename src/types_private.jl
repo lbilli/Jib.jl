@@ -88,6 +88,7 @@ mutable struct ContractDetails
   eventContract1::String
   eventContractDescription1::String
   eventContractDescription2::String
+  settlementMethod::String
 end
 ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)...,
                                     nothing, nothing, fill(ns, 6)..., nothing, nothing,
@@ -95,7 +96,7 @@ ContractDetails() = ContractDetails(Contract(), ns, 0, ns, ns, 0, 0, fill(ns, 9)
                                     fill(ns, 5)..., false, false, nothing, false,
                                     ns, ns, ns, ns, false, ns, fill(ns, 7)...,
                                     false, false, false, fill(ns, 7)...,
-                                    IneligibilityReason[], ns, ns, ns)
+                                    IneligibilityReason[], ns, ns, ns, ns)
 
 
 struct Execution

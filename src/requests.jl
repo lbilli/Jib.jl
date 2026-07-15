@@ -102,30 +102,11 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
     isnothing(val) || (o[n] = Int(val))
   end
 
-  if ib.version < Client.ADDITIONAL_ORDER_PARAMS_1
-    for n ∈ (:deactivate, :postOnly, :allowPreOpen, :ignoreOpenAuction)
-      PB.has(o, n) && error("Order parameter :$n not supported")
-    end
-
-  end
-
-  if ib.version < Client.ADDITIONAL_ORDER_PARAMS_2
-    for n ∈ (:routeMarketableToBbo, :seekPriceImprovement, :whatIfType)
-      PB.has(o, n) && error("Order parameter :$n not supported")
-    end
-  end
-
-  ib.version < Client.HEDGE_MAX_SIZE && PB.has(o, :hedgeMaxSize) &&
-    error("Order parameter :hedgeMaxSize not supported")
-
   ao = maptopb!(PB.Message(:AttachedOrders),
                 (n => getfield(order, n) for n ∈ (:slOrderId,
                                                   :slOrderType,
                                                   :ptOrderId,
                                                   :ptOrderType)))
-
-  ib.version < Client.ATTACHED_ORDERS && length(ao) > 0 &&
-    error("Attached Orders parameters not supported")
 
   msg = PB.Message(:PlaceOrderRequest; orderId=id,
                                        contract=c,
@@ -257,15 +238,6 @@ reqRealTimeBars(ib::Connection, reqId::Int, contract::Contract, barSize::Int,
                                         realTimeBarsOptions))
 
 cancelRealTimeBars(ib::Connection, reqId::Int) = req_simple(ib, 51, reqId) ### CANCEL_REAL_TIME_BARS
-
-reqFundamentalData(ib::Connection, reqId::Int, contract::Contract, reportType::String, fundamentalDataOptions::NamedTuple=(;)) =
-  sendmsg(ib, 52, ### REQ_FUNDAMENTAL_DATA
-          maptopb(:FundamentalDataRequest; reqId,
-                                           contract,
-                                           reportType,
-                                           fundamentalDataOptions))
-
-cancelFundamentalData(ib::Connection, reqId::Int) = req_simple(ib, 53, reqId) ### CANCEL_FUNDAMENTAL_DATA
 
 calculateImpliedVolatility(ib::Connection, reqId::Int, contract::Contract, optionPrice::Float64, underPrice::Float64, miscOptions::NamedTuple=(;)) =
   sendmsg(ib, 54, ### REQ_CALC_IMPLIED_VOLAT
