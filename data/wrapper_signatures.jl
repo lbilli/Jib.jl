@@ -58,8 +58,6 @@ realtimeBar(reqId::Int, time::Int, open::Float64, high::Float64, low::Float64, c
 
 currentTime(time::Int)
 
-fundamentalData(reqId::Int, data::String)
-
 deltaNeutralValidation(reqId::Int, deltaNeutralContract::DeltaNeutralContract)
 
 tickSnapshotEnd(reqId::Int)

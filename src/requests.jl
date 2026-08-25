@@ -102,6 +102,9 @@ function placeOrder(ib::Connection, id::Int, contract::Contract, order::Order)
     isnothing(val) || (o[n] = Int(val))
   end
 
+  ib.version < Client.COND_ORDER_WITH_OVERNIGHT_PARAM && PB.has(o, :conditionsIncludeOvernight) &&
+    error("Order parameter :conditionsIncludeOvernight not supported")
+
   ao = maptopb!(PB.Message(:AttachedOrders),
                 (n => getfield(order, n) for n ∈ (:slOrderId,
                                                   :slOrderType,
@@ -479,8 +482,6 @@ export reqMktData,
        reqCurrentTime,
        reqRealTimeBars,
        cancelRealTimeBars,
-       reqFundamentalData,
-       cancelFundamentalData,
        calculateImpliedVolatility,
        calculateOptionPrice,
        cancelCalculateImpliedVolatility,

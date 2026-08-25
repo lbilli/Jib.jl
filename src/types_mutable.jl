@@ -140,6 +140,7 @@ mutable struct Order
   conditions::Vector{AbstractCondition}
   conditionsCancelOrder::Bool
   conditionsIgnoreRth::Bool
+  conditionsIncludeOvernight::Bool
   extOperator::String
   softDollarTier::SoftDollarTier
   cashQty::Union{Float64,Nothing}
@@ -193,7 +194,7 @@ Order() = Order(0, 0, 0, ns, 0, ns, nothing, nothing, ns, ns, ns, ns, 0, ns, tru
                 fill(nothing, 9)..., false, nothing, nothing, false, ns, ns, ns,
                 nothing, fill(ns, 5)..., (;), (;), ns, false, false, false,
                 ns, Float64[], (;), 0, 0, false, 0, ns, ns, fill(nothing, 4)..., 0,
-                nothing, AbstractCondition[], false, false, ns,
+                nothing, AbstractCondition[], false, false, false, ns,
                 SoftDollarTier(), nothing, ns, ns, ns, ns, false, false, false, ns, nothing,
                 nothing, false, ns, false, fill(nothing, 5)..., ns, ns, fill(nothing, 5)...,
                 ns, false, ns, false, nothing, ns, false, false, false, false,
